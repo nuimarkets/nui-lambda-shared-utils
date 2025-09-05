@@ -23,6 +23,7 @@ from .secrets_helper import (
     get_api_key,
     clear_cache,
 )
+
 # Optional imports - only fail if actually used
 try:
     from .slack_client import SlackClient
