@@ -1,0 +1,40 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -e .[dev]
+    
+    - name: Lint with black
+      run: |
+        black --check lambda_shared_utils/
+    
+    # TODO: Re-enable mypy after fixing type annotations
+    # - name: Type check with mypy
+    #   run: |
+    #     mypy lambda_shared_utils/ --config-file mypy.ini
+    
+    - name: Test with pytest
+      run: |
+        pytest --cov=lambda_shared_utils --cov-report=xml

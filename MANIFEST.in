@@ -1,0 +1,37 @@
+# Include the license and readme
+include LICENSE
+include README.md
+include CHANGELOG.md
+
+# Include package data
+recursive-include nui_lambda_shared_utils *.py
+recursive-include nui_lambda_shared_utils/slack_setup *.yaml
+
+# Exclude development and build files
+exclude .gitignore
+exclude .github
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
+recursive-exclude * *.so
+recursive-exclude * *.dylib
+exclude .coverage
+exclude htmlcov
+recursive-exclude htmlcov *
+exclude .pytest_cache
+recursive-exclude .pytest_cache *
+exclude .mypy_cache
+recursive-exclude .mypy_cache *
+exclude build
+recursive-exclude build *
+exclude dist
+recursive-exclude dist *
+exclude *.egg-info
+recursive-exclude *.egg-info *
+
+# Include tests for source distributions
+recursive-include tests *.py
+exclude tests/conftest.py
+
+# Documentation
+include docs/*.md
+recursive-exclude docs/_build *

@@ -1,0 +1,123 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nui-lambda-shared-utils"
+version = "1.0.0"
+authors = [
+    {name = "NUI Markets", email = "develop@nuimarkets.com"},
+]
+description = "Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, and monitoring integrations"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Monitoring",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Environment :: Console",
+    "Framework :: AWS CDK",
+]
+keywords = ["aws", "lambda", "utilities", "slack", "elasticsearch", "monitoring", "serverless"]
+dependencies = [
+    "boto3>=1.20.0",
+    "pytz>=2021.3",
+    "click>=8.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+elasticsearch = ["elasticsearch>=7.17.0,<8.0.0"]
+database = ["pymysql>=1.0.0", "psycopg2-binary>=2.9.0"]
+slack = ["slack-sdk>=3.19.0"]
+all = [
+    "elasticsearch>=7.17.0,<8.0.0",
+    "pymysql>=1.0.0", 
+    "psycopg2-binary>=2.9.0",
+    "slack-sdk>=3.19.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "pytest-mock>=3.10.0",
+    "moto>=4.0.0",
+    "black>=22.0.0",
+    "mypy>=0.990",
+    "boto3-stubs[essential]>=1.20.0",
+    "twine>=4.0.0",
+    "build>=0.8.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/nuimarkets/nui-lambda-shared-utils"
+"Bug Tracker" = "https://github.com/nuimarkets/nui-lambda-shared-utils/issues"
+Documentation = "https://github.com/nuimarkets/nui-lambda-shared-utils/blob/main/README.md"
+Source = "https://github.com/nuimarkets/nui-lambda-shared-utils"
+
+[project.scripts]
+nui-slack-setup = "nui_lambda_shared_utils.slack_setup_cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["nui_lambda_shared_utils*"]
+
+[tool.setuptools.package-data]
+"nui_lambda_shared_utils" = ["slack_setup/*.yaml"]
+
+[tool.black]
+line-length = 120
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+strict_optional = false
+no_implicit_optional = false
+check_untyped_defs = false
+disallow_untyped_defs = false
+
+[tool.coverage.run]
+source = ["nui_lambda_shared_utils"]
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "*/venv/*",
+]
+
+[tool.coverage.report]
+precision = 2
+skip_covered = false
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]
