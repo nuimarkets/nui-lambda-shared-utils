@@ -62,12 +62,3 @@ nui_lambda_shared_utils/
 └── slack_setup/           # Automated Slack workspace setup
 ```
 
-## Support
-
-- **GitHub Issues**: Report bugs and request features
-- **Documentation**: Comprehensive guides and API reference
-- **Examples**: Real-world usage patterns and integration examples
-
----
-
-*This documentation is generated for version 1.0.0 of nui-lambda-shared-utils.*
