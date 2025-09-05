@@ -33,8 +33,14 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
+        echo "Installing test requirements..."
         pip install -r requirements-test.txt
+        echo "Installing package..."
         pip install -e .
+        echo "Verifying key dependencies:"
+        python -c "import elasticsearch; print('✓ elasticsearch')" || echo "✗ elasticsearch missing"
+        python -c "import slack_sdk; print('✓ slack_sdk')" || echo "✗ slack_sdk missing" 
+        python -c "import pymysql; print('✓ pymysql')" || echo "✗ pymysql missing"
     
     - name: Auto-format with black
       run: |
