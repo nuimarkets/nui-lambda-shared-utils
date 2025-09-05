@@ -23,9 +23,12 @@ from .secrets_helper import (
     get_api_key,
     clear_cache,
 )
-from .slack_client import SlackClient
-
 # Optional imports - only fail if actually used
+try:
+    from .slack_client import SlackClient
+except ImportError:
+    SlackClient = None
+
 try:
     from .es_client import ElasticsearchClient
 except ImportError:
@@ -36,9 +39,10 @@ try:
 except ImportError:
     DatabaseClient = None
     get_pool_stats = None
+
 from .timezone import nz_time, format_nz_time
 
-# New utilities
+# Slack formatting utilities (no external dependencies)
 from .slack_formatter import (
     SlackBlockBuilder,
     format_currency,
@@ -98,8 +102,11 @@ from .cloudwatch_metrics import (
 )
 
 
-# Slack setup utilities (for CLI usage)
-from . import slack_setup
+# Slack setup utilities (for CLI usage) - optional import
+try:
+    from . import slack_setup
+except ImportError:
+    slack_setup = None
 
 __all__ = [
     # Configuration system
