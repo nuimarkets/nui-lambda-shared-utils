@@ -11,7 +11,7 @@ from nui_lambda_shared_utils.db_client import (
     DatabaseClient,
     _clean_expired_connections,
     get_pool_stats,
-    _safe_close_connection,
+    safe_close_connection,
 )
 
 
@@ -68,7 +68,7 @@ class TestGetConnection:
     """Tests for get_connection context manager."""
 
     @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
-    @patch("nui_lambda_shared_utils.db_client._safe_close_connection")
+    @patch("nui_lambda_shared_utils.db_client.safe_close_connection")
     @patch("pymysql.connect")
     def test_get_connection_success(self, mock_connect, mock_safe_close, mock_get_creds):
         """Test successful connection creation."""
@@ -489,7 +489,7 @@ class TestConnectionRecycling:
     """Tests for connection recycling functionality."""
 
     @patch("nui_lambda_shared_utils.db_client._connection_pool", {})
-    @patch("nui_lambda_shared_utils.db_client._safe_close_connection")
+    @patch("nui_lambda_shared_utils.db_client.safe_close_connection")
     def test_clean_expired_connections_enabled(self, mock_safe_close):
         """Test that connections are recycled when they exceed pool_recycle time."""
         from nui_lambda_shared_utils.db_client import _connection_pool
@@ -570,7 +570,7 @@ class TestSafeCloseConnection:
         mock_conn = Mock()
         mock_conn._closed = False
 
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         mock_conn.close.assert_called_once()
 
@@ -579,7 +579,7 @@ class TestSafeCloseConnection:
         mock_conn = Mock()
         mock_conn._closed = True
 
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         mock_conn.close.assert_not_called()
 
@@ -590,21 +590,21 @@ class TestSafeCloseConnection:
         mock_conn.close.side_effect = pymysql.MySQLError("Connection error")
 
         # Should not raise an exception
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         mock_conn.close.assert_called_once()
 
     def test_safe_close_connection_none(self):
         """Test that None connections are handled gracefully."""
         # Should not raise an exception
-        _safe_close_connection(None)
+        safe_close_connection(None)
 
     def test_safe_close_connection_no_close_method(self):
         """Test that objects without close method are handled gracefully."""
         not_a_connection = "not a connection"
 
         # Should not raise an exception
-        _safe_close_connection(not_a_connection)
+        safe_close_connection(not_a_connection)
 
     def test_safe_close_connection_open_flag_false(self):
         """Test that connections with open=False are not closed."""
@@ -612,7 +612,7 @@ class TestSafeCloseConnection:
         mock_conn._closed = False
         mock_conn.open = False  # Connection reports it's not open
 
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         # Should not attempt to close if open=False
         mock_conn.close.assert_not_called()
@@ -623,7 +623,7 @@ class TestSafeCloseConnection:
         mock_conn._closed = False
         mock_conn.open = True  # Connection reports it's open
 
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         # Should attempt to close if open=True
         mock_conn.close.assert_called_once()
@@ -635,7 +635,7 @@ class TestSafeCloseConnection:
         # Don't set open attribute to simulate connections without it
         del mock_conn.open  # Remove the open attribute if it exists
 
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         # Should still attempt to close
         mock_conn.close.assert_called_once()
@@ -647,6 +647,6 @@ class TestSafeCloseConnection:
         mock_conn.close.side_effect = OSError("Network error")
 
         # Should not raise an exception
-        _safe_close_connection(mock_conn)
+        safe_close_connection(mock_conn)
 
         mock_conn.close.assert_called_once()

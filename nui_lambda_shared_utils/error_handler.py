@@ -96,7 +96,7 @@ class ErrorPatternMatcher:
 
     def __init__(self, patterns: Optional[Dict] = None):
         self.patterns = patterns or ERROR_PATTERNS
-        self.compiled_patterns = {}
+        self.compiled_patterns: Dict[str, Any] = {}
         self._compile_patterns()
 
     def _compile_patterns(self):
@@ -279,8 +279,8 @@ class ErrorAggregator:
         if not self.errors:
             return {"total_errors": 0, "by_category": {}, "by_severity": {}, "recent_errors": []}
 
-        by_category = {}
-        by_severity = {}
+        by_category: Dict[str, int] = {}
+        by_severity: Dict[str, int] = {}
 
         for error in self.errors:
             # Count by category
