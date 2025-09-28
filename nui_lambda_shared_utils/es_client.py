@@ -5,6 +5,7 @@ Refactored Elasticsearch client using BaseClient for DRY code patterns.
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+from urllib.parse import urlparse
 from elasticsearch import Elasticsearch
 
 from .base_client import BaseClient, ServiceHealthMixin
@@ -48,12 +49,14 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
             getattr(self.config, "es_host", "localhost:9200")
         )
 
-        # Ensure port is included
-        if ":" not in host:
-            host = f"{host}:9200"
-
-        # Build ES URL
-        es_url = f"http://{host}"
+        parsed = urlparse(host)
+        if parsed.scheme:
+            es_url = host
+        else:
+            if ":" not in host:
+                host = f"{host}:9200"
+            scheme = self.client_config.get("scheme", "http")
+            es_url = f"{scheme}://{host}"
 
         # Get credentials
         username = self.credentials.get("username", "elastic")

@@ -3,6 +3,7 @@ Utility functions for DRY code patterns across the lambda shared utils.
 """
 
 import os
+import time
 import logging
 import functools
 from typing import Union, List, Optional, Any, Dict
@@ -283,7 +284,7 @@ def format_log_context(
     """
     context = {
         "operation": operation,
-        "timestamp": log.time.time() if hasattr(log, 'time') else None,
+        "timestamp": time.time(),
     }
     context.update(context_data)
     

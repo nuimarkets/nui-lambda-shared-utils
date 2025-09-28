@@ -245,7 +245,10 @@ class RetryableOperationMixin:
             **retry_kwargs
         )(operation_func)
         
-        return self._execute_with_error_handling(
-            operation_name,
-            retried_operation
-        )
+        executor = getattr(self, "_execute_with_error_handling", None)
+        if executor is None:
+            raise AttributeError(
+                f"{self.__class__.__name__} must implement _execute_with_error_handling "
+                "to use RetryableOperationMixin"
+            )
+        return executor(operation_name, retried_operation)

@@ -32,6 +32,11 @@ class BaseClientContract(ABC):
         """Return client-specific kwargs for testing."""
         pass
 
+    @abstractmethod
+    def get_secret_patch_target(self) -> str:
+        """Return the fully qualified secret retrieval function to patch."""
+        pass
+
 
 class TestClientContract:
     """Contract tests that all client implementations must pass."""
@@ -39,7 +44,7 @@ class TestClientContract:
     @pytest.mark.skip(reason="Contract tests need refactoring after DRY implementation")
     def test_initialization_with_required_secret(self, client_contract):
         """Test that all clients require a secret name for initialization."""
-        with patch(f"nui_lambda_shared_utils.{client_contract.__module__.split('.')[-1]}.get_secret") as mock_get_secret:
+        with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
             mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "username": "test-user", "password": "test-pass"}
             
             # Should work with secret name
@@ -49,7 +54,7 @@ class TestClientContract:
     @pytest.mark.skip(reason="Contract tests need refactoring after DRY implementation")
     def test_secret_retrieval_consistent(self, client_contract):
         """Test that all clients retrieve secrets consistently."""
-        with patch(f"nui_lambda_shared_utils.{client_contract.__module__.split('.')[-1]}.get_secret") as mock_get_secret:
+        with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
             mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "username": "test-user", "password": "test-pass"}
             
             client_contract.create_client_instance(secret_name="custom-secret")
@@ -60,7 +65,7 @@ class TestClientContract:
     @pytest.mark.skip(reason="Contract tests need refactoring after DRY implementation")
     def test_configuration_integration(self, client_contract):
         """Test that all clients integrate with configuration system."""
-        with patch(f"nui_lambda_shared_utils.{client_contract.__module__.split('.')[-1]}.get_secret") as mock_get_secret:
+        with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
             with patch("nui_lambda_shared_utils.config.get_config") as mock_get_config:
                 mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "username": "test-user", "password": "test-pass"}
                 mock_config = Mock()
@@ -92,6 +97,9 @@ class SlackClientContract(BaseClientContract):
     def get_client_specific_kwargs(self) -> Dict[str, Any]:
         return {}
 
+    def get_secret_patch_target(self) -> str:
+        return "nui_lambda_shared_utils.slack_client.get_secret"
+
 
 class ElasticsearchClientContract(BaseClientContract):
     """Contract implementation for ElasticsearchClient."""
@@ -106,6 +114,9 @@ class ElasticsearchClientContract(BaseClientContract):
     def get_client_specific_kwargs(self) -> Dict[str, Any]:
         return {"host": "test-es:9200"}
 
+    def get_secret_patch_target(self) -> str:
+        return "nui_lambda_shared_utils.es_client.get_secret"
+
 
 class DatabaseClientContract(BaseClientContract):
     """Contract implementation for DatabaseClient."""
@@ -119,6 +130,9 @@ class DatabaseClientContract(BaseClientContract):
 
     def get_client_specific_kwargs(self) -> Dict[str, Any]:
         return {"use_pool": False}
+
+    def get_secret_patch_target(self) -> str:
+        return "nui_lambda_shared_utils.db_client.get_database_credentials"
 
 
 # Pytest fixtures for contract testing

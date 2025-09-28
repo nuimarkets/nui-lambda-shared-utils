@@ -48,9 +48,7 @@ except ImportError:
     ElasticsearchClient = None  # type: ignore
 
 try:
-    from .db_client import DatabaseClient, PostgreSQLClient
-    # Legacy compatibility
-    get_pool_stats = None  # Functionality moved to client methods
+    from .db_client import DatabaseClient, PostgreSQLClient, get_pool_stats
 except ImportError:
     DatabaseClient = None  # type: ignore
     PostgreSQLClient = None  # type: ignore
