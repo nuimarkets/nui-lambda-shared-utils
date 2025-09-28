@@ -35,32 +35,41 @@ class Config:
             aws_region: AWS region for secrets/services
         """
         # Elasticsearch settings
-        self.es_host = es_host or os.environ.get("ES_HOST") or os.environ.get("ELASTICSEARCH_HOST") or "localhost:9200"
+        if es_host is not None:
+            self.es_host = es_host
+        else:
+            self.es_host = os.environ.get("ES_HOST") or os.environ.get("ELASTICSEARCH_HOST") or "localhost:9200"
 
-        self.es_credentials_secret = (
-            es_credentials_secret
-            or os.environ.get("ES_CREDENTIALS_SECRET")
-            or os.environ.get("ELASTICSEARCH_CREDENTIALS_SECRET")
-            or "elasticsearch-credentials"
-        )
+        if es_credentials_secret is not None:
+            self.es_credentials_secret = es_credentials_secret
+        else:
+            self.es_credentials_secret = (
+                os.environ.get("ES_CREDENTIALS_SECRET")
+                or os.environ.get("ELASTICSEARCH_CREDENTIALS_SECRET")
+                or "elasticsearch-credentials"
+            )
 
         # Database settings
-        self.db_credentials_secret = (
-            db_credentials_secret
-            or os.environ.get("DB_CREDENTIALS_SECRET")
-            or os.environ.get("DATABASE_CREDENTIALS_SECRET")
-            or "database-credentials"
-        )
+        if db_credentials_secret is not None:
+            self.db_credentials_secret = db_credentials_secret
+        else:
+            self.db_credentials_secret = (
+                os.environ.get("DB_CREDENTIALS_SECRET")
+                or os.environ.get("DATABASE_CREDENTIALS_SECRET")
+                or "database-credentials"
+            )
 
         # Slack settings
-        self.slack_credentials_secret = (
-            slack_credentials_secret or os.environ.get("SLACK_CREDENTIALS_SECRET") or "slack-credentials"
-        )
+        if slack_credentials_secret is not None:
+            self.slack_credentials_secret = slack_credentials_secret
+        else:
+            self.slack_credentials_secret = os.environ.get("SLACK_CREDENTIALS_SECRET") or "slack-credentials"
 
         # AWS settings
-        self.aws_region = (
-            aws_region or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
-        )
+        if aws_region is not None:
+            self.aws_region = aws_region
+        else:
+            self.aws_region = os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION") or "us-east-1"
 
     def to_dict(self) -> Dict[str, Any]:
         """Return configuration as dictionary for debugging/logging."""

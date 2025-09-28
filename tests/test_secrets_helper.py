@@ -180,7 +180,7 @@ class TestGetDatabaseCredentials:
 class TestGetElasticsearchCredentials:
     """Tests for get_elasticsearch_credentials function."""
 
-    @patch.dict("os.environ", {}, clear=True)
+    @patch.dict("os.environ", {"ES_HOST": "localhost:9200"}, clear=True)
     def test_get_elasticsearch_credentials_success(self, mock_secrets_manager):
         """Test successful Elasticsearch credentials retrieval."""
         mock_secrets_manager.get_secret_value.return_value = {

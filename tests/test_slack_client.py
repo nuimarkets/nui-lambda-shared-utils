@@ -13,7 +13,7 @@ from datetime import datetime
 class TestSlackClient:
     """Tests for SlackClient class."""
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_init_required_secret(self, mock_webclient, mock_get_secret):
         """Test initialization requires secret name parameter."""
@@ -24,7 +24,7 @@ class TestSlackClient:
         mock_get_secret.assert_called_once_with("test-secret")
         mock_webclient.assert_called_once_with(token="xoxb-test-token")
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_init_custom_secret(self, mock_webclient, mock_get_secret):
         """Test initialization with custom secret name."""
@@ -35,16 +35,26 @@ class TestSlackClient:
         mock_get_secret.assert_called_once_with("custom-slack-secret")
         mock_webclient.assert_called_once_with(token="xoxb-custom-token")
 
-    def test_init_requires_secret_name(self):
-        """Test that initialization requires secret_name parameter."""
-        with pytest.raises(TypeError, match="missing 1 required positional argument: 'secret_name'"):
-            SlackClient()
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {}, clear=True)
+    def test_init_with_default_secret_name(self, mock_webclient, mock_get_secret):
+        """Test initialization with default secret name."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-default-token"}
+        
+        with patch("nui_lambda_shared_utils.base_client.resolve_config_value") as mock_resolve:
+            mock_resolve.return_value = "slack-credentials"
+            
+            client = SlackClient()
+        
+        mock_get_secret.assert_called_once_with("slack-credentials")
+        mock_webclient.assert_called_once_with(token="xoxb-default-token")
 
 
 class TestSendMessage:
     """Tests for send_message method."""
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_message_success(self, mock_webclient, mock_get_secret):
         """Test successful message sending."""
@@ -59,7 +69,7 @@ class TestSendMessage:
         assert result is True
         mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Test message", blocks=None)
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_message_with_blocks(self, mock_webclient, mock_get_secret):
         """Test sending message with blocks."""
@@ -76,7 +86,7 @@ class TestSendMessage:
         assert result is True
         mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Fallback text", blocks=blocks)
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_message_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of Slack API error."""
@@ -92,7 +102,7 @@ class TestSendMessage:
 
         assert result is False
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_message_not_ok(self, mock_webclient, mock_get_secret):
         """Test handling of not ok response."""
@@ -106,7 +116,7 @@ class TestSendMessage:
 
         assert result is False
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_message_unexpected_error(self, mock_webclient, mock_get_secret):
         """Test handling of unexpected errors."""
@@ -124,7 +134,7 @@ class TestSendMessage:
 class TestSendFile:
     """Tests for send_file method."""
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_file_success(self, mock_webclient, mock_get_secret):
         """Test successful file upload."""
@@ -141,7 +151,7 @@ class TestSendFile:
             channel="C123", content="File content", filename="test.txt", title="Test File"
         )
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_file_default_title(self, mock_webclient, mock_get_secret):
         """Test file upload with default title."""
@@ -158,7 +168,7 @@ class TestSendFile:
             channel="C123", content="File content", filename="report.csv", title="report.csv"
         )
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_file_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of file upload API error."""
@@ -178,7 +188,7 @@ class TestSendFile:
 class TestSendThreadReply:
     """Tests for send_thread_reply method."""
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_thread_reply_success(self, mock_webclient, mock_get_secret):
         """Test successful thread reply."""
@@ -195,7 +205,7 @@ class TestSendThreadReply:
             channel="C123", thread_ts="1234567890.123456", text="Reply text", blocks=None
         )
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_send_thread_reply_with_blocks(self, mock_webclient, mock_get_secret):
         """Test thread reply with blocks."""
@@ -218,7 +228,7 @@ class TestSendThreadReply:
 class TestUpdateMessage:
     """Tests for update_message method."""
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_update_message_success(self, mock_webclient, mock_get_secret):
         """Test successful message update."""
@@ -235,7 +245,7 @@ class TestUpdateMessage:
             channel="C123", ts="1234567890.123456", text="Updated text", blocks=None
         )
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_update_message_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of update API error."""
@@ -255,7 +265,7 @@ class TestUpdateMessage:
 class TestAddReaction:
     """Tests for add_reaction method."""
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_add_reaction_success(self, mock_webclient, mock_get_secret):
         """Test successful reaction addition."""
@@ -272,7 +282,7 @@ class TestAddReaction:
             channel="C123", timestamp="1234567890.123456", name="thumbsup"
         )
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_add_reaction_already_exists(self, mock_webclient, mock_get_secret):
         """Test handling when reaction already exists."""
@@ -288,7 +298,7 @@ class TestAddReaction:
 
         assert result is True  # Should return True for already_reacted
 
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_add_reaction_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of reaction API error."""
@@ -308,8 +318,8 @@ class TestAddReaction:
 class TestLambdaContextHeader:
     """Tests for Lambda context header functionality."""
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
@@ -333,7 +343,7 @@ class TestLambdaContextHeader:
 
         # Mock STS for account info
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {
             "Account": "123456789012",  # Production
             "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/test-function",
@@ -341,7 +351,7 @@ class TestLambdaContextHeader:
 
         # Mock Lambda client for deployment time
         mock_lambda = Mock()
-        mock_boto3.client.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
         mock_lambda.get_function.return_value = {"Configuration": {"LastModified": "2023-11-15T10:30:45.123+0000"}}
 
         # Mock config file check
@@ -379,8 +389,8 @@ class TestLambdaContextHeader:
             assert "Log:" in header_text
             assert "`/aws/lambda/test-function`" in header_text
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
@@ -400,7 +410,7 @@ class TestLambdaContextHeader:
 
         # Mock STS for account info
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {
             "Account": "234567890123",  # Development
             "Arn": "arn:aws:sts::234567890123:assumed-role/test-role/nui-service",
@@ -408,7 +418,7 @@ class TestLambdaContextHeader:
 
         # Mock Lambda client - deployment time fails
         mock_lambda = Mock()
-        mock_boto3.client.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
         mock_lambda.get_function.side_effect = Exception("Access denied")
 
         # Mock config file check
@@ -438,8 +448,8 @@ class TestLambdaContextHeader:
             assert "Unknown" in header_text  # Deploy time unknown due to error
             assert "📋" in header_text  # Log emoji
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {})  # No Lambda environment variables
     def test_lambda_header_not_in_lambda(self, mock_webclient, mock_get_secret, mock_boto3):
@@ -451,7 +461,7 @@ class TestLambdaContextHeader:
 
         # Mock STS to simulate that we can't get account info when not in Lambda
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.side_effect = Exception("Not authenticated")
 
         slack = SlackClient(secret_name="test-secret")
@@ -467,8 +477,8 @@ class TestLambdaContextHeader:
         assert blocks[0]["type"] == "context"  # First block is header
         assert blocks[1]["text"]["text"] == "Original block"  # Second block is original
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function", "STAGE": "prod"})
     def test_lambda_header_can_be_disabled(self, mock_webclient, mock_get_secret, mock_boto3):
@@ -480,7 +490,7 @@ class TestLambdaContextHeader:
 
         # Mock STS
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
 
         slack = SlackClient(secret_name="test-secret")
@@ -492,8 +502,8 @@ class TestLambdaContextHeader:
 
         assert blocks is None  # No blocks added
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function", "STAGE": "prod"})
     def test_thread_reply_no_header_by_default(self, mock_webclient, mock_get_secret, mock_boto3):
@@ -505,7 +515,7 @@ class TestLambdaContextHeader:
 
         # Mock STS
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
 
         slack = SlackClient(secret_name="test-secret")
@@ -517,8 +527,8 @@ class TestLambdaContextHeader:
 
         assert blocks is None
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function", "STAGE": "prod"})
     def test_unknown_account_id_handling(self, mock_webclient, mock_get_secret, mock_boto3):
@@ -530,7 +540,7 @@ class TestLambdaContextHeader:
 
         # Mock STS with unknown account
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {
             "Account": "999999999999",  # Unknown account
             "Arn": "arn:aws:sts::999999999999:assumed-role/test-role/test-function",
@@ -547,8 +557,8 @@ class TestLambdaContextHeader:
 
         assert "Unknown (999999999999)" in header_text
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
@@ -563,7 +573,7 @@ class TestLambdaContextHeader:
 
         # Mock STS for Production account
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {
             "Account": "123456789012",  # Production
             "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/test-function",
@@ -586,8 +596,8 @@ class TestLambdaContextHeader:
 class TestAccountNameConsistency:
     """Tests to ensure account name mappings are consistent across functions."""
 
-    @patch("nui_lambda_shared_utils.slack_client.boto3")
-    @patch("nui_lambda_shared_utils.slack_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {})  # No Lambda environment variables
     def test_centralized_account_mappings(self, mock_webclient, mock_get_secret, mock_boto3):
@@ -599,7 +609,7 @@ class TestAccountNameConsistency:
 
         # Test Development ID specifically (the one that was inconsistent)
         mock_sts = Mock()
-        mock_boto3.client.return_value = mock_sts
+        mock_boto3.return_value = mock_sts
         mock_sts.get_caller_identity.return_value = {"Account": "234567890123"}  # Development
 
         slack = SlackClient(secret_name="test-secret")

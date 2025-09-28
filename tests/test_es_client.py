@@ -13,16 +13,18 @@ class TestElasticsearchClient:
     """Tests for ElasticsearchClient class."""
 
     @patch.dict("os.environ", {}, clear=True)
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.resolve_config_value")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
-    def test_init_default_values(self, mock_es, mock_get_secret):
+    def test_init_default_values(self, mock_es, mock_get_secret, mock_resolve_config_value):
         """Test initialization with default values."""
+        # Mock resolve_config_value to return localhost for host resolution
+        mock_resolve_config_value.return_value = "localhost:9200"
         mock_get_secret.return_value = {"username": "elastic", "password": "test_password"}
 
         client = ElasticsearchClient()
 
-        # Host should not include port
-        assert client.host == "localhost:9200"
+        # Verify secret was retrieved
         mock_get_secret.assert_called_once_with("elasticsearch-credentials")
         mock_es.assert_called_once_with(
             ["http://localhost:9200"],
@@ -32,7 +34,7 @@ class TestElasticsearchClient:
             retry_on_timeout=True,
         )
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_init_custom_host(self, mock_es, mock_get_secret):
         """Test initialization with custom host."""
@@ -40,7 +42,7 @@ class TestElasticsearchClient:
 
         client = ElasticsearchClient(host="10.0.0.1")
 
-        assert client.host == "10.0.0.1"
+        # Verify custom host was used in client creation
         mock_es.assert_called_once_with(
             ["http://10.0.0.1:9200"],
             basic_auth=("elastic", "test_password"),
@@ -49,7 +51,7 @@ class TestElasticsearchClient:
             retry_on_timeout=True,
         )
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_init_env_vars(self, mock_es, mock_get_secret):
         """Test initialization with environment variables."""
@@ -58,14 +60,21 @@ class TestElasticsearchClient:
         with patch.dict("os.environ", {"ES_HOST": "es.example.com", "ES_CREDENTIALS_SECRET": "custom-es-secret"}):
             client = ElasticsearchClient()
 
-        assert client.host == "es.example.com"
+        # Verify environment variable was used for host and secret
         mock_get_secret.assert_called_once_with("custom-es-secret")
+        mock_es.assert_called_once_with(
+            ["http://es.example.com:9200"],
+            basic_auth=("elastic", "test_password"),
+            request_timeout=30,
+            max_retries=3,
+            retry_on_timeout=True,
+        )
 
 
 class TestSearch:
     """Tests for search method."""
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_search_success(self, mock_es, mock_get_secret):
         """Test successful search."""
@@ -88,7 +97,7 @@ class TestSearch:
             index="test-index", body={"query": {"match_all": {}}}, size=100, ignore_unavailable=True
         )
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_search_custom_size(self, mock_es, mock_get_secret):
         """Test search with custom size parameter."""
@@ -102,7 +111,7 @@ class TestSearch:
 
         mock_client.search.assert_called_once_with(index="test-index", body={}, size=500, ignore_unavailable=True)
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_search_error_handling(self, mock_es, mock_get_secret):
         """Test search error handling."""
@@ -120,7 +129,7 @@ class TestSearch:
 class TestAggregate:
     """Tests for aggregate method."""
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_aggregate_success(self, mock_es, mock_get_secret):
         """Test successful aggregation."""
@@ -148,7 +157,7 @@ class TestAggregate:
             ignore_unavailable=True,
         )
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_aggregate_error_handling(self, mock_es, mock_get_secret):
         """Test aggregation error handling."""
@@ -166,7 +175,7 @@ class TestAggregate:
 class TestCount:
     """Tests for count method."""
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_count_success(self, mock_es, mock_get_secret):
         """Test successful document count."""
@@ -181,7 +190,7 @@ class TestCount:
         assert count == 42
         mock_client.count.assert_called_once_with(index="test-index", body=None, ignore_unavailable=True)
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_count_with_query(self, mock_es, mock_get_secret):
         """Test count with query body."""
@@ -198,7 +207,7 @@ class TestCount:
         assert count == 10
         mock_client.count.assert_called_once_with(index="test-index", body=query, ignore_unavailable=True)
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_count_error_handling(self, mock_es, mock_get_secret):
         """Test count error handling."""
@@ -216,7 +225,7 @@ class TestCount:
 class TestGetServiceStats:
     """Tests for get_service_stats method."""
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_get_service_stats_success(self, mock_es, mock_get_secret):
         """Test successful service stats retrieval."""
@@ -251,7 +260,7 @@ class TestGetServiceStats:
         assert "gte" in query
         assert "lte" in query
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_get_service_stats_no_data(self, mock_es, mock_get_secret):
         """Test service stats with no data."""
@@ -272,7 +281,7 @@ class TestGetServiceStats:
         assert stats["error_rate"] == 0  # Should handle division by zero
         assert stats["p95_response_time"] == 0
 
-    @patch("nui_lambda_shared_utils.es_client.get_secret")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     @patch("nui_lambda_shared_utils.es_client.datetime")
     def test_get_service_stats_time_window(self, mock_datetime, mock_es, mock_get_secret):

@@ -24,22 +24,37 @@ from .secrets_helper import (
     clear_cache,
 )
 
-# Optional imports - only fail if actually used
+# Common utilities
+from .utils import (
+    resolve_config_value,
+    create_aws_client,
+    handle_client_errors,
+    merge_dimensions,
+    validate_required_param,
+)
+
+# Base client architecture
+from .base_client import BaseClient, ServiceHealthMixin, RetryableOperationMixin
+
+# Client implementations - only fail if actually used
 try:
     from .slack_client import SlackClient
 except ImportError:
-    SlackClient = None
+    SlackClient = None  # type: ignore
 
 try:
     from .es_client import ElasticsearchClient
 except ImportError:
-    ElasticsearchClient = None
+    ElasticsearchClient = None  # type: ignore
 
 try:
-    from .db_client import DatabaseClient, get_pool_stats
+    from .db_client import DatabaseClient, PostgreSQLClient
+    # Legacy compatibility
+    get_pool_stats = None  # Functionality moved to client methods
 except ImportError:
-    DatabaseClient = None
-    get_pool_stats = None
+    DatabaseClient = None  # type: ignore
+    PostgreSQLClient = None  # type: ignore
+    get_pool_stats = None  # type: ignore
 
 from .timezone import nz_time, format_nz_time
 
@@ -72,14 +87,14 @@ try:
         build_tender_participant_query,
     )
 except ImportError:
-    ESQueryBuilder = None
-    build_error_rate_query = None
-    build_top_errors_query = None
-    build_response_time_query = None
-    build_service_volume_query = None
-    build_user_activity_query = None
-    build_pattern_detection_query = None
-    build_tender_participant_query = None
+    ESQueryBuilder = None  # type: ignore
+    build_error_rate_query = None  # type: ignore
+    build_top_errors_query = None  # type: ignore
+    build_response_time_query = None  # type: ignore
+    build_service_volume_query = None  # type: ignore
+    build_user_activity_query = None  # type: ignore
+    build_pattern_detection_query = None  # type: ignore
+    build_tender_participant_query = None  # type: ignore
 from .error_handler import (
     RetryableError,
     NonRetryableError,
@@ -107,7 +122,7 @@ from .cloudwatch_metrics import (
 try:
     from . import slack_setup
 except ImportError:
-    slack_setup = None
+    slack_setup = None  # type: ignore
 
 __all__ = [
     # Configuration system
@@ -126,10 +141,22 @@ __all__ = [
     "get_slack_credentials",
     "get_api_key",
     "clear_cache",
+    # Common utilities
+    "resolve_config_value",
+    "create_aws_client",
+    "handle_client_errors",
+    "merge_dimensions",
+    "validate_required_param",
+    # Base client architecture
+    "BaseClient",
+    "ServiceHealthMixin",
+    "RetryableOperationMixin",
+    # Client implementations
     "SlackClient",
     "ElasticsearchClient",
     "DatabaseClient",
-    "get_pool_stats",
+    "PostgreSQLClient",
+    "get_pool_stats",  # Legacy compatibility (None)
     "nz_time",
     "format_nz_time",
     "slack_setup",
