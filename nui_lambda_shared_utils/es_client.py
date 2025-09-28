@@ -50,7 +50,7 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
         )
 
         parsed = urlparse(host)
-        if parsed.scheme:
+        if parsed.scheme and parsed.netloc:  # Valid URL with scheme://netloc
             es_url = host
         else:
             if ":" not in host:
