@@ -5,6 +5,8 @@ Tests for base client functionality and contract compliance.
 import pytest
 import time
 import logging
+
+pytestmark = pytest.mark.unit
 from unittest.mock import patch, Mock, MagicMock, call
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
@@ -77,6 +79,7 @@ class TestClientContract:
 
                 # Should have consulted the config system
                 assert mock_get_config.called
+                mock_get_secret.assert_called_once_with("config-secret")
 
 
 # Specific client contract implementations
@@ -197,7 +200,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = {"token": "test-token"}
 
         # Create client with explicit secret name
-        client = TestBaseClient(secret_name="explicit-secret")
+        TestBaseClient(secret_name="explicit-secret")
 
         # Should use explicit secret name
         mock_get_secret.assert_called_once_with("explicit-secret")
@@ -214,7 +217,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = {"token": "test-token"}
 
         # Create client without explicit secret (should use env var)
-        client = TestBaseClient()
+        TestBaseClient()
 
         # Should use environment variable
         mock_get_secret.assert_called_once_with("env-secret")
@@ -243,7 +246,7 @@ class TestBaseClientImplementation:
         mock_config.test_host = "config-host"
 
         # Configure the mock to return AttributeError for missing attributes
-        def config_side_effect(obj, name, default=None):
+        def config_side_effect(name, default=None):
             if name == "test_missing_key":
                 return default
             return getattr(mock_config, name, default)
@@ -350,7 +353,7 @@ class TestBaseClientImplementation:
 
     @patch('nui_lambda_shared_utils.base_client.get_secret')
     @patch('nui_lambda_shared_utils.base_client.get_config')
-    def test_validation_required_param_error(self, mock_get_config, mock_get_secret):
+    def test_validation_required_param_error(self, mock_get_config, _mock_get_secret):
         """Test that required parameter validation works."""
         mock_config = Mock()
         # No credentials secret configured
@@ -456,7 +459,7 @@ class TestRetryableOperationMixin:
 
     @patch('nui_lambda_shared_utils.base_client.get_secret')
     @patch('nui_lambda_shared_utils.base_client.get_config')
-    @patch('nui_lambda_shared_utils.error_handler.with_retry')
+    @patch('nui_lambda_shared_utils.base_client.with_retry')
     def test_execute_with_retry_configures_retry_decorator(self, mock_with_retry, mock_get_config, mock_get_secret):
         """Test that retry decorator is configured correctly."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -724,7 +727,7 @@ class TestClientInheritanceIntegration:
 
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
-    @patch("nui_lambda_shared_utils.config.get_config")
+    @patch("nui_lambda_shared_utils.base_client.get_config")
     def test_inherited_config_resolution_integration(self, mock_get_config, mock_es_class, mock_get_secret):
         """Test that inherited config resolution works in actual client implementations."""
         from nui_lambda_shared_utils.es_client import ElasticsearchClient
