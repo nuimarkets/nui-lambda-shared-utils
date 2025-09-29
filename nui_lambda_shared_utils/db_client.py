@@ -156,14 +156,29 @@ class DatabaseClient(BaseClient, ServiceHealthMixin):
     def _resolve_credentials(self, secret_name: Optional[str]) -> Dict[str, Any]:
         """
         Override to use get_database_credentials for normalized field names.
-        
+
         Args:
             secret_name: Optional secret name override
-            
+
         Returns:
             Normalized database credentials
         """
-        return get_database_credentials(secret_name)
+        # Use BaseClient's resolution logic to determine the secret name
+        from .utils import resolve_config_value, validate_required_param
+
+        resolved_secret_name = resolve_config_value(
+            secret_name,
+            [
+                f"{self.config_key_prefix.upper()}_CREDENTIALS_SECRET",
+                f"{self.config_key_prefix.upper()}CREDENTIALS_SECRET"  # Alternative format
+            ],
+            getattr(self.config, f"{self.config_key_prefix}_credentials_secret", self._get_default_secret_name())
+        )
+
+        validate_required_param(resolved_secret_name, "secret_name")
+
+        # Now use the resolved secret name with get_database_credentials
+        return get_database_credentials(resolved_secret_name)
 
     def _clean_expired_connections(self, pool_key: str) -> None:
         """
