@@ -10,7 +10,12 @@ from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
 import json
-import yaml
+
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    YAML_AVAILABLE = False
 
 from .base_client import BaseClient, ServiceHealthMixin
 from .utils import create_aws_client, handle_client_errors
@@ -103,6 +108,10 @@ class SlackClient(BaseClient, ServiceHealthMixin):
 
         # Load from config file if provided
         if config_path:
+            if not YAML_AVAILABLE:
+                log.warning("PyYAML not installed, cannot load config from YAML file")
+                return mappings if not account_names else {**mappings, **account_names}
+
             try:
                 config_file = Path(config_path).resolve()
 

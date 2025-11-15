@@ -110,7 +110,7 @@ slack.reply_to_thread(
 
 By default, the library uses example account IDs for display. Lambda clients should configure their own AWS account name mappings for proper identification in Slack messages.
 
-**Option 1: Direct dictionary (programmatic)**
+#### Option 1: Direct dictionary (programmatic)
 ```python
 from nui_lambda_shared_utils import SlackClient
 
@@ -123,7 +123,7 @@ account_mappings = {
 slack = SlackClient(account_names=account_mappings)
 ```
 
-**Option 2: YAML config file (recommended)**
+#### Option 2: YAML config file (recommended)
 ```python
 from nui_lambda_shared_utils import SlackClient
 

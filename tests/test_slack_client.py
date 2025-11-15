@@ -691,6 +691,7 @@ class TestAccountNameConsistency:
         custom_accounts = {"999888777666": "MyCustomAccount"}
         slack = SlackClient(secret_name="test-secret", account_names=custom_accounts)
         result = slack.send_message("C123", "Test message")
+        assert result is True
 
         # Verify custom account name is used
         call_args = mock_client.chat_postMessage.call_args
@@ -737,6 +738,7 @@ account_names:
         # Create client with config file
         slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
         result = slack.send_message("C123", "Test message")
+        assert result is True
 
         # Verify YAML account name is used
         call_args = mock_client.chat_postMessage.call_args
