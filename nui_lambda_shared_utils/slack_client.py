@@ -5,10 +5,12 @@ Refactored Slack client using BaseClient for DRY code patterns.
 import os
 import logging
 from typing import List, Dict, Optional
+from pathlib import Path
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
 import json
+import yaml
 
 from .base_client import BaseClient, ServiceHealthMixin
 from .utils import create_aws_client, handle_client_errors
@@ -16,10 +18,10 @@ from .slack_formatter import format_nz_time
 
 log = logging.getLogger(__name__)
 
-# Centralized account ID mappings
-ACCOUNT_NAMES = {
+# Default account ID mappings (examples only - override via config in consuming lambdas)
+DEFAULT_ACCOUNT_NAMES = {
     "123456789012": "Production",
-    "234567890123": "Development", 
+    "234567890123": "Development",
     "345678901234": "Staging",
 }
 
@@ -29,18 +31,123 @@ class SlackClient(BaseClient, ServiceHealthMixin):
     Refactored Slack client with standardized patterns and reduced duplication.
     """
 
-    def __init__(self, secret_name: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        secret_name: Optional[str] = None,
+        account_names: Optional[Dict[str, str]] = None,
+        account_names_config: Optional[str] = None,
+        **kwargs
+    ):
         """
         Initialize Slack client with base class functionality.
-        
+
         Args:
             secret_name: Override default secret name
+            account_names: Dict mapping AWS account IDs to display names
+            account_names_config: Path to YAML file with account_names mapping
             **kwargs: Additional configuration options
+
+        Examples:
+            Basic initialization with defaults:
+                >>> slack = SlackClient()
+
+            With custom account names (programmatic):
+                >>> account_mappings = {
+                ...     "123456789012": "my-prod",
+                ...     "234567890123": "my-dev"
+                ... }
+                >>> slack = SlackClient(account_names=account_mappings)
+
+            With YAML config file (recommended for Lambdas):
+                >>> slack = SlackClient(account_names_config="slack_config.yaml")
+
+            Combined (YAML + runtime overrides):
+                >>> slack = SlackClient(
+                ...     account_names_config="slack_config.yaml",
+                ...     account_names={"999888777666": "temporary-dev"}
+                ... )
         """
         super().__init__(secret_name=secret_name, **kwargs)
-        
+
+        # Load account names from config file or use provided dict
+        self._account_names = self._load_account_names(account_names, account_names_config)
+
         # Collect Lambda context once during initialization
         self._lambda_context = self._collect_lambda_context()
+
+    def _load_account_names(
+        self,
+        account_names: Optional[Dict[str, str]],
+        config_path: Optional[str]
+    ) -> Dict[str, str]:
+        """
+        Load account name mappings from config file or dict.
+
+        Priority order (later overrides earlier):
+        1. DEFAULT_ACCOUNT_NAMES (built-in examples)
+        2. YAML config file (if provided)
+        3. Direct dict parameter (if provided)
+
+        Args:
+            account_names: Direct dict of account mappings
+            config_path: Path to YAML file with account_names mapping
+
+        Returns:
+            Dict mapping account IDs to display names
+
+        Raises:
+            No exceptions - failures are logged and defaults are used
+        """
+        # Start with defaults
+        mappings = DEFAULT_ACCOUNT_NAMES.copy()
+
+        # Load from config file if provided
+        if config_path:
+            try:
+                config_file = Path(config_path).resolve()
+
+                if not config_file.exists():
+                    log.debug(f"Account names config file not found: {config_path} (optional)")
+                    return mappings if not account_names else {**mappings, **account_names}
+
+                with open(config_file, 'r', encoding='utf-8') as f:
+                    config_data = yaml.safe_load(f)
+
+                    if config_data is None:
+                        log.warning(f"Account names config file is empty: {config_path}")
+                    elif not isinstance(config_data, dict):
+                        log.warning(f"Account names config file is not a valid YAML dict: {config_path}")
+                    elif 'account_names' not in config_data:
+                        log.warning(f"Account names config file missing 'account_names' key: {config_path}")
+                    elif not isinstance(config_data['account_names'], dict):
+                        log.warning(f"'account_names' must be a dict in config file: {config_path}")
+                    else:
+                        # Validate all keys and values are strings
+                        account_data = config_data['account_names']
+                        if all(isinstance(k, str) and isinstance(v, str) for k, v in account_data.items()):
+                            mappings.update(account_data)
+                            log.debug(f"Loaded {len(account_data)} account name(s) from {config_path}")
+                        else:
+                            log.warning(f"Account names config contains non-string keys/values: {config_path}")
+
+            except yaml.YAMLError as e:
+                log.warning(f"Invalid YAML in account names config {config_path}: {e}")
+            except (IOError, OSError) as e:
+                log.warning(f"Failed to read account names config {config_path}: {e}")
+            except Exception as e:
+                log.warning(f"Unexpected error loading account names config {config_path}: {e}")
+
+        # Override with direct dict if provided
+        if account_names:
+            if isinstance(account_names, dict) and all(
+                isinstance(k, str) and isinstance(v, str) for k, v in account_names.items()
+            ):
+                mappings.update(account_names)
+                log.debug(f"Applied {len(account_names)} custom account name mapping(s)")
+            else:
+                log.warning("account_names parameter must be Dict[str, str], ignoring")
+
+        return mappings
 
     def _get_default_config_prefix(self) -> str:
         """Return configuration prefix for Slack."""
@@ -81,8 +188,8 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             account_info = sts_client.get_caller_identity()
             context["aws_account_id"] = account_info.get("Account", "Unknown")
             context["aws_account_arn"] = account_info.get("Arn", "Unknown")
-            context["aws_account_name"] = ACCOUNT_NAMES.get(
-                context["aws_account_id"], 
+            context["aws_account_name"] = self._account_names.get(
+                context["aws_account_id"],
                 f"Unknown Account ({context['aws_account_id']})"
             )
         except Exception as e:
@@ -154,31 +261,17 @@ class SlackClient(BaseClient, ServiceHealthMixin):
     def _create_lambda_header_block(self) -> List[Dict]:
         """
         Create Lambda context header block.
-        
+
         Returns:
             List of Slack blocks for Lambda context
         """
-        # Determine environment and stage display
-        account_name = self._lambda_context["aws_account_name"]
-        if "Production" in account_name:
-            simple_account = "Production"
-            expected_stage = "prod"
-        elif "Development" in account_name:
-            simple_account = "Development"
-            expected_stage = "dev"
-        else:
-            simple_account = f"Unknown ({self._lambda_context['aws_account_id']})"
-            expected_stage = None
-
-        # Show stage only if it doesn't match environment
-        stage = self._lambda_context["stage"]
-        stage_suffix = ""
-        if expected_stage and stage != expected_stage:
-            stage_suffix = f" ({stage})"
+        # Get account name from configured mappings or show as Unknown
+        account_id = self._lambda_context['aws_account_id']
+        simple_account = self._account_names.get(account_id, f"Unknown ({account_id})")
 
         # Build header lines
-        line1 = f"🤖 `{self._lambda_context['function_name']}`{stage_suffix}"
-        line2 = f"📍 {simple_account} • {self._lambda_context['aws_region']} • Deployed: {self._lambda_context['deploy_time']}"
+        line1 = f"🤖 {self._lambda_context['function_name']}"
+        line2 = f"📍 {simple_account} ({account_id}) • {self._lambda_context['aws_region']}"
         line3 = f"📋 Log: `{self._lambda_context['log_group']}`"
 
         return [{
@@ -205,7 +298,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             username = "Unknown"
 
         timestamp = datetime.now(timezone.utc).strftime("%H:%M UTC")
-        account_name = ACCOUNT_NAMES.get(
+        account_name = self._account_names.get(
             self._lambda_context["aws_account_id"],
             f"Unknown ({self._lambda_context['aws_account_id']})"
         )

@@ -106,6 +106,38 @@ slack.reply_to_thread(
 )
 ```
 
+#### Configuring AWS Account Names
+
+By default, the library uses example account IDs for display. Lambda clients should configure their own AWS account name mappings for proper identification in Slack messages.
+
+**Option 1: Direct dictionary (programmatic)**
+```python
+from nui_lambda_shared_utils import SlackClient
+
+# Provide custom account mappings (replace with your AWS account IDs)
+account_mappings = {
+    "111222333444": "my-prod",
+    "555666777888": "my-dev"
+}
+
+slack = SlackClient(account_names=account_mappings)
+```
+
+**Option 2: YAML config file (recommended)**
+```python
+from nui_lambda_shared_utils import SlackClient
+
+# Copy docs/slack_config.yaml.template to your Lambda project
+# and customize with your AWS account IDs
+
+slack = SlackClient(account_names_config="slack_config.yaml")
+```
+
+**Benefits**:
+- Slack headers show meaningful account names instead of "Unknown"
+- Separate config files per Lambda service
+- No sensitive account IDs hardcoded in shared library
+
 ### Elasticsearch Operations
 
 ```python
