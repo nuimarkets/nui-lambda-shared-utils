@@ -1,115 +1,133 @@
-# Documentation Structure
+# Documentation
 
-This directory contains the complete documentation for `nui-lambda-shared-utils`.
+Welcome to the comprehensive documentation for `nui-lambda-shared-utils`.
 
-## Documentation Files
+**Last Updated**: 2025-01-17
 
-### Getting Started
-- [`index.md`](index.md) - Main documentation homepage
-- [`installation.md`](installation.md) - Installation and setup guide  
-- [`configuration.md`](configuration.md) - Configuration and credential management
-- [`quickstart.md`](quickstart.md) - Quick start examples and common patterns
+## Quick Navigation
 
-### Core Components
-- [`secrets.md`](secrets.md) - AWS Secrets Manager integration
-- [`slack.md`](slack.md) - Slack messaging and formatting
-- [`elasticsearch.md`](elasticsearch.md) - Elasticsearch operations and query building
-- [`database.md`](database.md) - Database connections and operations
-- [`metrics.md`](metrics.md) - CloudWatch metrics and monitoring
-- [`error-handling.md`](error-handling.md) - Error handling and retry patterns
-- [`timezone.md`](timezone.md) - Timezone utilities
+### 📚 Getting Started
+- **[Installation Guide](getting-started/installation.md)** - Setup and dependency management
+- **[Configuration Guide](getting-started/configuration.md)** - Environment setup and credential management
+- **[Quick Start](getting-started/quickstart.md)** - Common usage patterns and examples
 
-### Advanced Topics  
-- [`aws-infrastructure.md`](aws-infrastructure.md) - AWS resources and IAM requirements
-- [`testing.md`](testing.md) - Testing strategies and tools
-- [`lambda-integration.md`](lambda-integration.md) - Lambda-specific integration patterns
-- [`cli-tools.md`](cli-tools.md) - Command-line tools and utilities
+### 📖 Guides
+Component-specific guides for major features:
+- **[Slack Integration](guides/slack-integration.md)** - Messaging, formatting, and file uploads
+- Elasticsearch Operations (planned)
+- Database Connections (planned)
+- Error Handling Patterns (planned)
+- CloudWatch Metrics (planned)
 
-### Developer Resources
-- [`api/`](api/) - Complete API reference documentation
-- [`contributing.md`](contributing.md) - Development workflow and contributing guidelines
-- [`changelog.md`](changelog.md) - Version history and migration notes
-- [`troubleshooting.md`](troubleshooting.md) - Common issues and solutions
+### 📋 Reference
+API reference and detailed component documentation (planned):
+- Client APIs (planned)
+- Utility Functions (planned)
+- Configuration Options (planned)
 
-## Navigation
+### 🛠️ Development
+Developer resources and contribution guidelines:
+- **[Testing Guide](development/testing.md)** - Test strategies and running tests
+- [Contributing](../CONTRIBUTING.md) - Development workflow
+- [Changelog](../CHANGELOG.md) - Version history
 
-The documentation is organized to support different user journeys:
+### 📦 Templates
+- **[Slack Configuration Template](templates/slack_config.yaml.template)** - Slack workspace setup YAML
 
-**New Users**: Start with `index.md` → `installation.md` → `configuration.md` → `quickstart.md`
+### 📁 Archive
+Historical documentation and analysis:
+- [Test Coverage Analysis](archive/TEST_COVERAGE_ANALYSIS.md) (outdated - see actual coverage in CI)
+- [Lambda Shared Utils Analysis](archive/LAMBDA_SHARED_UTILS_ANALYSIS.md) (migration doc)
 
-**Integration Focus**: Jump to specific component docs (`slack.md`, `elasticsearch.md`, etc.)
+## Documentation Structure
 
-**Development**: See `contributing.md` → `testing.md` → `api/` reference
+```
+docs/
+├── README.md                    # This file - main documentation homepage
+├── getting-started/             # User onboarding
+│   ├── installation.md
+│   ├── configuration.md
+│   └── quickstart.md
+├── guides/                      # Component-specific how-to guides
+├── reference/                   # API reference documentation
+├── development/                 # Developer resources
+│   └── testing.md
+├── templates/                   # Configuration templates
+│   └── slack_config.yaml.template
+└── archive/                     # Outdated/historical docs
+    ├── TEST_COVERAGE_ANALYSIS.md
+    └── LAMBDA_SHARED_UTILS_ANALYSIS.md
+```
 
-**Deployment**: Review `aws-infrastructure.md` → `lambda-integration.md`
+## User Journeys
 
-## Viewing Documentation
+### New Users
+1. Start with this README for overview
+2. Follow [Installation Guide](getting-started/installation.md)
+3. Review [Configuration Guide](getting-started/configuration.md)
+4. Try examples in [Quick Start](getting-started/quickstart.md)
 
-### Local Development
+### Integration Focus
+- Jump to specific component guides (when available)
+- Reference [Configuration Guide](getting-started/configuration.md) for setup
+- Use [Quick Start](getting-started/quickstart.md) for code examples
 
-For local development, you can view the documentation by:
-
-1. **Markdown Viewers**: Most IDEs and editors can preview markdown files
-2. **Static Site Generators**: Use tools like MkDocs, Sphinx, or similar
-3. **GitHub**: The documentation renders automatically on GitHub
-
-### Online Documentation
-
-The documentation is available at:
-- GitHub Repository: https://github.com/nuimarkets/nui-lambda-shared-utils
-- Package Documentation: Linked from PyPI package page
+### Development Contributors
+1. Read [Contributing Guidelines](../CONTRIBUTING.md)
+2. Review [Testing Guide](development/testing.md)
+3. Check [Changelog](../CHANGELOG.md) for recent changes
 
 ## Contributing to Documentation
 
-When contributing to the documentation:
+When contributing to documentation:
 
-1. **Follow the existing structure** - Use consistent headers, formatting, and style
-2. **Include code examples** - Provide working code snippets where applicable
-3. **Cross-reference sections** - Link related topics and create clear navigation
-4. **Update multiple files** - Changes may require updates to several docs
-5. **Test examples** - Ensure all code examples work with the current version
+1. **Follow the structure** - Place new docs in appropriate directories
+2. **Include code examples** - Provide working, tested code snippets
+3. **Cross-reference** - Link related topics for easy navigation
+4. **Add to this README** - Update navigation when adding new docs
+5. **Test examples** - Ensure all code works with current version
+6. **Add last-updated dates** - Help users know doc freshness
 
-## Building Documentation
+## Documentation Status
 
-For generating static documentation sites:
+### ✅ Available
+- Main documentation (this README)
+- Getting started guides (installation, configuration, quickstart)
+- Slack integration guide (guides/slack-integration.md)
+- Testing guide (development/testing.md)
+- Slack configuration template
 
-### Using MkDocs
+### 🚧 Planned
+- Component-specific guides (Slack, Elasticsearch, Database, Metrics, Error Handling)
+- API reference documentation
+- Advanced topics (AWS infrastructure, Lambda integration)
+- Troubleshooting guide
 
+## Local Viewing
+
+### Markdown Viewers
+Most IDEs and editors can preview markdown files natively.
+
+### Static Site Generation (Optional)
+
+**Using MkDocs:**
 ```bash
-# Install MkDocs
 pip install mkdocs mkdocs-material
-
-# Create mkdocs.yml in project root
-# Build and serve
 mkdocs serve
 ```
 
-### Using Sphinx
-
+**Using Sphinx:**
 ```bash
-# Install Sphinx
 pip install sphinx sphinx-rtd-theme
-
-# Initialize Sphinx
 sphinx-quickstart docs
-
-# Build documentation
 make html
 ```
 
-The documentation files are written in standard Markdown format and should work with most documentation generators.
+## Online Documentation
 
-## Current Documentation Status
+- GitHub Repository: https://github.com/nuimarkets/nui-lambda-shared-utils
+- Package Page: https://pypi.org/project/nui-lambda-shared-utils/
 
-**Available Documentation:**
-- ✅ Main documentation (`index.md`)
-- ✅ Installation guide (`installation.md`) 
-- ✅ Configuration guide (`configuration.md`)
-- ✅ Quick start guide (`quickstart.md`)
+---
 
-**Planned Documentation:**
-- 🚧 Individual component guides (secrets, slack, elasticsearch, database, metrics, error-handling, timezone)
-- 🚧 Advanced topics (aws-infrastructure, testing, lambda-integration, cli-tools)
-- 🚧 Developer resources (api reference, contributing, changelog, troubleshooting)
-
-**Note:** Some documentation files referenced in the navigation are planned but not yet created. The core documentation (index, installation, configuration, quickstart) provides comprehensive coverage of the package functionality.
+*Documentation structure reorganized 2025-01-17 as part of project root improvements.*
