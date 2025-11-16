@@ -9,7 +9,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="nui-lambda-shared-utils",
-    version="1.0.0",
+    use_scm_version=True,
+    setup_requires=["setuptools-scm>=8.0"],
     author="NUI Markets",
     author_email="develop@nuimarkets.com",
     description="Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, and monitoring integrations",
