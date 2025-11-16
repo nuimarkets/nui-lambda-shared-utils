@@ -110,41 +110,40 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         if config_path:
             if not YAML_AVAILABLE:
                 log.warning("PyYAML not installed, cannot load config from YAML file")
-                return mappings if not account_names else {**mappings, **account_names}
+            else:
+                try:
+                    config_file = Path(config_path).resolve()
 
-            try:
-                config_file = Path(config_path).resolve()
-
-                if not config_file.exists():
-                    log.debug(f"Account names config file not found: {config_path} (optional)")
-                    return mappings if not account_names else {**mappings, **account_names}
-
-                with open(config_file, 'r', encoding='utf-8') as f:
-                    config_data = yaml.safe_load(f)
-
-                    if config_data is None:
-                        log.warning(f"Account names config file is empty: {config_path}")
-                    elif not isinstance(config_data, dict):
-                        log.warning(f"Account names config file is not a valid YAML dict: {config_path}")
-                    elif 'account_names' not in config_data:
-                        log.warning(f"Account names config file missing 'account_names' key: {config_path}")
-                    elif not isinstance(config_data['account_names'], dict):
-                        log.warning(f"'account_names' must be a dict in config file: {config_path}")
+                    if not config_file.exists():
+                        log.debug(f"Account names config file not found: {config_path} (optional)")
                     else:
-                        # Validate all keys and values are strings
-                        account_data = config_data['account_names']
-                        if all(isinstance(k, str) and isinstance(v, str) for k, v in account_data.items()):
-                            mappings.update(account_data)
-                            log.debug(f"Loaded {len(account_data)} account name(s) from {config_path}")
-                        else:
-                            log.warning(f"Account names config contains non-string keys/values: {config_path}")
+                        with open(config_file, 'r', encoding='utf-8') as f:
+                            config_data = yaml.safe_load(f)
 
-            except yaml.YAMLError as e:
-                log.warning(f"Invalid YAML in account names config {config_path}: {e}")
-            except (IOError, OSError) as e:
-                log.warning(f"Failed to read account names config {config_path}: {e}")
-            except Exception as e:
-                log.warning(f"Unexpected error loading account names config {config_path}: {e}")
+                        if config_data is None:
+                            log.warning(f"Account names config file is empty: {config_path}")
+                        elif not isinstance(config_data, dict):
+                            log.warning(f"Account names config file is not a valid YAML dict: {config_path}")
+                        elif 'account_names' not in config_data:
+                            log.warning(f"Account names config file missing 'account_names' key: {config_path}")
+                        elif not isinstance(config_data['account_names'], dict):
+                            log.warning(f"'account_names' must be a dict in config file: {config_path}")
+                        else:
+                            # Validate all keys and values are strings
+                            account_data = config_data['account_names']
+                            if all(isinstance(k, str) and isinstance(v, str) for k, v in account_data.items()):
+                                mappings.update(account_data)
+                                log.debug(f"Loaded {len(account_data)} account name(s) from {config_path}")
+                            else:
+                                log.warning(f"Account names config contains non-string keys/values: {config_path}")
+
+                except yaml.YAMLError as e:
+                    log.warning(f"Invalid YAML in account names config {config_path}: {e}")
+                except (IOError, OSError) as e:
+                    log.warning(f"Failed to read account names config {config_path}: {e}")
+                except Exception as e:
+                    # Defensive catch-all for config loading - noqa: BLE001
+                    log.warning(f"Unexpected error loading account names config {config_path}: {e}")
 
         # Override with direct dict if provided
         if account_names:
