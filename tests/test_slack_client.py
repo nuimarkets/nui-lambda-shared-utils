@@ -5,7 +5,7 @@ Tests for slack_client module.
 import pytest
 from unittest.mock import patch, Mock, MagicMock
 from slack_sdk.errors import SlackApiError
-from nui_lambda_shared_utils.slack_client import SlackClient, ACCOUNT_NAMES
+from nui_lambda_shared_utils.slack_client import SlackClient, DEFAULT_ACCOUNT_NAMES
 import os
 from datetime import datetime
 
@@ -318,6 +318,22 @@ class TestAddReaction:
 class TestLambdaContextHeader:
     """Tests for Lambda context header functionality."""
 
+    @staticmethod
+    def assert_header_format(header_text: str, expected_parts: dict):
+        """
+        Helper to assert header format with nice error messages.
+
+        Args:
+            header_text: Full header text from Slack block
+            expected_parts: Dict of expected values to check
+
+        Shows the full header on assertion failure for easy debugging.
+        """
+        failure_msg = f"\n\nFull header text:\n{header_text}\n\nExpected to contain: {expected_parts}\n"
+
+        for key, value in expected_parts.items():
+            assert value in header_text, f"{failure_msg}Missing {key}: {value}"
+
     @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
@@ -373,21 +389,17 @@ class TestLambdaContextHeader:
             assert header_block["type"] == "context"
             header_text = header_block["elements"][0]["text"]
 
-            # Check line 1 content - no stage shown for prod in prod
-            assert "🤖" in header_text  # AI robot emoji
-            assert "`test-function`" in header_text
-            assert "(prod)" not in header_text  # Stage not shown when it matches environment
-
-            # Check line 2 content
-            assert "📍" in header_text  # Location emoji
-            assert "Production" in header_text  # Simplified account name
-            assert "eu-west-1" in header_text
-            assert "Deployed:" in header_text
-
-            # Check line 3 content
-            assert "📋" in header_text  # Log emoji
-            assert "Log:" in header_text
-            assert "`/aws/lambda/test-function`" in header_text
+            # Use helper to check all expected parts
+            self.assert_header_format(header_text, {
+                "robot emoji": "🤖",
+                "function name": "test-function",
+                "location emoji": "📍",
+                "account name": "Production",
+                "account ID": "(123456789012)",
+                "region": "eu-west-1",
+                "log emoji": "📋",
+                "log group": "`/aws/lambda/test-function`"
+            })
 
     @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
@@ -439,14 +451,16 @@ class TestLambdaContextHeader:
             assert header_block["type"] == "context"
             header_text = header_block["elements"][0]["text"]
 
-            # Check emojis and content - no stage shown for dev in dev
-            assert "🤖" in header_text  # AI robot emoji
-            assert "`nui-service`" in header_text
-            assert "(dev)" not in header_text  # Stage not shown when it matches environment
-            assert "Development" in header_text  # Simplified account name
-            assert "ap-southeast-2" in header_text
-            assert "Unknown" in header_text  # Deploy time unknown due to error
-            assert "📋" in header_text  # Log emoji
+            # Use helper to check all expected parts
+            self.assert_header_format(header_text, {
+                "robot emoji": "🤖",
+                "function name": "nui-service",
+                "location emoji": "📍",
+                "account name": "Development",
+                "account ID": "(234567890123)",
+                "region": "ap-southeast-2",
+                "log emoji": "📋"
+            })
 
     @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
@@ -565,7 +579,7 @@ class TestLambdaContextHeader:
         {"AWS_LAMBDA_FUNCTION_NAME": "dev-test-function", "STAGE": "dev", "AWS_REGION": "eu-west-1"},  # Dev stage
     )
     def test_stage_mismatch_shown_in_header(self, mock_webclient, mock_get_secret, mock_boto3):
-        """Test that stage is shown when it doesn't match the environment."""
+        """Test that header shows account name regardless of stage env var."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
         mock_client = Mock()
         mock_webclient.return_value = mock_client
@@ -582,14 +596,15 @@ class TestLambdaContextHeader:
         slack = SlackClient(secret_name="test-secret")
         result = slack.send_message("C123", "Test message")
 
-        # Check header shows stage mismatch
+        # Check header shows account name only (not stage)
         call_args = mock_client.chat_postMessage.call_args
         blocks = call_args.kwargs.get("blocks", call_args[1].get("blocks"))
         header_block = blocks[0]
         header_text = header_block["elements"][0]["text"]
 
-        # Should show (dev) because it's a dev Lambda in prod account
-        assert "`dev-test-function` (dev)" in header_text
+        # Shared library doesn't interpret stage - just shows account name
+        assert "dev-test-function" in header_text
+        assert "(dev)" not in header_text  # No stage suffix
         assert "Production" in header_text
 
 
@@ -627,17 +642,219 @@ class TestAccountNameConsistency:
 
         assert "Development" in header_text
 
-    def test_account_names_constant(self):
-        """Test that ACCOUNT_NAMES constant contains expected mappings."""
+    def test_default_account_names_constant(self):
+        """Test that DEFAULT_ACCOUNT_NAMES constant contains only example mappings."""
         expected_accounts = {
             "123456789012": "Production",
             "234567890123": "Development",
             "345678901234": "Staging",
         }
 
-        assert ACCOUNT_NAMES == expected_accounts
+        assert DEFAULT_ACCOUNT_NAMES == expected_accounts
 
         # Verify example account IDs are present
-        assert ACCOUNT_NAMES["123456789012"] == "Production"
-        assert ACCOUNT_NAMES["234567890123"] == "Development"
-        assert ACCOUNT_NAMES["345678901234"] == "Staging"
+        assert DEFAULT_ACCOUNT_NAMES["123456789012"] == "Production"
+        assert DEFAULT_ACCOUNT_NAMES["234567890123"] == "Development"
+        assert DEFAULT_ACCOUNT_NAMES["345678901234"] == "Staging"
+
+        # Verify no real account IDs are hardcoded
+        assert "043836023178" not in DEFAULT_ACCOUNT_NAMES
+        assert "036220212417" not in DEFAULT_ACCOUNT_NAMES
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(
+        os.environ,
+        {
+            "AWS_LAMBDA_FUNCTION_NAME": "custom-function",
+            "AWS_LAMBDA_LOG_GROUP_NAME": "/aws/lambda/custom-function",
+            "AWS_REGION": "us-east-1",
+        },
+    )
+    def test_custom_account_names_via_dict(self, mock_webclient, mock_get_secret, mock_boto3):
+        """Test that clients can provide custom account name mappings via dict."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_client = Mock()
+        mock_webclient.return_value = mock_client
+        mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
+
+        # Mock custom account ID
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {
+            "Account": "999888777666",
+            "Arn": "arn:aws:sts::999888777666:assumed-role/test-role/custom-function",
+        }
+
+        # Create client with custom account names
+        custom_accounts = {"999888777666": "MyCustomAccount"}
+        slack = SlackClient(secret_name="test-secret", account_names=custom_accounts)
+        result = slack.send_message("C123", "Test message")
+        assert result is True
+
+        # Verify custom account name is used
+        call_args = mock_client.chat_postMessage.call_args
+        blocks = call_args.kwargs.get("blocks", call_args[1].get("blocks"))
+        header_text = blocks[0]["elements"][0]["text"]
+
+        assert "MyCustomAccount" in header_text
+        assert "(999888777666)" in header_text
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(
+        os.environ,
+        {
+            "AWS_LAMBDA_FUNCTION_NAME": "yaml-config-function",
+            "AWS_LAMBDA_LOG_GROUP_NAME": "/aws/lambda/yaml-config-function",
+            "AWS_REGION": "eu-central-1",
+        },
+    )
+    def test_custom_account_names_via_yaml(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+        """Test that clients can provide custom account name mappings via YAML config."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_client = Mock()
+        mock_webclient.return_value = mock_client
+        mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
+
+        # Mock custom account ID
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {
+            "Account": "111222333444",
+            "Arn": "arn:aws:sts::111222333444:assumed-role/test-role/yaml-config-function",
+        }
+
+        # Create YAML config file
+        config_file = tmp_path / "slack_config.yaml"
+        config_file.write_text("""
+account_names:
+  "111222333444": "YAMLConfiguredAccount"
+  "555666777888": "AnotherAccount"
+""")
+
+        # Create client with config file
+        slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+        result = slack.send_message("C123", "Test message")
+        assert result is True
+
+        # Verify YAML account name is used
+        call_args = mock_client.chat_postMessage.call_args
+        blocks = call_args.kwargs.get("blocks", call_args[1].get("blocks"))
+        header_text = blocks[0]["elements"][0]["text"]
+
+        assert "YAMLConfiguredAccount" in header_text
+        assert "(111222333444)" in header_text
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
+    def test_malformed_yaml_fallback_to_defaults(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+        """Test that malformed YAML falls back to defaults gracefully."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_webclient.return_value = Mock()
+
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
+
+        # Create malformed YAML file
+        config_file = tmp_path / "bad_config.yaml"
+        config_file.write_text("account_names: [this, is, not, a, dict]")
+
+        # Should initialize without error and use defaults
+        slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+
+        # Should fall back to default account name
+        assert slack._lambda_context["aws_account_name"] == "Production"  # From defaults
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
+    def test_empty_yaml_file_fallback(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+        """Test that empty YAML file falls back to defaults."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_webclient.return_value = Mock()
+
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {"Account": "234567890123"}
+
+        # Create empty YAML file
+        config_file = tmp_path / "empty_config.yaml"
+        config_file.write_text("")
+
+        slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+
+        # Should use default account name
+        assert slack._lambda_context["aws_account_name"] == "Development"
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
+    def test_missing_yaml_file_fallback(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+        """Test that missing YAML file falls back to defaults."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_webclient.return_value = Mock()
+
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {"Account": "345678901234"}
+
+        # Reference non-existent file
+        config_file = tmp_path / "nonexistent.yaml"
+
+        slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+
+        # Should use default account name
+        assert slack._lambda_context["aws_account_name"] == "Staging"
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
+    def test_invalid_account_names_type_ignored(self, mock_webclient, mock_get_secret, mock_boto3):
+        """Test that invalid account_names parameter type is ignored gracefully."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_webclient.return_value = Mock()
+
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
+
+        # Pass invalid type (list instead of dict)
+        slack = SlackClient(secret_name="test-secret", account_names=["not", "a", "dict"])
+
+        # Should use default account name, ignoring invalid parameter
+        assert slack._lambda_context["aws_account_name"] == "Production"
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
+    def test_yaml_with_non_string_values_ignored(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+        """Test that YAML with non-string values is validated and ignored."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_webclient.return_value = Mock()
+
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
+
+        # Create YAML with non-string values
+        config_file = tmp_path / "invalid_types.yaml"
+        config_file.write_text("""
+account_names:
+  "123456789012": 12345
+  "234567890123": true
+""")
+
+        slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+
+        # Should fall back to defaults due to type validation failure
+        assert slack._lambda_context["aws_account_name"] == "Production"

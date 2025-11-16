@@ -1,0 +1,22 @@
+# Slack Configuration Template for nui-lambda-shared-utils
+#
+# This file provides AWS account name mappings for Slack message headers.
+# Copy this file to your Lambda project and customize with your account IDs.
+#
+# Usage:
+#   from nui_lambda_shared_utils import SlackClient
+#   slack = SlackClient(account_names_config="slack_config.yaml")
+#
+# The SlackClient will use these mappings to show friendly account names
+# in Lambda context headers instead of "Unknown (123456789012)".
+
+account_names:
+  # Example mappings (replace with your actual AWS account IDs)
+  "123456789012": "Production"
+  "234567890123": "Development"
+  "345678901234": "Staging"
+
+  # Add your custom account mappings below:
+  # "111222333444": "my-prod"
+  # "555666777888": "my-dev"
+  # "999888777666": "my-staging"
