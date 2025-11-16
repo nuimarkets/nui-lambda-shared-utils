@@ -133,8 +133,8 @@ The package expects AWS secrets in specific JSON formats:
 
 ```json
 {
-  "bot_token": "xoxb-your-slack-bot-token",
-  "webhook_url": "https://hooks.slack.com/services/..."
+  "bot_token": "YOUR_SLACK_BOT_TOKEN_HERE",
+  "webhook_url": "YOUR_WEBHOOK_URL_HERE"
 }
 ```
 
@@ -162,7 +162,7 @@ aws secretsmanager create-secret \
 aws secretsmanager create-secret \
   --name "slack-credentials" \
   --description "Slack bot token for notifications" \
-  --secret-string '{"bot_token":"xoxb-your-token"}'
+  --secret-string '{"bot_token":"YOUR_SLACK_BOT_TOKEN_HERE"}'
 ```
 
 #### Using AWS Console

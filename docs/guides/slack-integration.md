@@ -1,0 +1,491 @@
+# Slack Integration Guide
+
+Comprehensive guide for using Slack messaging and formatting features in `nui-lambda-shared-utils`.
+
+**Last Updated**: 2025-01-17
+
+## Overview
+
+The package provides rich Slack integration through two main components:
+- **SlackClient** - Message sending, file uploads, threading
+- **SlackBlockBuilder** - Rich message formatting with Slack blocks
+
+## Quick Start
+
+```python
+import nui_lambda_shared_utils as nui
+
+# Configure Slack credentials
+nui.configure(slack_credentials_secret="prod/slack-token")
+
+# Send a simple message
+slack = nui.SlackClient()
+slack.send_message(
+    channel="#alerts",
+    text="Hello from Lambda!"
+)
+```
+
+## Configuration
+
+### AWS Secrets Manager Setup
+
+Create a secret with your Slack bot token:
+
+```bash
+aws secretsmanager create-secret \
+  --name "slack-credentials" \
+  --description "Slack bot token for Lambda notifications" \
+  --secret-string '{"bot_token":"YOUR_SLACK_BOT_TOKEN_HERE"}'
+```
+
+**Secret Format:**
+```json
+{
+  "bot_token": "YOUR_SLACK_BOT_TOKEN_HERE",
+  "webhook_url": "YOUR_WEBHOOK_URL_HERE"
+}
+```
+
+### Getting a Slack Bot Token
+
+1. Go to https://api.slack.com/apps
+2. Create a new app or select existing
+3. Navigate to "OAuth & Permissions"
+4. Add bot token scopes:
+   - `chat:write` - Send messages
+   - `files:write` - Upload files
+   - `channels:read` - List channels
+5. Install app to workspace
+6. Copy "Bot User OAuth Token" (starts with `xoxb-`)
+
+### Environment Configuration
+
+```python
+import os
+import nui_lambda_shared_utils as nui
+
+# Configure in Lambda handler
+stage = os.environ.get('STAGE', 'dev')
+nui.configure(slack_credentials_secret=f"{stage}/slack-token")
+```
+
+## Basic Messaging
+
+### Simple Text Messages
+
+```python
+from nui_lambda_shared_utils import SlackClient
+
+slack = SlackClient()
+
+# Basic message
+slack.send_message(
+    channel="#general",
+    text="Deployment completed successfully"
+)
+
+# Message with emoji
+slack.send_message(
+    channel="#alerts",
+    text=":white_check_mark: All tests passed"
+)
+```
+
+### Message Threading
+
+```python
+# Send initial message
+response = slack.send_message(
+    channel="#support",
+    text="New support ticket received"
+)
+
+# Reply in thread
+thread_ts = response['ts']
+slack.send_message(
+    channel="#support",
+    text="Ticket assigned to engineering team",
+    thread_ts=thread_ts
+)
+```
+
+### Direct Messages
+
+```python
+# Send to user by user ID
+slack.send_message(
+    channel="@U1234ABCD",  # Slack user ID
+    text="Your report is ready"
+)
+
+# Send to user by email (requires looking up user first)
+user = slack.get_user_by_email("user@example.com")
+slack.send_message(
+    channel=user['id'],
+    text="Direct message content"
+)
+```
+
+## Rich Message Formatting
+
+### Using SlackBlockBuilder
+
+```python
+from nui_lambda_shared_utils import SlackClient, SlackBlockBuilder
+
+slack = SlackClient()
+builder = SlackBlockBuilder()
+
+# Build message blocks
+blocks = (builder
+    .add_header("Deployment Status", emoji=":rocket:")
+    .add_context("Production deployment completed at 14:30 NZDT")
+    .add_divider()
+    .add_section("Summary", "All services deployed successfully")
+    .add_fields([
+        ("Services", "3"),
+        ("Duration", "5 minutes"),
+        ("Status", ":white_check_mark: Success")
+    ])
+    .build()
+)
+
+# Send formatted message
+slack.send_message(channel="#deployments", blocks=blocks)
+```
+
+### Block Types
+
+#### Header Block
+
+```python
+builder.add_header("Title Text", emoji=":tada:")
+```
+
+#### Section Block
+
+```python
+# Simple section
+builder.add_section("Section Title", "Section content goes here")
+
+# Section with markdown
+builder.add_section(
+    "Error Details",
+    "*Function*: `process_orders`\n*Error*: `Connection timeout`"
+)
+```
+
+#### Fields Block
+
+```python
+# Multiple fields in columns
+builder.add_fields([
+    ("Label 1", "Value 1"),
+    ("Label 2", "Value 2"),
+    ("Label 3", "Value 3"),
+])
+```
+
+#### Context Block
+
+```python
+# Smaller, lighter text
+builder.add_context("Last updated: 2025-01-17 14:30 NZDT")
+```
+
+#### Divider
+
+```python
+# Visual separator
+builder.add_divider()
+```
+
+## Advanced Examples
+
+### Lambda Execution Report
+
+```python
+import nui_lambda_shared_utils as nui
+from datetime import datetime
+
+def send_execution_report(event, context, results):
+    """Send detailed Lambda execution report to Slack."""
+    slack = nui.SlackClient()
+    builder = nui.SlackBlockBuilder()
+
+    # Determine status emoji
+    status_emoji = ":white_check_mark:" if results['success'] else ":x:"
+
+    blocks = (builder
+        .add_header(f"{status_emoji} Lambda Execution Report")
+        .add_context(f"Function: {context.function_name} | Request ID: {context.request_id}")
+        .add_divider()
+        .add_fields([
+            ("Records Processed", str(results['processed'])),
+            ("Errors", str(results['errors'])),
+            ("Execution Time", f"{results['duration']:.2f}ms"),
+            ("Memory Used", f"{results['memory_mb']}MB")
+        ])
+        .add_section("Details", results.get('details', 'No additional details'))
+        .build()
+    )
+
+    slack.send_message(
+        channel="#lambda-executions",
+        blocks=blocks
+    )
+```
+
+### Error Alerts with Details
+
+```python
+import traceback
+import nui_lambda_shared_utils as nui
+
+def send_error_alert(error: Exception, context: dict):
+    """Send detailed error alert to Slack."""
+    slack = nui.SlackClient()
+    builder = nui.SlackBlockBuilder()
+
+    error_details = "".join(traceback.format_exception(
+        type(error), error, error.__traceback__
+    ))
+
+    blocks = (builder
+        .add_header(":rotating_light: Lambda Error", emoji=":rotating_light:")
+        .add_context(f"Occurred at {nui.format_nz_time()}")
+        .add_divider()
+        .add_fields([
+            ("Function", context.get('function_name', 'Unknown')),
+            ("Error Type", type(error).__name__),
+            ("Environment", context.get('environment', 'Unknown'))
+        ])
+        .add_section("Error Message", f"```{str(error)}```")
+        .build()
+    )
+
+    # Send to alerts channel
+    response = slack.send_message(
+        channel="#alerts-critical",
+        blocks=blocks
+    )
+
+    # Add stack trace in thread to avoid clutter
+    slack.send_message(
+        channel="#alerts-critical",
+        text=f"```{error_details}```",
+        thread_ts=response['ts']
+    )
+```
+
+### Data Processing Summary
+
+```python
+import nui_lambda_shared_utils as nui
+
+def send_processing_summary(stats: dict):
+    """Send data processing summary with metrics."""
+    slack = nui.SlackClient()
+    builder = nui.SlackBlockBuilder()
+
+    success_rate = (stats['successful'] / stats['total']) * 100
+
+    blocks = (builder
+        .add_header("Data Processing Complete", emoji=":bar_chart:")
+        .add_context(f"Batch processed at {nui.format_nz_time()}")
+        .add_divider()
+        .add_fields([
+            ("Total Records", nui.format_number(stats['total'])),
+            ("Successful", nui.format_number(stats['successful'])),
+            ("Failed", nui.format_number(stats['failed'])),
+            ("Success Rate", nui.format_percentage(success_rate))
+        ])
+        .add_section(
+            "Performance",
+            f"Processed {stats['records_per_second']:.1f} records/sec"
+        )
+        .build()
+    )
+
+    slack.send_message(channel="#data-pipeline", blocks=blocks)
+```
+
+## File Uploads
+
+```python
+from nui_lambda_shared_utils import SlackClient
+
+slack = SlackClient()
+
+# Upload file from path
+slack.upload_file(
+    channels="#reports",
+    file_path="/tmp/report.csv",
+    title="Daily Sales Report",
+    initial_comment="Today's sales data attached"
+)
+
+# Upload file content directly
+csv_content = "name,value\nItem 1,100\nItem 2,200"
+slack.upload_file(
+    channels="#reports",
+    content=csv_content.encode(),
+    filename="sales_summary.csv",
+    title="Sales Summary"
+)
+```
+
+## Channel Management
+
+```python
+slack = SlackClient()
+
+# List all channels
+channels = slack.list_channels()
+for channel in channels:
+    print(f"{channel['name']}: {channel['id']}")
+
+# Find channel by name
+channel_id = slack.get_channel_id("general")
+
+# Get channel info
+info = slack.get_channel_info("C1234567890")
+```
+
+## Error Handling
+
+### Retry Logic
+
+```python
+from nui_lambda_shared_utils import with_retry, SlackClient
+
+@with_retry(max_attempts=3, backoff_factor=2)
+def send_critical_alert(message: str):
+    """Send message with automatic retry on failure."""
+    slack = SlackClient()
+    slack.send_message(channel="#alerts", text=message)
+```
+
+### Graceful Degradation
+
+```python
+from nui_lambda_shared_utils import SlackClient
+
+def notify_with_fallback(message: str):
+    """Try Slack notification with fallback to logging."""
+    try:
+        slack = SlackClient()
+        slack.send_message(channel="#notifications", text=message)
+    except Exception as e:
+        # Fallback to CloudWatch logs
+        print(f"Slack notification failed: {e}")
+        print(f"Message content: {message}")
+```
+
+## Best Practices
+
+### 1. Use Environment-Based Configuration
+
+```python
+import os
+import nui_lambda_shared_utils as nui
+
+stage = os.environ.get('STAGE', 'dev')
+nui.configure(slack_credentials_secret=f"{stage}/slack")
+```
+
+### 2. Channel Naming Conventions
+
+- `#alerts-critical` - Production issues requiring immediate attention
+- `#alerts` - General alerts and warnings
+- `#deployments` - Deployment notifications
+- `#data-pipeline` - Data processing updates
+- `#lambda-executions` - Lambda execution reports
+
+### 3. Rate Limiting Awareness
+
+Slack has rate limits:
+- ~1 message per second per channel
+- Burst allowance available
+- Use threading for related messages
+
+```python
+# Good: Use threading for related messages
+response = slack.send_message(channel="#support", text="Main message")
+slack.send_message(channel="#support", text="Details", thread_ts=response['ts'])
+
+# Avoid: Flooding channel with sequential messages
+for item in items:  # Could hit rate limit
+    slack.send_message(channel="#notifications", text=item)
+```
+
+### 4. Message Formatting
+
+- Use emoji for visual cues (`:white_check_mark:`, `:x:`, `:warning:`)
+- Format code with backticks: `` `function_name` ``
+- Use code blocks for stack traces: ``` ```error details``` ```
+- Keep messages concise and scannable
+
+### 5. Testing
+
+```python
+# Mock Slack client for testing
+from unittest.mock import Mock, patch
+
+@patch('nui_lambda_shared_utils.SlackClient')
+def test_notification_logic(mock_slack):
+    """Test notification without actually sending to Slack."""
+    mock_client = Mock()
+    mock_slack.return_value = mock_client
+
+    # Your code that uses SlackClient
+    send_notification("test message")
+
+    # Verify it was called correctly
+    mock_client.send_message.assert_called_once_with(
+        channel="#test",
+        text="test message"
+    )
+```
+
+## Troubleshooting
+
+### Common Issues
+
+#### Authentication Errors
+
+**Error:** `invalid_auth`
+
+**Solutions:**
+- Verify bot token in AWS Secrets Manager
+- Check token starts with `xoxb-`
+- Ensure bot is installed to workspace
+
+#### Channel Not Found
+
+**Error:** `channel_not_found`
+
+**Solutions:**
+- Verify channel name (include `#` for public channels)
+- Check bot has been invited to private channels
+- Use channel ID instead of name
+
+#### Missing Scopes
+
+**Error:** `missing_scope`
+
+**Solutions:**
+- Add required OAuth scopes in Slack app settings
+- Reinstall app to workspace after adding scopes
+- Common scopes: `chat:write`, `files:write`, `channels:read`
+
+## Resources
+
+- [Slack Block Kit Builder](https://app.slack.com/block-kit-builder/) - Visual block designer
+- [Slack API Documentation](https://api.slack.com/)
+- [Slack Emoji Reference](https://www.webfx.com/tools/emoji-cheat-sheet/)
+
+---
+
+*For more examples, see [Quick Start Guide](../getting-started/quickstart.md)*

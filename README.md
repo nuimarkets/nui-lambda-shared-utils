@@ -6,6 +6,19 @@
 
 Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, and monitoring integrations. This package provides standardized, production-ready patterns for common serverless operations while maintaining flexibility and configurability.
 
+## Table of Contents
+
+- [Key Features](#key-features)
+- [Documentation](#documentation)
+- [Quick Start](#quick-start)
+- [Usage Examples](#usage-examples)
+- [Configuration](#configuration)
+- [AWS Infrastructure Requirements](#aws-infrastructure-requirements)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [Documentation & Support](#documentation--support)
+- [License](#license)
+
 ## Key Features
 
 - **AWS Secrets Manager Integration** - Secure credential management with caching
@@ -16,6 +29,18 @@ Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, a
 - **Error Handling** - Intelligent retry patterns with exponential backoff
 - **Timezone Utilities** - Timezone handling and formatting
 - **Configurable Defaults** - Environment-aware configuration system
+
+## Documentation
+
+**New to this package?** Start with our comprehensive guides:
+
+- **[Quick Start Guide](docs/getting-started/quickstart.md)** - Common patterns and complete examples
+- **[Installation Guide](docs/getting-started/installation.md)** - Setup and dependency management
+- **[Configuration Guide](docs/getting-started/configuration.md)** - Environment setup and AWS Secrets
+- **[Slack Integration Guide](docs/guides/slack-integration.md)** - Messaging, blocks, threading, and files
+- **[Testing Guide](docs/development/testing.md)** - Test strategies and coverage
+
+**Complete documentation**: See [docs/](docs/README.md) for all guides and references.
 
 ## Quick Start
 
@@ -48,208 +73,125 @@ nui.configure(
 # ES_HOST, ES_CREDENTIALS_SECRET, SLACK_CREDENTIALS_SECRET, etc.
 ```
 
+## What's Next?
+
+After installing the package:
+
+1. **Configuration** → Set up environment variables or programmatic config ([guide](docs/getting-started/configuration.md))
+2. **AWS Setup** → Configure Secrets Manager and IAM permissions ([guide](docs/getting-started/configuration.md#aws-infrastructure))
+3. **Integration** → Choose your integration and follow the detailed guide:
+   - [Slack Integration](docs/guides/slack-integration.md) - Messaging, formatting, file uploads
+   - [Elasticsearch Operations](docs/getting-started/quickstart.md#elasticsearch-operations) - Query builders and search
+   - [Database Connections](docs/getting-started/quickstart.md#database-connections) - Connection pooling and queries
+   - [CloudWatch Metrics](docs/getting-started/quickstart.md#cloudwatch-metrics) - Performance tracking
+4. **Testing** → Learn testing strategies ([guide](docs/development/testing.md))
+
+**Complete documentation**: [docs/](docs/README.md)
+
 ## Usage Examples
+
+Below are minimal examples to get you started. **For complete examples and detailed usage, see [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md)**.
 
 ### Secrets Management
 
 ```python
-from nui_lambda_shared_utils import get_secret, get_slack_credentials, get_database_credentials
+from nui_lambda_shared_utils import get_secret, get_slack_credentials
 
 # Generic secret retrieval
 api_keys = get_secret("my-service/api-keys")
 
 # Specialized getters with normalized field names
 slack_creds = get_slack_credentials()  # Uses configured secret name
-db_creds = get_database_credentials()  # Standardized: host, port, username, password, database
 ```
+
+**[→ See full secrets management guide](docs/getting-started/configuration.md#aws-secrets-manager)**
 
 ### Slack Integration
 
 ```python
 from nui_lambda_shared_utils import SlackClient, SlackBlockBuilder
 
-# Initialize client
 slack = SlackClient()
 
 # Simple message
-response = slack.send_message(
-    channel='#alerts',
-    text='Service deployment complete'
-)
+slack.send_message(channel='#alerts', text='Service deployment complete')
 
 # Rich formatted message with blocks
 builder = SlackBlockBuilder()
-blocks = (builder
-    .add_header("Production Alert", emoji="warning")
-    .add_section("Error Rate", "15.2% (above 10% threshold)")
-    .add_section("Time Range", "Last 10 minutes")
-    .add_divider()
-    .add_context("Alert ID: PROD-2025-001")
-    .build()
-)
-
+blocks = builder.add_header("Alert", emoji="warning").add_section("Status", "Active").build()
 slack.send_message(channel='#incidents', blocks=blocks)
-
-# File upload
-slack.send_file(
-    channel='#reports',
-    content='Daily metrics...',
-    filename='metrics-2025-01-05.csv',
-    title='Daily Metrics Report'
-)
-
-# Thread reply
-slack.reply_to_thread(
-    channel='#incidents',
-    thread_ts='1735689600.123',
-    text='Issue resolved!'
-)
 ```
 
-#### Configuring AWS Account Names
-
-By default, the library uses example account IDs for display. Lambda clients should configure their own AWS account name mappings for proper identification in Slack messages.
-
-#### Option 1: Direct dictionary (programmatic)
-```python
-from nui_lambda_shared_utils import SlackClient
-
-# Provide custom account mappings (replace with your AWS account IDs)
-account_mappings = {
-    "111222333444": "my-prod",
-    "555666777888": "my-dev"
-}
-
-slack = SlackClient(account_names=account_mappings)
-```
-
-#### Option 2: YAML config file (recommended)
-```python
-from nui_lambda_shared_utils import SlackClient
-
-# Copy docs/slack_config.yaml.template to your Lambda project
-# and customize with your AWS account IDs
-
-slack = SlackClient(account_names_config="slack_config.yaml")
-```
-
-**Benefits**:
-- Slack headers show meaningful account names instead of "Unknown"
-- Separate config files per Lambda service
-- No sensitive account IDs hardcoded in shared library
+**[→ See comprehensive Slack integration guide](docs/guides/slack-integration.md)**
 
 ### Elasticsearch Operations
 
 ```python
 from nui_lambda_shared_utils import ElasticsearchClient, ESQueryBuilder
 
-# Initialize client
 es = ElasticsearchClient()
-
-# Query builder for complex searches
 query_builder = ESQueryBuilder()
-query = (query_builder
-    .date_range("@timestamp", "now-1h", "now")
-    .term("level", "ERROR")
-    .wildcard("message", "*timeout*")
-    .build()
-)
-
+query = query_builder.date_range("@timestamp", "now-1h", "now").term("level", "ERROR").build()
 results = es.search(index="logs-*", body={"query": query})
-
-# Built-in query helpers
-error_stats = es.get_error_stats(
-    index="application-logs", 
-    time_range="1h",
-    service_filter="payment-service"
-)
 ```
+
+**[→ See full Elasticsearch guide](docs/getting-started/quickstart.md#elasticsearch-operations)**
 
 ### Database Connections
 
 ```python
 from nui_lambda_shared_utils import DatabaseClient
 
-# Initialize with connection pooling
 db = DatabaseClient()
 
-# Execute queries with automatic retry
+# Execute queries with automatic retry and connection pooling
 async with db.get_connection() as conn:
-    results = await conn.execute(
-        "SELECT * FROM orders WHERE created_at > %s",
-        [datetime.now() - timedelta(hours=1)]
-    )
-
-# Bulk operations
-records = [{"id": 1, "name": "Item 1"}, {"id": 2, "name": "Item 2"}]
-db.bulk_insert("items", records)
+    results = await conn.execute("SELECT * FROM orders WHERE status = %s", ["confirmed"])
 ```
+
+**[→ See full database guide](docs/getting-started/quickstart.md#database-connections)**
 
 ### CloudWatch Metrics
 
 ```python
-from nui_lambda_shared_utils import MetricsPublisher, StandardMetrics
+from nui_lambda_shared_utils import MetricsPublisher, track_lambda_performance
 
-# Initialize publisher
 metrics = MetricsPublisher(namespace="MyApplication")
 
-# Individual metrics
-metrics.put_metric("ProcessedItems", 150, "Count")
-metrics.put_metric("ResponseTime", 245.5, "Milliseconds")
-
-# Batch publishing (more efficient)
-metrics.batch_publish([
-    StandardMetrics.count("Errors", 3),
-    StandardMetrics.duration("ProcessingTime", 1.2),
-    StandardMetrics.gauge("QueueSize", 45)
-])
-
-# Decorator for Lambda performance tracking
 @track_lambda_performance(metrics)
 def lambda_handler(event, context):
-    # Your Lambda logic here
+    metrics.put_metric("ProcessedItems", 150, "Count")
     return {"statusCode": 200}
 ```
+
+**[→ See full metrics guide](docs/getting-started/quickstart.md#cloudwatch-metrics)**
 
 ### Error Handling
 
 ```python
-from nui_lambda_shared_utils import with_retry, retry_on_network_error, handle_lambda_error
+from nui_lambda_shared_utils import with_retry, handle_lambda_error
 
-# Automatic retry with exponential backoff
-@retry_on_network_error
-def call_external_api():
-    response = requests.get("https://api.external-service.com/data")
-    return response.json()
-
-# Custom retry configuration
-@with_retry(max_attempts=5, initial_delay=2.0)
-def critical_operation():
-    # Operation that might fail
-    return perform_critical_task()
-
-# Lambda error handling wrapper
 @handle_lambda_error
+@with_retry(max_attempts=3)
 def lambda_handler(event, context):
-    # Your Lambda logic here
-    return {"statusCode": 200, "body": "Success"}
+    # Your Lambda logic with automatic error handling and retries
+    return {"statusCode": 200}
 ```
+
+**[→ See full error handling guide](docs/getting-started/quickstart.md#error-handling)**
 
 ## Configuration
 
-The package supports multiple configuration methods:
+The package supports multiple configuration methods. **For detailed configuration options, see [docs/getting-started/configuration.md](docs/getting-started/configuration.md)**.
 
 ### Environment Variables
 
 ```bash
-# Core settings
 ES_HOST=localhost:9200                    # Elasticsearch host
-ES_CREDENTIALS_SECRET=elasticsearch-creds # AWS secret name for ES credentials
-DB_CREDENTIALS_SECRET=database-creds      # AWS secret name for DB credentials
-SLACK_CREDENTIALS_SECRET=slack-bot-token  # AWS secret name for Slack token
-
-# AWS settings
-AWS_REGION=us-east-1                      # AWS region for services
+ES_CREDENTIALS_SECRET=elasticsearch-creds # AWS secret name for ES
+DB_CREDENTIALS_SECRET=database-creds      # AWS secret name for database
+SLACK_CREDENTIALS_SECRET=slack-bot-token  # AWS secret name for Slack
+AWS_REGION=us-east-1                      # AWS region
 ```
 
 ### Programmatic Configuration
@@ -257,96 +199,50 @@ AWS_REGION=us-east-1                      # AWS region for services
 ```python
 import nui_lambda_shared_utils as nui
 
-# Configure all at once
-config = nui.Config(
-    es_host="prod-elastic:9200",
-    es_credentials_secret="prod/elasticsearch",
-    db_credentials_secret="prod/database",
-    slack_credentials_secret="prod/slack",
-    aws_region="us-west-2"
-)
-nui.set_config(config)
-
-# Or configure specific settings
 nui.configure(
     es_host="localhost:9200",
     slack_credentials_secret="dev/slack-token"
 )
 ```
 
+**[→ See complete configuration guide](docs/getting-started/configuration.md)**
+
 ## AWS Infrastructure Requirements
 
-This package expects certain AWS resources to be available:
+This package requires AWS Secrets Manager for credential storage and IAM permissions for CloudWatch metrics.
 
-### Secrets Manager
+**For detailed AWS setup instructions, see [docs/getting-started/configuration.md#aws-infrastructure](docs/getting-started/configuration.md)**.
 
-Create secrets with these structures:
+### Quick Reference
 
-```json
-// Elasticsearch credentials
-{
-  "host": "your-elasticsearch-host:9200",
-  "username": "elastic", 
-  "password": "your-password"
-}
+**Secrets Manager** - Store credentials as JSON:
+- Elasticsearch: `{"host": "...", "username": "...", "password": "..."}`
+- Database: `{"host": "...", "port": 3306, "username": "...", "password": "...", "database": "..."}`
+- Slack: `{"bot_token": "xoxb-...", "webhook_url": "..."}`
 
-// Database credentials
-{
-  "host": "your-db-host",
-  "port": 3306,
-  "username": "dbuser",
-  "password": "dbpassword", 
-  "database": "your_database"
-}
+**IAM Permissions** - Lambda execution role needs:
+- `secretsmanager:GetSecretValue` for credential access
+- `cloudwatch:PutMetricData` for metrics publishing
 
-// Slack credentials
-{
-  "bot_token": "xoxb-your-slack-bot-token",
-  "webhook_url": "https://hooks.slack.com/..." // optional
-}
-```
-
-### IAM Permissions
-
-Your Lambda execution role needs:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "secretsmanager:GetSecretValue"
-      ],
-      "Resource": "arn:aws:secretsmanager:*:*:secret:your-secret-*"
-    },
-    {
-      "Effect": "Allow", 
-      "Action": [
-        "cloudwatch:PutMetricData"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
+**[→ See complete AWS infrastructure guide](docs/getting-started/configuration.md#aws-infrastructure)**
 
 ## Testing
+
+**For comprehensive testing guide, see [docs/development/testing.md](docs/development/testing.md)**.
 
 ```bash
 # Install with dev dependencies
 pip install nui-lambda-shared-utils[dev]
 
-# Run tests
+# Run all tests
 pytest
 
-# Run tests with coverage
+# Run with coverage
 pytest --cov=nui_lambda_shared_utils --cov-report=html
 
 # Run specific test categories
-pytest -m unit      # Unit tests only
-pytest -m integration  # Integration tests (requires AWS access)
+pytest -m unit           # Unit tests only
+pytest -m integration    # Integration tests (requires AWS)
 ```
 
 ## Contributing
@@ -359,9 +255,23 @@ pytest -m integration  # Integration tests (requires AWS access)
 
 ## Documentation & Support
 
+### 📚 Documentation
+- **[Complete Documentation](docs/README.md)** - Comprehensive guides and references
+- **[Quick Start Guide](docs/getting-started/quickstart.md)** - Get up and running fast
+- **[Configuration Guide](docs/getting-started/configuration.md)** - Setup and AWS integration
+- **[Slack Integration Guide](docs/guides/slack-integration.md)** - Detailed Slack features
+- **[Testing Guide](docs/development/testing.md)** - Test strategies and coverage
+
+### 🔗 Links
 - **GitHub Repository**: https://github.com/nuimarkets/nui-lambda-shared-utils
 - **Issue Tracker**: https://github.com/nuimarkets/nui-lambda-shared-utils/issues
 - **PyPI Package**: https://pypi.org/project/nui-lambda-shared-utils/
+- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+
+### 💬 Support
+- **Bug Reports**: [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
+- **Feature Requests**: [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
+- **Questions**: Check [docs/](docs/README.md) first, then open an issue
 
 ## License
 

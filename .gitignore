@@ -73,11 +73,11 @@ temp*
 tmp/
 
 # Project-specific
-TODO.mdtest_env/
-*.egg-info/
-__pycache__/
-.coverage
-htmlcov/
 test_env/
-*.egg-info/
-htmlcov/
+TODO.md
+CHANGELOG.md
+
+# Documentation
+docs/archive/
+
+

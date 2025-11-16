@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Quick Links
+
+📚 **Documentation**: See [docs/README.md](docs/README.md) for comprehensive guides
+- [Quick Start Guide](docs/getting-started/quickstart.md) - Usage patterns and examples
+- [Configuration Guide](docs/getting-started/configuration.md) - Environment setup and credentials
+- [Slack Integration](docs/guides/slack-integration.md) - Messaging, formatting, and file uploads
+- [Testing Guide](docs/development/testing.md) - Test strategies and coverage
+
+🔧 **Development**: Jump to [Development Commands](#development-commands) below
+
+## Navigation Guide
+
+**Are you...**
+- 🆕 **New to this package?** → Start with [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md)
+- 🔧 **Contributing code?** → See [Development Commands](#development-commands) below
+- 🧪 **Writing tests?** → See [docs/development/testing.md](docs/development/testing.md)
+- 📦 **Deploying/publishing?** → See [Package Building](#package-building-and-publishing) below
+- 💬 **Integrating Slack?** → See [docs/guides/slack-integration.md](docs/guides/slack-integration.md)
+
 ## Project Overview
 
 This is `nui-lambda-shared-utils`, a Python package providing enterprise-grade utilities for AWS Lambda functions. It offers standardized integrations for Slack, Elasticsearch, database operations, CloudWatch metrics, and error handling patterns commonly used across NUI platform Lambda services.
@@ -48,6 +67,9 @@ source venv/bin/activate  # Linux/Mac
 ```
 
 ### Testing
+
+**See [docs/development/testing.md](docs/development/testing.md) for comprehensive testing guide**
+
 ```bash
 # Run all tests
 pytest
@@ -83,6 +105,9 @@ black --check nui_lambda_shared_utils/
 ```
 
 ### Package Building and Publishing
+
+**See [docs/getting-started/installation.md](docs/getting-started/installation.md) for installation details**
+
 ```bash
 # Build package
 python -m build
@@ -134,43 +159,29 @@ nui.set_config(config)
 
 ## Common Usage Patterns
 
-### Error Handling with Decorators
+For detailed usage examples and integration patterns, see:
+- **[Quick Start Guide](docs/getting-started/quickstart.md)** - Common usage patterns for all components
+- **[Slack Integration Guide](docs/guides/slack-integration.md)** - Slack messaging, blocks, threading, and file uploads
+- **[Configuration Guide](docs/getting-started/configuration.md)** - Environment setup and AWS Secrets integration
+
+### Quick Reference
+
 ```python
-from nui_lambda_shared_utils import with_retry, handle_lambda_error
+# See docs/getting-started/quickstart.md for complete examples
+from nui_lambda_shared_utils import SlackClient, MetricsPublisher, with_retry
 
-@handle_lambda_error
-@with_retry(max_attempts=3)
-def lambda_handler(event, context):
-    # Lambda logic with automatic error handling and retries
-    pass
-```
-
-### Metrics Publishing
-```python
-from nui_lambda_shared_utils import MetricsPublisher, track_lambda_performance
-
-metrics = MetricsPublisher(namespace="MyService")
-
-@track_lambda_performance(metrics)
-def lambda_handler(event, context):
-    # Automatically tracked performance metrics
-    metrics.put_metric("ProcessedItems", len(items), "Count")
-```
-
-### Slack Integration
-```python
-from nui_lambda_shared_utils import SlackClient, SlackBlockBuilder
-
+# Slack messaging with rich formatting
 slack = SlackClient()
-builder = SlackBlockBuilder()
+slack.send_message(channel="#alerts", text="Alert message")
 
-blocks = (builder
-    .add_header("Alert", emoji="warning")
-    .add_section("Status", "Error detected")
-    .build()
-)
+# CloudWatch metrics publishing
+metrics = MetricsPublisher(namespace="MyService")
+metrics.put_metric("ProcessedItems", count, "Count")
 
-slack.send_message(channel="#alerts", blocks=blocks)
+# Error handling with automatic retries
+@with_retry(max_attempts=3)
+def critical_operation():
+    pass
 ```
 
 ## Testing Strategy
@@ -216,3 +227,22 @@ The package is designed to work well in Lambda layers for sharing across multipl
 - Automatic AWS region detection
 - Secrets Manager integration with credential caching
 - CloudWatch metrics with proper dimensions
+
+## Documentation Organization
+
+This project follows a clear documentation structure:
+
+- **[CLAUDE.md](CLAUDE.md)** (this file) - Development workflows, commands, testing strategies
+- **[README.md](README.md)** - User-facing PyPI package description with quick start examples
+- **[docs/](docs/README.md)** - Comprehensive usage guides and references
+  - `getting-started/` - Installation, configuration, quick start patterns
+  - `guides/` - Component-specific how-to guides (Slack, ES, Database, etc.)
+  - `development/` - Testing strategies, contributing guidelines
+  - `templates/` - Configuration file templates (Slack setup YAML)
+  - `archive/` - Historical documentation and migration notes
+
+**For Claude Code users**: The docs/ directory contains detailed usage patterns,
+configuration examples, and integration guides that complement these development instructions.
+
+**For new package users**: Start with [docs/getting-started/quickstart.md](docs/getting-started/quickstart.md)
+for working code examples and common patterns.

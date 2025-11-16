@@ -145,8 +145,8 @@ def client_contract(request):
     return request.param
 
 
-# Test implementation for BaseClient
-class TestBaseClient(BaseClient):
+# Concrete implementation for BaseClient testing
+class ConcreteBaseClient(BaseClient):
     """Concrete implementation of BaseClient for testing."""
 
     def _get_default_config_prefix(self) -> str:
@@ -159,7 +159,7 @@ class TestBaseClient(BaseClient):
         return "test-credentials"
 
 
-class TestBaseClientImplementation:
+class ConcreteBaseClientImplementation:
     """Tests for the BaseClient class implementation."""
 
     @patch('nui_lambda_shared_utils.base_client.get_secret')
@@ -176,7 +176,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = mock_credentials
 
         # Create client
-        client = TestBaseClient()
+        client = ConcreteBaseClient()
 
         # Verify initialization
         assert client.config == mock_config
@@ -198,7 +198,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = {"token": "test-token"}
 
         # Create client with explicit secret name
-        TestBaseClient(secret_name="explicit-secret")
+        ConcreteBaseClient(secret_name="explicit-secret")
 
         # Should use explicit secret name
         mock_get_secret.assert_called_once_with("explicit-secret")
@@ -215,7 +215,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = {"token": "test-token"}
 
         # Create client without explicit secret (should use env var)
-        TestBaseClient()
+        ConcreteBaseClient()
 
         # Should use environment variable
         mock_get_secret.assert_called_once_with("env-secret")
@@ -233,7 +233,7 @@ class TestBaseClientImplementation:
 
         # Should raise exception
         with pytest.raises(Exception, match="Secret not found"):
-            TestBaseClient()
+            ConcreteBaseClient()
 
     @patch('nui_lambda_shared_utils.base_client.get_secret')
     @patch('nui_lambda_shared_utils.base_client.get_config')
@@ -253,7 +253,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = {"token": "test-token"}
 
         # Create client with client config
-        client = TestBaseClient(host="client-host", port=8080)
+        client = ConcreteBaseClient(host="client-host", port=8080)
 
         # Client config should take precedence
         assert client._get_config_value("host") == "client-host"
@@ -271,7 +271,7 @@ class TestBaseClientImplementation:
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
         mock_get_secret.return_value = {"token": "test-token"}
 
-        client = TestBaseClient()
+        client = ConcreteBaseClient()
 
         # Mock operation that succeeds
         def successful_operation():
@@ -298,7 +298,7 @@ class TestBaseClientImplementation:
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
         mock_get_secret.return_value = {"token": "test-token"}
 
-        client = TestBaseClient()
+        client = ConcreteBaseClient()
 
         # Mock operation that fails
         def failing_operation():
@@ -321,12 +321,12 @@ class TestBaseClientImplementation:
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
         mock_get_secret.return_value = {"username": "test_user"}
 
-        client = TestBaseClient(host="test-host", debug=True)
+        client = ConcreteBaseClient(host="test-host", debug=True)
 
         info = client.get_client_info()
 
         expected_info = {
-            "client_type": "TestBaseClient",
+            "client_type": "ConcreteBaseClient",
             "config_prefix": "test",
             "has_credentials": True,
             "client_config": {"host": "test-host", "debug": True}
@@ -344,7 +344,7 @@ class TestBaseClientImplementation:
         mock_get_secret.return_value = {"token": "test-token"}
 
         # Create client with custom config prefix
-        client = TestBaseClient(config_key_prefix="custom")
+        client = ConcreteBaseClient(config_key_prefix="custom")
 
         assert client.config_key_prefix == "custom"
         mock_get_secret.assert_called_once_with("custom-secret")
@@ -360,13 +360,13 @@ class TestBaseClientImplementation:
 
         # Should raise ValueError for missing secret name
         with pytest.raises(ValueError, match="secret_name is required"):
-            TestBaseClient()
+            ConcreteBaseClient()
 
 
 class TestServiceHealthMixin:
     """Test ServiceHealthMixin functionality."""
 
-    class TestClientWithHealthMixin(TestBaseClient, ServiceHealthMixin):
+    class ConcreteClientWithHealthMixin(ConcreteBaseClient, ServiceHealthMixin):
         """Test client that includes health mixin."""
 
         def _perform_health_check(self):
@@ -382,12 +382,12 @@ class TestServiceHealthMixin:
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
         mock_get_secret.return_value = {"token": "test-token"}
 
-        client = self.TestClientWithHealthMixin()
+        client = self.ConcreteClientWithHealthMixin()
 
         result = client.health_check()
 
         assert result["status"] == "healthy"
-        assert result["client_type"] == "TestClientWithHealthMixin"
+        assert result["client_type"] == "ConcreteClientWithHealthMixin"
         assert "timestamp" in result
 
     @patch('nui_lambda_shared_utils.base_client.get_secret')
@@ -397,13 +397,13 @@ class TestServiceHealthMixin:
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
         mock_get_secret.return_value = {"token": "test-token"}
 
-        client = self.TestClientWithHealthMixin()
+        client = self.ConcreteClientWithHealthMixin()
         client._health_check_should_fail = True
 
         result = client.health_check()
 
         assert result["status"] == "unhealthy"
-        assert result["client_type"] == "TestClientWithHealthMixin"
+        assert result["client_type"] == "ConcreteClientWithHealthMixin"
         assert result["error"] == "Health check failed"
         assert result["error_type"] == "Exception"
         assert "timestamp" in result
@@ -412,7 +412,7 @@ class TestServiceHealthMixin:
 class TestRetryableOperationMixin:
     """Test RetryableOperationMixin functionality."""
 
-    class TestClientWithRetryMixin(TestBaseClient, RetryableOperationMixin):
+    class ConcreteClientWithRetryMixin(ConcreteBaseClient, RetryableOperationMixin):
         """Test client that includes retry mixin."""
         pass
 
@@ -423,7 +423,7 @@ class TestRetryableOperationMixin:
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
         mock_get_secret.return_value = {"token": "test-token"}
 
-        client = self.TestClientWithRetryMixin()
+        client = self.ConcreteClientWithRetryMixin()
 
         def successful_operation():
             return "success"
@@ -468,7 +468,7 @@ class TestRetryableOperationMixin:
             return func
         mock_with_retry.return_value = mock_decorator
 
-        client = self.TestClientWithRetryMixin()
+        client = self.ConcreteClientWithRetryMixin()
 
         def test_operation():
             return "test"
