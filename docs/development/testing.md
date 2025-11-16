@@ -2,7 +2,7 @@
 
 Comprehensive testing guide for `nui-lambda-shared-utils` developers.
 
-**Last Updated**: 2025-01-17
+**Last Updated**: 2025-11-16
 
 ## Overview
 

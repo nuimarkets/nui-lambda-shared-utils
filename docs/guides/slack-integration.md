@@ -2,7 +2,7 @@
 
 Comprehensive guide for using Slack messaging and formatting features in `nui-lambda-shared-utils`.
 
-**Last Updated**: 2025-01-17
+**Last Updated**: 2025-11-16
 
 ## Overview
 
