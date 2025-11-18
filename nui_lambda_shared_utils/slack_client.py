@@ -41,6 +41,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         secret_name: Optional[str] = None,
         account_names: Optional[Dict[str, str]] = None,
         account_names_config: Optional[str] = None,
+        service_name: Optional[str] = None,
         **kwargs
     ):
         """
@@ -50,6 +51,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             secret_name: Override default secret name
             account_names: Dict mapping AWS account IDs to display names
             account_names_config: Path to YAML file with account_names mapping
+            service_name: Optional display name for service (e.g., "my-service" instead of full Lambda name)
             **kwargs: Additional configuration options
 
         Examples:
@@ -66,16 +68,23 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             With YAML config file (recommended for Lambdas):
                 >>> slack = SlackClient(account_names_config="slack_config.yaml")
 
+            With custom service name for cleaner display:
+                >>> slack = SlackClient(service_name="my-service")
+
             Combined (YAML + runtime overrides):
                 >>> slack = SlackClient(
                 ...     account_names_config="slack_config.yaml",
-                ...     account_names={"999888777666": "temporary-dev"}
+                ...     account_names={"999888777666": "temporary-dev"},
+                ...     service_name="my-service"
                 ... )
         """
         super().__init__(secret_name=secret_name, **kwargs)
 
         # Load account names from config file or use provided dict
         self._account_names = self._load_account_names(account_names, account_names_config)
+
+        # Store optional service name for display
+        self._service_name = service_name
 
         # Collect Lambda context once during initialization
         self._lambda_context = self._collect_lambda_context()
@@ -277,16 +286,18 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         account_id = self._lambda_context['aws_account_id']
         simple_account = self._account_names.get(account_id, f"Unknown ({account_id})")
 
-        # Build header lines
-        line1 = f"🤖 {self._lambda_context['function_name']}"
-        line2 = f"📍 {simple_account} ({account_id}) • {self._lambda_context['aws_region']}"
-        line3 = f"📋 Log: `{self._lambda_context['log_group']}`"
+        # Use custom service name if provided, otherwise use full function name
+        display_name = self._service_name or self._lambda_context['function_name']
+
+        # Build header lines (2 lines total)
+        line1 = f"🤖 {display_name}"
+        line2 = f"{simple_account} ({account_id}) • {self._lambda_context['aws_region']} • 📋 Log: `{self._lambda_context['log_group']}`"
 
         return [{
             "type": "context",
             "elements": [{
                 "type": "mrkdwn",
-                "text": f"{line1}\n{line2}\n{line3}"
+                "text": f"{line1}\n{line2}"
             }]
         }]
 

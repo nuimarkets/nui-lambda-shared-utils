@@ -393,7 +393,6 @@ class TestLambdaContextHeader:
             self.assert_header_format(header_text, {
                 "robot emoji": "🤖",
                 "function name": "test-function",
-                "location emoji": "📍",
                 "account name": "Production",
                 "account ID": "(123456789012)",
                 "region": "eu-west-1",
@@ -455,10 +454,145 @@ class TestLambdaContextHeader:
             self.assert_header_format(header_text, {
                 "robot emoji": "🤖",
                 "function name": "nui-service",
-                "location emoji": "📍",
                 "account name": "Development",
                 "account ID": "(234567890123)",
                 "region": "ap-southeast-2",
+                "log emoji": "📋"
+            })
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(
+        os.environ,
+        {
+            "AWS_LAMBDA_FUNCTION_NAME": "connect-prod-long-service-name-12345",
+            "AWS_REGION": "eu-west-1",
+            "STAGE": "prod",
+        },
+    )
+    def test_custom_service_name_in_header(self, mock_webclient, mock_get_secret, mock_boto3):
+        """Service name parameter overrides function name in header."""
+        # Setup mocks
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_client = Mock()
+        mock_webclient.return_value = mock_client
+        mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
+
+        # Mock STS for account info
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {
+            "Account": "123456789012",  # Production
+            "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/connect-prod-long-service-name-12345",
+        }
+
+        # Mock Lambda client
+        mock_lambda = Mock()
+        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_lambda.get_function.return_value = {
+            "Configuration": {"FunctionName": "connect-prod-long-service-name-12345"}
+        }
+
+        # Mock config file check
+        with patch("os.path.exists") as mock_exists:
+            mock_exists.return_value = False
+
+            # Create client with custom service name
+            slack = SlackClient(
+                secret_name="test-secret",
+                service_name="my-service",
+                account_names={"123456789012": "Production"}
+            )
+            result = slack.send_message("C123", "Test message")
+
+            # Verify the header was included
+            call_args = mock_client.chat_postMessage.call_args
+            blocks = call_args.kwargs.get("blocks", call_args[1].get("blocks"))
+
+            assert blocks is not None
+            header_block = blocks[0]
+            assert header_block["type"] == "context"
+            header_text = header_block["elements"][0]["text"]
+
+            # Should show custom service name, not full function name
+            assert "my-service" in header_text
+            assert "connect-prod-long-service-name-12345" not in header_text
+
+            # Other header elements should still be present
+            self.assert_header_format(header_text, {
+                "robot emoji": "🤖",
+                "function name": "my-service",  # Custom name
+                "account name": "Production",
+                "account ID": "(123456789012)",
+                "region": "eu-west-1",
+                "log emoji": "📋"
+            })
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict(
+        os.environ,
+        {
+            "AWS_LAMBDA_FUNCTION_NAME": "test-function",
+            "AWS_REGION": "eu-west-1",
+            "STAGE": "prod",
+        },
+    )
+    def test_missing_service_name_uses_function_name(self, mock_webclient, mock_get_secret, mock_boto3):
+        """Without service_name, falls back to function name."""
+        # Setup mocks
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_client = Mock()
+        mock_webclient.return_value = mock_client
+        mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
+
+        # Mock STS for account info
+        mock_sts = Mock()
+        mock_boto3.return_value = mock_sts
+        mock_sts.get_caller_identity.return_value = {
+            "Account": "123456789012",
+            "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/test-function",
+        }
+
+        # Mock Lambda client
+        mock_lambda = Mock()
+        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_lambda.get_function.return_value = {
+            "Configuration": {"FunctionName": "test-function"}
+        }
+
+        # Mock config file check
+        with patch("os.path.exists") as mock_exists:
+            mock_exists.return_value = False
+
+            # Create client WITHOUT custom service name
+            slack = SlackClient(
+                secret_name="test-secret",
+                account_names={"123456789012": "Production"}
+            )
+            result = slack.send_message("C123", "Test message")
+
+            # Verify the header was included
+            call_args = mock_client.chat_postMessage.call_args
+            blocks = call_args.kwargs.get("blocks", call_args[1].get("blocks"))
+
+            assert blocks is not None
+            header_block = blocks[0]
+            assert header_block["type"] == "context"
+            header_text = header_block["elements"][0]["text"]
+
+            # Should show full function name
+            assert "test-function" in header_text
+
+            # All header elements should be present
+            self.assert_header_format(header_text, {
+                "robot emoji": "🤖",
+                "function name": "test-function",  # Original function name
+                "account name": "Production",
+                "account ID": "(123456789012)",
+                "region": "eu-west-1",
                 "log emoji": "📋"
             })
 
