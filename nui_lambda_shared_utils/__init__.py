@@ -67,7 +67,6 @@ from .slack_formatter import (
     format_daily_header,
     format_weekly_header,
     format_error_alert,
-    SERVICE_EMOJI,
     SEVERITY_EMOJI,
     STATUS_EMOJI,
 )
@@ -168,7 +167,6 @@ __all__ = [
     "format_daily_header",
     "format_weekly_header",
     "format_error_alert",
-    "SERVICE_EMOJI",
     "SEVERITY_EMOJI",
     "STATUS_EMOJI",
     # ES query building
