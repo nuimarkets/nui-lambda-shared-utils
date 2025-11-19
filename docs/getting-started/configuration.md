@@ -112,6 +112,7 @@ The package expects AWS secrets in specific JSON formats:
 ```
 
 **Optional Fields:**
+
 - `host` - Can override ES_HOST if provided
 - `username` - Defaults to "elastic" if not provided
 
@@ -139,6 +140,7 @@ The package expects AWS secrets in specific JSON formats:
 ```
 
 **Optional Fields:**
+
 - `webhook_url` - Alternative to bot token for simple messaging
 
 ### Creating Secrets

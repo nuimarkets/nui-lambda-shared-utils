@@ -1,0 +1,593 @@
+# AWS Powertools Integration Guide
+
+This guide covers the AWS Powertools integration utilities provided by `nui-lambda-shared-utils`. These utilities standardize logging, metrics, and error handling patterns across Lambda functions using [AWS Lambda Powertools for Python](https://docs.powertools.aws.dev/lambda/python/).
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Logger Setup](#logger-setup)
+- [Handler Decorator](#handler-decorator)
+- [Local vs Lambda Environment](#local-vs-lambda-environment)
+- [Migration Guide](#migration-guide)
+- [Troubleshooting](#troubleshooting)
+
+## Installation
+
+Install the package with Powertools support:
+
+```bash
+# Install with Powertools integration
+pip install nui-lambda-shared-utils[powertools]
+
+# Or install everything
+pip install nui-lambda-shared-utils[all]
+```
+
+This installs:
+
+- `aws-lambda-powertools>=3.6.0,<4.0.0` - AWS Lambda Powertools framework
+- `coloredlogs>=15.0` - Colored logging for local development
+
+## Quick Start
+
+Here's a complete example using both Powertools utilities:
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+
+# Create logger (works in both local and Lambda environments)
+logger = get_powertools_logger("my-service", level="INFO")
+
+# Decorate your Lambda handler
+@powertools_handler(
+    service_name="my-lambda",
+    metrics_namespace="MyApp/Lambda",
+    slack_alert_channel="#errors"
+)
+@logger.inject_lambda_context
+def handler(event, context):
+    """Lambda handler with logging, metrics, and error handling."""
+
+    logger.info("Processing event", extra={"event_type": event.get("type")})
+
+    # Your business logic here
+    result = process_data(event)
+
+    logger.info("Processing complete", extra={"result_count": len(result)})
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"results": result})
+    }
+```
+
+## Logger Setup
+
+### Function: `get_powertools_logger()`
+
+Creates an AWS Powertools Logger with Elasticsearch-compatible formatting.
+
+**Signature:**
+
+```python
+def get_powertools_logger(
+    service_name: str,
+    level: str = "INFO",
+    local_dev_colors: bool = True,
+) -> Union[Logger, logging.Logger]:
+    """
+    Create AWS Powertools Logger with Elasticsearch-compatible formatting.
+
+    Args:
+        service_name: Service identifier (e.g., "nui-tender-analyser")
+        level: Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        local_dev_colors: Enable coloredlogs for local development
+
+    Returns:
+        Logger instance with inject_lambda_context decorator method
+    """
+```
+
+### Basic Usage
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger
+
+# Create logger with default INFO level
+logger = get_powertools_logger("my-service")
+
+# Create logger with DEBUG level
+logger = get_powertools_logger("my-service", level="DEBUG")
+
+# Disable coloredlogs for local development
+logger = get_powertools_logger("my-service", local_dev_colors=False)
+```
+
+### Structured Logging
+
+The logger supports structured logging with the `extra` parameter:
+
+```python
+logger.info(
+    "Order processed successfully",
+    extra={
+        "order_id": "ORD-12345",
+        "user_id": 789,
+        "total_amount": 250.00,
+        "processing_time_ms": 123
+    }
+)
+```
+
+### Elasticsearch-Compatible Timestamps
+
+The logger automatically formats timestamps for Elasticsearch compatibility:
+
+**Powertools default:** `2025-01-18 04:39:27,788+0000`
+**Our format:** `2025-01-18T04:39:27.788Z`
+
+This ensures proper indexing and querying in Elasticsearch log aggregation systems.
+
+### Using Lambda Context Injection
+
+```python
+logger = get_powertools_logger("my-service")
+
+@logger.inject_lambda_context
+def handler(event, context):
+    # Automatically includes Lambda context in all logs:
+    # - function_name
+    # - function_version
+    # - function_arn
+    # - request_id
+    # - cold_start
+    logger.info("Event received")
+    return {"statusCode": 200}
+```
+
+## Handler Decorator
+
+### Function: `powertools_handler()`
+
+Decorator combining logging, metrics, and error handling for Lambda handlers.
+
+**Signature:**
+
+```python
+def powertools_handler(
+    service_name: str,
+    metrics_namespace: Optional[str] = None,
+    slack_alert_channel: Optional[str] = None,
+):
+    """
+    Decorator for Lambda handlers with logging, metrics, and error handling.
+
+    Args:
+        service_name: Service identifier for logging and metrics dimensions
+        metrics_namespace: CloudWatch namespace (e.g., "NUI/TenderAnalyser")
+        slack_alert_channel: Slack channel for error alerts (e.g., "#alerts")
+    """
+```
+
+### Basic Usage (Logging Only)
+
+```python
+from nui_lambda_shared_utils import powertools_handler
+
+@powertools_handler(service_name="simple-lambda")
+def handler(event, context):
+    return {"statusCode": 200, "body": "Success"}
+```
+
+### With Metrics Publishing
+
+```python
+@powertools_handler(
+    service_name="data-processor",
+    metrics_namespace="MyApp/DataProcessor"
+)
+def handler(event, context):
+    # Metrics are automatically published at end of execution
+    return {"statusCode": 200}
+```
+
+### With Slack Error Alerts
+
+```python
+@powertools_handler(
+    service_name="critical-service",
+    slack_alert_channel="#production-alerts"
+)
+def handler(event, context):
+    # Exceptions automatically sent to Slack
+    if error_condition:
+        raise ValueError("Critical error occurred")
+    return {"statusCode": 200}
+```
+
+### Complete Example (All Features)
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+
+logger = get_powertools_logger("order-processor")
+
+@powertools_handler(
+    service_name="order-processor",
+    metrics_namespace="Ecommerce/Orders",
+    slack_alert_channel="#order-alerts"
+)
+@logger.inject_lambda_context
+def handler(event, context):
+    """
+    Process order events with full observability.
+
+    Features:
+    - Structured logging with Lambda context
+    - CloudWatch metrics publishing
+    - Slack alerts on failures
+    - Proper error response formatting
+    """
+
+    logger.info("Processing order", extra={"event_id": event.get("id")})
+
+    try:
+        order = validate_order(event)
+        result = process_order(order)
+
+        logger.info(
+            "Order processed successfully",
+            extra={
+                "order_id": order["id"],
+                "processing_time_ms": result["duration"]
+            }
+        )
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps({"order_id": order["id"]})
+        }
+
+    except ValidationError as e:
+        logger.error("Order validation failed", extra={"error": str(e)})
+        return {
+            "statusCode": 400,
+            "body": json.dumps({"error": "Invalid order"})
+        }
+```
+
+## Local vs Lambda Environment
+
+The utilities automatically detect the execution environment and adapt accordingly:
+
+### Lambda Environment Detection
+
+Environment is considered "Lambda" when:
+
+- `AWS_LAMBDA_RUNTIME_API` environment variable is set
+- AND `AWS_SAM_LOCAL` is NOT set (to support SAM local testing)
+
+### Logger Behavior by Environment
+
+| Feature | Local Environment | Lambda Environment |
+|---------|-------------------|-------------------|
+| **Logger Type** | Python `logging.Logger` | AWS Powertools `Logger` |
+| **Output Format** | Human-readable text | JSON structured logs |
+| **Colorization** | Coloredlogs (if available) | No colors |
+| **Timestamp Format** | System default | ES-compatible ISO format |
+| **Lambda Context** | Mock (no-op decorator) | Real context injection |
+
+### Testing Locally
+
+```python
+# In your local development environment
+# NO environment variables set
+
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+
+logger = get_powertools_logger("test-service")
+
+@powertools_handler(service_name="test-service")
+@logger.inject_lambda_context  # Works locally as no-op
+def handler(event, context):
+    logger.info("Testing locally")
+    return {"statusCode": 200}
+
+# Test the handler
+if __name__ == "__main__":
+    from unittest.mock import MagicMock
+
+    mock_context = MagicMock()
+    mock_context.function_name = "test-function"
+
+    result = handler({"test": "data"}, mock_context)
+    print(result)
+```
+
+## Migration Guide
+
+### From Custom Logger Wrappers
+
+**Before:**
+
+```python
+# Old custom logger setup
+import logging
+import os
+from aws_lambda_powertools import Logger
+
+def get_logger(name, level="DEBUG"):
+    if os.getenv("AWS_LAMBDA_RUNTIME_API") is None:
+        import coloredlogs
+        coloredlogs.install(level=level)
+        log = logging.getLogger(name)
+        log.inject_lambda_context = lambda func: func
+        return log
+
+    logger = Logger(
+        level=level,
+        service=name,
+        datefmt="%Y-%m-%dT%H:%M:%S.%fZ",
+        utc=True
+    )
+    return logger
+
+logger = get_logger("my-service")
+```
+
+**After:**
+
+```python
+# New simplified approach
+from nui_lambda_shared_utils import get_powertools_logger
+
+logger = get_powertools_logger("my-service")
+```
+
+### From Manual Error Handling
+
+**Before:**
+
+```python
+def handler(event, context):
+    try:
+        result = process_event(event)
+        return {"statusCode": 200, "body": json.dumps(result)}
+    except Exception as e:
+        logger.exception(f"Handler failed: {str(e)}")
+
+        # Manual Slack notification
+        try:
+            slack_client = SlackClient()
+            slack_client.send_message(
+                channel="#errors",
+                text=f"Lambda Error: {str(e)}"
+            )
+        except:
+            pass
+
+        return {"statusCode": 500, "body": "Internal Server Error"}
+```
+
+**After:**
+
+```python
+from nui_lambda_shared_utils import powertools_handler
+
+@powertools_handler(
+    service_name="my-service",
+    slack_alert_channel="#errors"
+)
+def handler(event, context):
+    result = process_event(event)
+    return {"statusCode": 200, "body": json.dumps(result)}
+```
+
+### From Manual Metrics Decorators
+
+**Before:**
+
+```python
+from aws_lambda_powertools import Logger, Metrics
+
+logger = Logger(service="my-service")
+metrics = Metrics(namespace="MyApp", service="my-service")
+
+@logger.inject_lambda_context
+@metrics.log_metrics
+def handler(event, context):
+    return {"statusCode": 200}
+```
+
+**After:**
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+
+logger = get_powertools_logger("my-service")
+
+@powertools_handler(
+    service_name="my-service",
+    metrics_namespace="MyApp"
+)
+@logger.inject_lambda_context
+def handler(event, context):
+    return {"statusCode": 200}
+```
+
+## Troubleshooting
+
+### ImportError: aws-lambda-powertools is required
+
+**Problem:** Running in Lambda environment without Powertools installed.
+
+**Solution:**
+
+```bash
+# Add to requirements.txt
+nui-lambda-shared-utils[powertools]
+
+# Or install directly
+pip install aws-lambda-powertools>=3.6.0
+```
+
+### Logs not appearing in CloudWatch
+
+**Problem:** Logger not properly configured or context not injected.
+
+**Checklist:**
+
+- ✓ Using `@logger.inject_lambda_context` decorator
+- ✓ Handler returns proper dict with statusCode
+- ✓ CloudWatch log group exists for Lambda function
+- ✓ Lambda execution role has `logs:CreateLogGroup` and `logs:PutLogEvents` permissions
+
+### Slack alerts not working
+
+**Problem:** Slack client initialization or message sending failures.
+
+**Possible Causes:**
+
+1. **Slack credentials not configured**
+   - Ensure `SLACK_CREDENTIALS_SECRET` environment variable is set
+   - Verify secret exists in AWS Secrets Manager
+
+2. **Slack client not installed**
+
+   ```bash
+   pip install nui-lambda-shared-utils[slack]
+   ```
+
+3. **Invalid channel name**
+   - Use `#channel-name` format (with `#` prefix)
+   - Verify bot has access to the channel
+
+**Graceful Degradation:** The decorator will log warnings but continue execution if Slack fails.
+
+### Metrics not publishing to CloudWatch
+
+**Problem:** Metrics not appearing in CloudWatch.
+
+**Checklist:**
+
+- ✓ `metrics_namespace` parameter provided to decorator
+- ✓ Lambda execution role has `cloudwatch:PutMetricData` permission
+- ✓ Using `@metrics.log_metrics` pattern correctly
+- ✓ Check CloudWatch Metrics console (5-15 min delay is normal)
+
+### Local development shows JSON logs instead of colored output
+
+**Problem:** Getting JSON-formatted logs locally instead of human-readable output.
+
+**Cause:** `AWS_LAMBDA_RUNTIME_API` environment variable is set locally.
+
+**Solution:**
+
+```bash
+# Unset the environment variable
+unset AWS_LAMBDA_RUNTIME_API
+
+# Or disable in your terminal profile
+```
+
+### Type hints not working
+
+**Problem:** IDE not recognizing Logger type hints.
+
+**Solution:**
+
+```python
+# Add explicit type hints
+from aws_lambda_powertools import Logger as PowertoolsLogger
+from logging import Logger as PythonLogger
+from typing import Union
+
+logger: Union[PowertoolsLogger, PythonLogger] = get_powertools_logger("my-service")
+```
+
+## Best Practices
+
+### 1. Use Structured Logging
+
+```python
+# ✓ Good - Searchable, filterable
+logger.info("Order created", extra={
+    "order_id": order.id,
+    "user_id": user.id,
+    "amount": order.total
+})
+
+# ✗ Bad - Unstructured string
+logger.info(f"Order {order.id} created for user {user.id} amount {order.total}")
+```
+
+### 2. Set Appropriate Log Levels
+
+```python
+# Development
+logger = get_powertools_logger("my-service", level="DEBUG")
+
+# Production
+logger = get_powertools_logger("my-service", level="INFO")
+
+# Use environment variables
+import os
+log_level = os.getenv("LOG_LEVEL", "INFO")
+logger = get_powertools_logger("my-service", level=log_level)
+```
+
+### 3. Combine with Existing Slack Integration
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler, SlackClient
+
+logger = get_powertools_logger("my-service")
+
+@powertools_handler(
+    service_name="my-service",
+    slack_alert_channel="#critical-errors"  # Errors only
+)
+@logger.inject_lambda_context
+def handler(event, context):
+    # Use SlackClient for business notifications
+    slack = SlackClient()
+    slack.send_message(
+        channel="#business-events",
+        text="Daily report ready"
+    )
+
+    return {"statusCode": 200}
+```
+
+### 4. Graceful Error Handling
+
+```python
+@powertools_handler(service_name="my-service", slack_alert_channel="#errors")
+@logger.inject_lambda_context
+def handler(event, context):
+    try:
+        # Business logic
+        result = process_data(event)
+        return {"statusCode": 200, "body": json.dumps(result)}
+
+    except ValidationError as e:
+        # Expected errors - log and return 400
+        logger.warning("Validation failed", extra={"error": str(e)})
+        return {"statusCode": 400, "body": json.dumps({"error": str(e)})}
+
+    # Unexpected errors caught by decorator -> 500 + Slack alert
+```
+
+## Related Documentation
+
+- [Slack Integration Guide](slack-integration.md) - Slack messaging and formatting
+- [Quick Start Guide](../getting-started/quickstart.md) - Package usage patterns
+- [AWS Lambda Powertools Documentation](https://docs.powertools.aws.dev/lambda/python/) - Official Powertools docs
+
+## Support
+
+For issues or questions:
+
+- [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
+- [Package Documentation](https://github.com/nuimarkets/nui-lambda-shared-utils)

@@ -7,12 +7,16 @@ Welcome to the comprehensive documentation for `nui-lambda-shared-utils`.
 ## Quick Navigation
 
 ### 📚 Getting Started
+
 - **[Installation Guide](getting-started/installation.md)** - Setup and dependency management
 - **[Configuration Guide](getting-started/configuration.md)** - Environment setup and credential management
 - **[Quick Start](getting-started/quickstart.md)** - Common usage patterns and examples
 
 ### 📖 Guides
+
 Component-specific guides for major features:
+
+- **[AWS Powertools Integration](guides/powertools-integration.md)** - Standardized logging, metrics, and error handling
 - **[Slack Integration](guides/slack-integration.md)** - Messaging, formatting, and file uploads
 - Elasticsearch Operations (planned)
 - Database Connections (planned)
@@ -20,28 +24,37 @@ Component-specific guides for major features:
 - CloudWatch Metrics (planned)
 
 ### 🔧 CLI Tools
+
 Command-line utilities included with the package:
+
 - **[Slack Channel Setup](guides/cli-tools.md)** - Automate Slack workspace channel creation
 - Additional CLI tools (planned)
 
 ### 📋 Reference
+
 API reference and detailed component documentation (planned):
+
 - Client APIs (planned)
 - Utility Functions (planned)
 - Configuration Options (planned)
 
 ### 🛠️ Development
+
 Developer resources and contribution guidelines:
+
 - **[Testing Guide](development/testing.md)** - Test strategies and running tests
 - [Contributing](../CONTRIBUTING.md) - Development workflow
 - [Changelog](../CHANGELOG.md) - Version history
 
 ### 📦 Templates
+
 - **[Slack Account Names](templates/slack_config.yaml.template)** - AWS account name mappings for Slack
 - **[Channel Configuration](templates/channels.yaml.template)** - Channel setup for slack-channel-setup CLI
 
 ### 📁 Archive
+
 Historical documentation and analysis:
+
 - [Test Coverage Analysis](archive/TEST_COVERAGE_ANALYSIS.md) (outdated - see actual coverage in CI)
 - [Lambda Shared Utils Analysis](archive/LAMBDA_SHARED_UTILS_ANALYSIS.md) (migration doc)
 
@@ -68,17 +81,20 @@ docs/
 ## User Journeys
 
 ### New Users
+
 1. Start with this README for overview
 2. Follow [Installation Guide](getting-started/installation.md)
 3. Review [Configuration Guide](getting-started/configuration.md)
 4. Try examples in [Quick Start](getting-started/quickstart.md)
 
 ### Integration Focus
+
 - Jump to specific component guides (when available)
 - Reference [Configuration Guide](getting-started/configuration.md) for setup
 - Use [Quick Start](getting-started/quickstart.md) for code examples
 
 ### Development Contributors
+
 1. Read [Contributing Guidelines](../CONTRIBUTING.md)
 2. Review [Testing Guide](development/testing.md)
 3. Check [Changelog](../CHANGELOG.md) for recent changes
@@ -97,14 +113,17 @@ When contributing to documentation:
 ## Documentation Status
 
 ### ✅ Available
+
 - Main documentation (this README)
 - Getting started guides (installation, configuration, quickstart)
+- AWS Powertools integration guide (guides/powertools-integration.md)
 - Slack integration guide (guides/slack-integration.md)
 - CLI tools guide (guides/cli-tools.md)
 - Testing guide (development/testing.md)
 - Configuration templates (Slack account names, channel setup)
 
 ### 🚧 Planned
+
 - Component-specific guides (Elasticsearch, Database, Metrics, Error Handling)
 - API reference documentation
 - Advanced topics (AWS infrastructure, Lambda integration)
@@ -113,17 +132,20 @@ When contributing to documentation:
 ## Local Viewing
 
 ### Markdown Viewers
+
 Most IDEs and editors can preview markdown files natively.
 
 ### Static Site Generation (Optional)
 
 **Using MkDocs:**
+
 ```bash
 pip install mkdocs mkdocs-material
 mkdocs serve
 ```
 
 **Using Sphinx:**
+
 ```bash
 pip install sphinx sphinx-rtd-theme
 sphinx-quickstart docs
@@ -137,4 +159,4 @@ make html
 
 ---
 
-*Documentation last updated 2025-01-19 with CLI tools guide and generic Slack workspace automation.*
+*Documentation last updated 2025-11-19 with AWS Powertools integration guide.*

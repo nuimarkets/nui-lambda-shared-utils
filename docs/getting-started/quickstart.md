@@ -223,6 +223,68 @@ def lambda_handler(event, context):
         raise
 ```
 
+### 5. AWS Powertools Integration
+
+For production Lambda functions, use AWS Powertools for standardized logging, metrics, and error handling:
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+
+# Create logger with ES-compatible formatting
+logger = get_powertools_logger("order-processor", level="INFO")
+
+@powertools_handler(
+    service_name="order-processor",
+    metrics_namespace="Ecommerce/Orders",
+    slack_alert_channel="#production-alerts"
+)
+@logger.inject_lambda_context
+def lambda_handler(event, context):
+    """
+    Lambda handler with:
+    - Structured JSON logging
+    - Automatic CloudWatch metrics
+    - Slack error alerting
+    - Proper error responses
+    """
+
+    logger.info("Processing order", extra={"order_id": event.get("id")})
+
+    # Your business logic
+    order = process_order(event)
+
+    logger.info(
+        "Order completed",
+        extra={
+            "order_id": order["id"],
+            "total": order["total"],
+            "processing_time_ms": order["duration"]
+        }
+    )
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"order_id": order["id"]})
+    }
+```
+
+**Installation:**
+
+```bash
+pip install nui-lambda-shared-utils[powertools]
+```
+
+**Benefits:**
+
+- ✅ Elasticsearch-compatible timestamp format (`2025-01-18T04:39:27.788Z`)
+- ✅ Automatic Lambda context injection (function name, request ID, etc.)
+- ✅ Local development with colored logs
+- ✅ CloudWatch metrics publishing
+- ✅ Slack error alerts with graceful degradation
+- ✅ Proper Lambda error responses
+
+**See:** [Powertools Integration Guide](../guides/powertools-integration.md) for complete documentation.
+
 ## Next Steps
 
 1. **Read the Configuration Guide** - [configuration.md](configuration.md) for detailed setup
@@ -233,6 +295,7 @@ def lambda_handler(event, context):
 ## Common Patterns
 
 ### Environment-Based Configuration
+
 ```python
 import os
 import nui_lambda_shared_utils as nui
@@ -247,6 +310,7 @@ nui.configure(
 ```
 
 ### Error Notifications
+
 ```python
 @nui.handle_lambda_error
 def lambda_handler(event, context):
@@ -264,6 +328,7 @@ def lambda_handler(event, context):
 ```
 
 ### Retry with Backoff
+
 ```python
 @nui.with_retry(max_attempts=3, backoff_factor=2)
 def external_api_call():

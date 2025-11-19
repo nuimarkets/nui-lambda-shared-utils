@@ -7,6 +7,7 @@ Comprehensive guide for using Slack messaging and formatting features in `nui-la
 ## Overview
 
 The package provides rich Slack integration through two main components:
+
 - **SlackClient** - Message sending, file uploads, threading
 - **SlackBlockBuilder** - Rich message formatting with Slack blocks
 
@@ -40,6 +41,7 @@ aws secretsmanager create-secret \
 ```
 
 **Secret Format:**
+
 ```json
 {
   "bot_token": "YOUR_SLACK_BOT_TOKEN_HERE",
@@ -406,6 +408,7 @@ nui.configure(slack_credentials_secret=f"{stage}/slack")
 ### 3. Rate Limiting Awareness
 
 Slack has rate limits:
+
 - ~1 message per second per channel
 - Burst allowance available
 - Use threading for related messages
@@ -458,6 +461,7 @@ def test_notification_logic(mock_slack):
 **Error:** `invalid_auth`
 
 **Solutions:**
+
 - Verify bot token in AWS Secrets Manager
 - Check token starts with `xoxb-`
 - Ensure bot is installed to workspace
@@ -467,6 +471,7 @@ def test_notification_logic(mock_slack):
 **Error:** `channel_not_found`
 
 **Solutions:**
+
 - Verify channel name (include `#` for public channels)
 - Check bot has been invited to private channels
 - Use channel ID instead of name
@@ -476,6 +481,7 @@ def test_notification_logic(mock_slack):
 **Error:** `missing_scope`
 
 **Solutions:**
+
 - Add required OAuth scopes in Slack app settings
 - Reinstall app to workspace after adding scopes
 - Common scopes: `chat:write`, `files:write`, `channels:read`
