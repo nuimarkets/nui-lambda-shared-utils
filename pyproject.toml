@@ -64,7 +64,8 @@ Documentation = "https://github.com/nuimarkets/nui-lambda-shared-utils/blob/main
 Source = "https://github.com/nuimarkets/nui-lambda-shared-utils"
 
 [project.scripts]
-nui-slack-setup = "nui_lambda_shared_utils.slack_setup_cli:main"
+slack-channel-setup = "nui_lambda_shared_utils.cli:main"
+nui-slack-setup = "nui_lambda_shared_utils.slack_setup_cli:main"  # Deprecated: use slack-channel-setup
 
 [tool.setuptools.packages.find]
 where = ["."]

@@ -23,7 +23,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is `nui-lambda-shared-utils`, a Python package providing enterprise-grade utilities for AWS Lambda functions. It offers standardized integrations for Slack, Elasticsearch, database operations, CloudWatch metrics, and error handling patterns commonly used across NUI platform Lambda services.
+This is `nui-lambda-shared-utils`, a Python package providing production-ready utilities for AWS Lambda functions. Built and battle-tested on the NUI platform, it offers standardized integrations for Slack, Elasticsearch, database operations, CloudWatch metrics, and error handling patterns. The package is designed to be generic and configurable for any AWS Lambda environment.
 
 ## Architecture
 
@@ -35,7 +35,7 @@ This is `nui-lambda-shared-utils`, a Python package providing enterprise-grade u
 - **Database** (`db_client.py`) - Connection pooling with retry logic
 - **Metrics** (`cloudwatch_metrics.py`) - Batched CloudWatch publishing with decorators
 - **Error Handling** (`error_handler.py`) - Retry patterns with exponential backoff
-- **Timezone Utils** (`timezone.py`) - New Zealand timezone handling
+- **Timezone Utils** (`timezone.py`) - Timezone conversion and formatting utilities
 
 ### Optional Dependencies
 The package uses optional extras to minimize Lambda bundle size:
@@ -45,11 +45,50 @@ The package uses optional extras to minimize Lambda bundle size:
 - `all` - All integrations
 - `dev` - Development and testing tools
 
-### Slack Setup Module
+### Slack Workspace Automation
 The `slack_setup/` submodule provides automated Slack workspace configuration:
 - **Channel Creation** - Programmatic channel and permission setup
 - **Template System** - YAML-based channel definitions
-- **CLI Tool** - `nui-slack-setup` command for deployment
+- **CLI Tool** - `slack-channel-setup` command for automation
+- **Generic Design** - Adaptable for any Slack workspace, not NUI-specific
+
+## Design Principles
+
+### Keeping the Package Generic
+
+This package is intentionally designed to avoid vendor-specific assumptions:
+
+**✅ DO:**
+- Use configurable defaults (e.g., `currency` as required parameter)
+- Accept parameters for service-specific values (e.g., `service_name` in alerts)
+- Provide flexible configuration via environment variables or programmatic setup
+- Keep utility functions generic and reusable
+
+**❌ DON'T:**
+- Hardcode service names, currency codes, or business logic
+- Add domain-specific database query methods (use generic `query()`, `execute()` methods)
+- Create mapping dictionaries for specific organizations (emoji maps, status codes, etc.)
+- Assume specific table schemas or column names
+
+**Examples:**
+- ❌ Hardcoded organization-specific mappings and constants
+- ✅ Accept values as parameters or via configuration
+- ❌ Default values that assume specific geography/currency/timezone
+- ✅ Required parameters or configurable defaults
+- ❌ Database methods that assume specific table schemas
+- ✅ Generic query methods that accept SQL and parameters
+
+### When Adding New Features
+
+Before adding convenience methods or defaults:
+1. **Ask**: "Is this specific to NUI, or useful for any Lambda project?"
+2. **Check**: Could this be made configurable rather than hardcoded?
+3. **Test**: Can someone use this without NUI-specific knowledge?
+
+If a feature is NUI-specific:
+- Consider if it belongs in this shared package
+- Document it clearly as an example pattern users can adapt
+- Provide configuration options to override defaults
 
 ## Development Commands
 
@@ -202,6 +241,27 @@ tests/
 └── fixtures/           # Test data files
 ```
 
+## Contribution Guidelines
+
+### Pull Request Checklist
+
+Before submitting PRs, ensure:
+- [ ] **No hardcoded organization-specific values** (service names, currencies, business logic)
+- [ ] **Configuration options** provided for any defaults
+- [ ] **Tests pass** with `pytest --cov`
+- [ ] **Code formatted** with Black (`black nui_lambda_shared_utils/ tests/`)
+- [ ] **Type hints** included for public APIs
+- [ ] **Documentation updated** in docs/ for new features
+- [ ] **Generic naming** - avoid organization-specific terminology in public APIs
+
+### Code Review Focus Areas
+
+Reviewers should check for:
+- Generic utility patterns vs vendor-specific code
+- Configurable defaults rather than hardcoded values
+- Clear documentation of any platform assumptions
+- Reusability across different AWS Lambda projects
+
 ## Package Distribution
 
 ### Version Management
@@ -211,7 +271,21 @@ Version is defined in both `setup.py` and `pyproject.toml` and should be kept in
 The package is published to PyPI as `nui-lambda-shared-utils` with GitHub Actions automation for releases.
 
 ### CLI Tools
-The package provides `nui-slack-setup` CLI tool for Slack workspace configuration.
+The package provides `slack-channel-setup` CLI tool for automating Slack workspace channel creation and configuration from YAML files. This is a generic tool useful for any team managing Slack workspaces.
+
+**Usage:**
+```bash
+# Create channels from YAML config
+slack-channel-setup --config channels.yaml
+
+# Check which channels exist
+slack-channel-setup --config channels.yaml --check-only
+
+# Generate environment variables
+slack-channel-setup --config channels.yaml --output channels.env --output-format env
+```
+
+**Note:** The legacy `nui-slack-setup` command is still available for backward compatibility but is deprecated.
 
 ## AWS Lambda Integration
 

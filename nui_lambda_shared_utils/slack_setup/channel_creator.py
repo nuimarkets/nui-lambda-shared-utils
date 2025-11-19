@@ -235,7 +235,7 @@ class ChannelCreator:
                         "elements": [
                             {
                                 "type": "mrkdwn",
-                                "text": f"This channel receives automated messages from the *{definition.service}* Lambda",
+                                "text": f"This channel receives automated messages from *{definition.service}*",
                             }
                         ],
                     }

@@ -2,7 +2,7 @@
 
 Welcome to the comprehensive documentation for `nui-lambda-shared-utils`.
 
-**Last Updated**: 2025-01-17
+**Last Updated**: 2025-01-19
 
 ## Quick Navigation
 
@@ -19,6 +19,11 @@ Component-specific guides for major features:
 - Error Handling Patterns (planned)
 - CloudWatch Metrics (planned)
 
+### 🔧 CLI Tools
+Command-line utilities included with the package:
+- **[Slack Channel Setup](guides/cli-tools.md)** - Automate Slack workspace channel creation
+- Additional CLI tools (planned)
+
 ### 📋 Reference
 API reference and detailed component documentation (planned):
 - Client APIs (planned)
@@ -32,7 +37,8 @@ Developer resources and contribution guidelines:
 - [Changelog](../CHANGELOG.md) - Version history
 
 ### 📦 Templates
-- **[Slack Configuration Template](templates/slack_config.yaml.template)** - Slack workspace setup YAML
+- **[Slack Account Names](templates/slack_config.yaml.template)** - AWS account name mappings for Slack
+- **[Channel Configuration](templates/channels.yaml.template)** - Channel setup for slack-channel-setup CLI
 
 ### 📁 Archive
 Historical documentation and analysis:
@@ -94,11 +100,12 @@ When contributing to documentation:
 - Main documentation (this README)
 - Getting started guides (installation, configuration, quickstart)
 - Slack integration guide (guides/slack-integration.md)
+- CLI tools guide (guides/cli-tools.md)
 - Testing guide (development/testing.md)
-- Slack configuration template
+- Configuration templates (Slack account names, channel setup)
 
 ### 🚧 Planned
-- Component-specific guides (Slack, Elasticsearch, Database, Metrics, Error Handling)
+- Component-specific guides (Elasticsearch, Database, Metrics, Error Handling)
 - API reference documentation
 - Advanced topics (AWS infrastructure, Lambda integration)
 - Troubleshooting guide
@@ -130,4 +137,4 @@ make html
 
 ---
 
-*Documentation structure reorganized 2025-01-17 as part of project root improvements.*
+*Documentation last updated 2025-01-19 with CLI tools guide and generic Slack workspace automation.*

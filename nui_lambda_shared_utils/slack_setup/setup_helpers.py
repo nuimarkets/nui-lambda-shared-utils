@@ -153,13 +153,13 @@ def print_channel_summary(channel_map: Dict[str, str], service_name: str):
         print(f"  #{name:<30} ID: {channel_id}")
 
     print("\n📋 Next steps:")
-    print("1. Update your serverless.yml with the channel IDs above")
-    print("2. Deploy your Lambda function")
-    print("3. Test by triggering your Lambda")
+    print("1. Use the channel IDs in your application configuration")
+    print("2. Deploy your application")
+    print("3. Test by sending messages to the channels")
 
     print("\n💡 Tips:")
     print("- Bot is already in all channels")
-    print("- Tim has been invited to all channels")
+    print("- Invited users have been added to channels")
     print("- Channels are public for transparency")
 
 

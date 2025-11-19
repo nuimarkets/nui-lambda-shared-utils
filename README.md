@@ -271,8 +271,19 @@ We welcome contributions! This package currently supports MySQL/PostgreSQL, Elas
 - **Messaging platforms**: Microsoft Teams, Discord, PagerDuty
 - **Monitoring**: Datadog, New Relic, Prometheus exporters
 - **Search engines**: OpenSearch, Algolia, Typesense
+- **CLI enhancements**: Additional automation commands for common workflows
 
 See our [development guide](docs/development/testing.md) for testing patterns and architecture guidelines.
+
+### Built-in CLI Tools
+
+The package includes `slack-channel-setup` - a CLI tool for automating Slack workspace channel creation from YAML configuration files. This generic tool works with any Slack workspace and can be used independently of Lambda functions.
+
+```bash
+# Install and use
+pip install nui-lambda-shared-utils[slack]
+slack-channel-setup --config channels.yaml
+```
 
 ## Documentation & Support
 
