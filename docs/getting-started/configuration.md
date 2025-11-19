@@ -301,18 +301,6 @@ for name, test_func in integrations:
         print(f"{name}: Configuration ERROR - {e}")
 ```
 
-## Legacy Compatibility
-
-The package provides legacy compatibility functions:
-
-```python
-# Legacy functions (deprecated, use get_config() instead)
-es_host = nui.get_es_host()
-es_secret = nui.get_es_credentials_secret()
-db_secret = nui.get_db_credentials_secret()
-slack_secret = nui.get_slack_credentials_secret()
-```
-
 ## Best Practices
 
 1. **Use Environment Variables in Lambda**: Set configuration via Lambda environment variables

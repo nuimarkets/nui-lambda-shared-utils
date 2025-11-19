@@ -285,8 +285,6 @@ slack-channel-setup --config channels.yaml --check-only
 slack-channel-setup --config channels.yaml --output channels.env --output-format env
 ```
 
-**Note:** The legacy `nui-slack-setup` command is still available for backward compatibility but is deprecated.
-
 ## AWS Lambda Integration
 
 ### Bundle Size Optimization

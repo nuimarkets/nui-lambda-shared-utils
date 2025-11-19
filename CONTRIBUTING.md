@@ -101,7 +101,6 @@ make lint  # If Makefile exists
 - **Title**: Use a clear, descriptive title
 - **Description**: Explain what your changes do and why
 - **Testing**: Include information about how you tested your changes
-- **Breaking Changes**: Clearly mark any breaking changes
 
 ### Commit Message Format
 

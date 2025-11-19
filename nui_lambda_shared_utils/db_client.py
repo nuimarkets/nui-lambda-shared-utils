@@ -28,8 +28,8 @@ _connection_pool = {}
 
 def _clean_expired_connections(pool_key: str, pool_recycle: int) -> None:
     """
-    Clean expired connections from the pool (standalone function for backward compatibility).
-    
+    Clean expired connections from the pool.
+
     Args:
         pool_key: Pool identifier
         pool_recycle: Maximum connection age in seconds (0 disables recycling)

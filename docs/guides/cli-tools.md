@@ -171,10 +171,12 @@ slack-channel-setup --config channels.yaml --test-access
 1. Create a Slack App at https://api.slack.com/apps
 2. Add bot token scopes:
    - `channels:read` - List channels
-   - `channels:write` - Create channels
-   - `channels:manage` - Set purpose/topic
+   - `channels:manage` - Create channels and set purpose/topic (public channels)
+   - `groups:write` - Create and manage private channels (if using private channels)
    - `chat:write` - Post welcome messages
+   - `chat:write.public` - (Optional) Post to public channels without being added first
    - `users:read` - Look up users by name
+   - `users:read.email` - (Optional) Access user email addresses
 3. Install app to workspace
 4. Copy bot token (starts with `xoxb-`)
 
@@ -235,20 +237,6 @@ custom:
 3. **Validation First**: Always run `--validate-only` before creating
 4. **Testing**: Use `--check-only` to audit existing channels
 5. **Documentation**: Keep channel descriptions clear and up-to-date
-
-### Migration from nui-slack-setup
-
-The old `nui-slack-setup` command is deprecated. Migration is straightforward:
-
-```bash
-# Old command
-nui-slack-setup --config channels.yaml
-
-# New command (identical functionality)
-slack-channel-setup --config channels.yaml
-```
-
-Both commands work identically - `slack-channel-setup` is the new generic name.
 
 ### Template Files
 
