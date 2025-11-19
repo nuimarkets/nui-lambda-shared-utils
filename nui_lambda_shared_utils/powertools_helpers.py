@@ -188,7 +188,9 @@ def powertools_handler(
         def wrapper(event: dict, context: Any) -> dict:
             try:
                 # Apply logger context injection
-                handler_with_logging = logger.inject_lambda_context(func)
+                # Note: inject_lambda_context is added dynamically to logging.Logger (line 95)
+                # and is native to Powertools Logger. Type checker can't verify this union.
+                handler_with_logging = logger.inject_lambda_context(func)  # type: ignore[attr-defined]
 
                 # Apply metrics if configured
                 if metrics:
