@@ -4,10 +4,11 @@
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, and monitoring integrations. This package provides standardized, production-ready patterns for common serverless operations while maintaining flexibility and configurability.
+Production-ready utilities for AWS Lambda functions with Slack, Elasticsearch, database, and monitoring integrations. Built and battle-tested on the NUI platform, this package provides standardized patterns for common serverless operations with sensible defaults that can be configured for any AWS environment.
 
 ## Table of Contents
 
+- [Who This Package Is For](#who-this-package-is-for)
 - [Key Features](#key-features)
 - [Documentation](#documentation)
 - [Quick Start](#quick-start)
@@ -18,6 +19,12 @@ Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, a
 - [Contributing](#contributing)
 - [Documentation & Support](#documentation--support)
 - [License](#license)
+
+## Who This Package Is For
+
+**NUI Team**: Drop-in utilities with NUI platform defaults pre-configured. Handles common patterns like Slack notifications, Elasticsearch logging, database connections, and CloudWatch metrics out of the box.
+
+**External Teams**: Solid AWS Lambda patterns for serverless operations. Default configurations reflect NUI conventions (Elasticsearch index patterns, AWS Secrets Manager naming, Slack workspace structure) but are fully overridable via environment variables or programmatic configuration. Consider this package as production-tested reference implementations that you can adapt to your infrastructure.
 
 ## Key Features
 
@@ -247,11 +254,36 @@ pytest -m integration    # Integration tests (requires AWS)
 
 ## Contributing
 
+We welcome contributions! This package currently supports MySQL/PostgreSQL, Elasticsearch, Slack, and core AWS services (Secrets Manager, CloudWatch). **We're open to expanding support for additional databases (MongoDB, DynamoDB, etc.) and AWS services (SQS, SNS, EventBridge, etc.).**
+
+### How to Contribute
+
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+### Contribution Ideas
+
+- **Database integrations**: MongoDB, DynamoDB, Redis, Cassandra
+- **AWS services**: SQS, SNS, EventBridge, Step Functions, S3, SES
+- **Messaging platforms**: Microsoft Teams, Discord, PagerDuty
+- **Monitoring**: Datadog, New Relic, Prometheus exporters
+- **Search engines**: OpenSearch, Algolia, Typesense
+- **CLI enhancements**: Additional automation commands for common workflows
+
+See our [development guide](docs/development/testing.md) for testing patterns and architecture guidelines.
+
+### Built-in CLI Tools
+
+The package includes `slack-channel-setup` - a CLI tool for automating Slack workspace channel creation from YAML configuration files. This generic tool works with any Slack workspace and can be used independently of Lambda functions.
+
+```bash
+# Install and use
+pip install nui-lambda-shared-utils[slack]
+slack-channel-setup --config channels.yaml
+```
 
 ## Documentation & Support
 
@@ -279,5 +311,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## About NUI Markets
 
-NUI Markets is a technology company focused on building innovative trading and marketplace platforms. This package represents our commitment to open-source tooling and enterprise-grade infrastructure patterns.
+NUI Markets is a technology company focused on building innovative trading and marketplace platforms. This package represents our commitment to open-source tooling and production-grade infrastructure patterns for AWS Lambda development.
 

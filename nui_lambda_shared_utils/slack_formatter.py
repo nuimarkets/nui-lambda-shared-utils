@@ -7,21 +7,6 @@ from typing import Dict, List, Any, Optional, Union
 from datetime import datetime, timedelta
 import pytz
 
-# Service emoji mapping
-SERVICE_EMOJI = {
-    "auth": "🔐",
-    "order": "📦",
-    "records": "📦",
-    "product": "📋",
-    "processing": "⚙️",
-    "surplus": "📊",
-    "gateway": "🌐",
-    "app": "📱",
-    "tender": "🎯",
-    "insights": "📈",
-    "monitor": "👁️",
-}
-
 # Severity emoji mapping
 SEVERITY_EMOJI = {"critical": "🚨", "warning": "⚠️", "info": "ℹ️", "success": "✅", "error": "❌"}
 
@@ -37,7 +22,7 @@ STATUS_EMOJI = {
 
 
 # Number formatting helpers
-def format_currency(value: float, currency: str = "NZD") -> str:
+def format_currency(value: float, currency: str) -> str:
     """Format a number as currency."""
     return f"${value:,.2f} {currency}"
 
@@ -95,7 +80,7 @@ class SlackBlockBuilder:
             .add_divider()
             .add_section("Total Records", format_number(150))
             .add_fields([
-                ("Revenue", format_currency(25000)),
+                ("Revenue", format_currency(25000, "USD")),
                 ("Growth", format_percentage(15.5))
             ])
             .build()
@@ -224,12 +209,11 @@ class SlackBlockBuilder:
     ) -> "SlackBlockBuilder":
         """Add a formatted alert block."""
         severity_emoji = SEVERITY_EMOJI.get(severity.lower(), "❓")
-        service_emoji = SERVICE_EMOJI.get(service.lower(), "🔧")
 
         self.add_header(f"Alert - {severity.upper()}", emoji=severity_emoji)
         self.add_fields(
             [
-                ("Service", f"{service_emoji} {service.upper()}"),
+                ("Service", service.upper()),
                 ("Time", format_nz_time()),
                 ("Environment", "Production"),
                 ("Severity", severity.title()),
@@ -255,8 +239,6 @@ class SlackBlockBuilder:
             if isinstance(value, (int, float)):
                 if "percent" in key or "rate" in key:
                     formatted_value = format_percentage(value)
-                elif "amount" in key or "revenue" in key or "value" in key:
-                    formatted_value = format_currency(value)
                 else:
                     formatted_value = format_number(value)
             else:

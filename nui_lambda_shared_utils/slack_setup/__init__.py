@@ -1,5 +1,5 @@
 """
-Slack setup utilities for Lambda services.
+Slack workspace automation utilities.
 """
 
 from .channel_creator import ChannelCreator

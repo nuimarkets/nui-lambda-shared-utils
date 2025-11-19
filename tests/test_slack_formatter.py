@@ -17,7 +17,6 @@ from nui_lambda_shared_utils.slack_formatter import (
     format_daily_header,
     format_weekly_header,
     format_error_alert,
-    SERVICE_EMOJI,
     SEVERITY_EMOJI,
     STATUS_EMOJI,
 )
@@ -26,16 +25,12 @@ from nui_lambda_shared_utils.slack_formatter import (
 class TestFormatFunctions:
     """Tests for formatting helper functions."""
 
-    def test_format_currency_default(self):
-        """Test currency formatting with default currency."""
-        assert format_currency(1234.56) == "$1,234.56 NZD"
-        assert format_currency(0) == "$0.00 NZD"
-        assert format_currency(1000000.789) == "$1,000,000.79 NZD"
-
-    def test_format_currency_custom(self):
-        """Test currency formatting with custom currency."""
+    def test_format_currency(self):
+        """Test currency formatting."""
         assert format_currency(1234.56, "USD") == "$1,234.56 USD"
-        assert format_currency(999.99, "EUR") == "$999.99 EUR"
+        assert format_currency(0, "NZD") == "$0.00 NZD"
+        assert format_currency(1000000.789, "EUR") == "$1,000,000.79 EUR"
+        assert format_currency(999.99, "GBP") == "$999.99 GBP"
 
     def test_format_percentage_default(self):
         """Test percentage formatting with default decimals."""
@@ -131,14 +126,6 @@ class TestFormatFunctions:
 
 class TestEmojiMappings:
     """Tests for emoji mapping constants."""
-
-    def test_service_emoji_mapping(self):
-        """Test service emoji mappings."""
-        assert SERVICE_EMOJI["auth"] == "🔐"
-        assert SERVICE_EMOJI["order"] == "📦"
-        assert SERVICE_EMOJI["product"] == "📋"
-        assert SERVICE_EMOJI["tender"] == "🎯"
-        assert SERVICE_EMOJI["monitor"] == "👁️"
 
     def test_severity_emoji_mapping(self):
         """Test severity emoji mappings."""
@@ -407,7 +394,7 @@ class TestSlackBlockBuilder:
         field_texts = [field["text"] for field in fields_block["fields"]]
         assert any("Total Orders" in text and "150" in text for text in field_texts)
         assert any("Error Rate" in text and "2.5%" in text for text in field_texts)
-        assert any("Revenue Amount" in text and "$25,000.50" in text for text in field_texts)
+        assert any("Revenue Amount" in text and "25,000" in text for text in field_texts)  # format_number (no decimals)
         assert any("Status" in text and "healthy" in text for text in field_texts)
 
     def test_add_code_block(self):

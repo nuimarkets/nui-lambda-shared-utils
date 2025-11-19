@@ -140,7 +140,7 @@ def generate_serverless_config(channel_map: Dict[str, str], service_name: str, o
 
     elif output_format == "env":
         lines = [
-            "# Environment variables for your Lambda:",
+            "# Environment variables for your application:",
         ]
 
         for channel_name, channel_id in channel_map.items():
