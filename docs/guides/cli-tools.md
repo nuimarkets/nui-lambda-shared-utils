@@ -65,17 +65,20 @@ slack-channel-setup --config channels.yaml --validate-only
 ### Features
 
 #### Automated Channel Creation
+
 - Creates public Slack channels programmatically
 - Handles existing channels gracefully (updates configuration)
 - Sets channel purpose, topic, and description
 - Posts welcome messages with channel context
 
 #### User Management
+
 - Invites specified users automatically
 - Bot joins all channels
 - Supports usernames or user IDs
 
 #### Configuration Generation
+
 - Outputs channel IDs for your application
 - Multiple formats: YAML (serverless.yml) or ENV variables
 
@@ -88,6 +91,7 @@ slack-channel-setup --config channels.yaml --output serverless-channels.yml --ou
 ```
 
 #### Validation & Testing
+
 - Validates channel names before creation
 - Tests bot access to created channels
 - Interactive confirmation before making changes
@@ -107,6 +111,7 @@ channels:
 ```
 
 #### Channel Naming Rules
+
 - Lowercase letters, numbers, hyphens only
 - Cannot start or end with hyphens
 - Maximum 80 characters
@@ -134,6 +139,7 @@ Options:
 ### Examples
 
 #### Basic Setup
+
 ```bash
 # Standard workflow
 export SLACK_BOT_TOKEN=xoxb-...
@@ -141,6 +147,7 @@ slack-channel-setup --config channels.yaml
 ```
 
 #### CI/CD Integration
+
 ```bash
 # Non-interactive mode for automation
 slack-channel-setup \
@@ -151,6 +158,7 @@ slack-channel-setup \
 ```
 
 #### Development Workflow
+
 ```bash
 # 1. Validate configuration
 slack-channel-setup --config channels.yaml --validate-only
@@ -168,6 +176,7 @@ slack-channel-setup --config channels.yaml --test-access
 ### Slack Bot Setup
 
 **Prerequisites:**
+
 1. Create a Slack App at https://api.slack.com/apps
 2. Add bot token scopes:
    - `channels:read` - List channels
@@ -183,6 +192,7 @@ slack-channel-setup --config channels.yaml --test-access
 ### Output Formats
 
 #### Environment Variables (`--output-format env`)
+
 ```bash
 # channels.env
 APP_ALERTS_CHANNEL=C01234567
@@ -191,6 +201,7 @@ ERRORS_CHANNEL=C01234569
 ```
 
 Usage in your application:
+
 ```python
 import os
 from nui_lambda_shared_utils import SlackClient
@@ -201,6 +212,7 @@ slack.send_message(channel=alerts_channel, text="Alert!")
 ```
 
 #### Serverless Configuration (`--output-format yaml`)
+
 ```yaml
 # serverless-channels.yml
 custom:
@@ -213,21 +225,27 @@ custom:
 ### Troubleshooting
 
 #### Authentication Errors
+
 ```
 ❌ Authentication failed: invalid_auth
 ```
+
 **Solution**: Check that `SLACK_BOT_TOKEN` is set correctly and starts with `xoxb-`
 
 #### Permission Errors
+
 ```
 ❌ Failed to create channel: missing_scope
 ```
+
 **Solution**: Add required bot token scopes in Slack App settings
 
 #### Channel Name Validation Errors
+
 ```
 ❌ Invalid channel name: my_channel
 ```
+
 **Solution**: Use hyphens instead of underscores: `my-channel`
 
 ### Best Practices
@@ -241,10 +259,12 @@ custom:
 ### Template Files
 
 See example configuration templates:
+
 - **[Channel Configuration Template](../templates/channels.yaml.template)** - Complete example with comments
 
 ---
 
 **Next Steps:**
+
 - See [Slack Integration Guide](slack-integration.md) for using SlackClient in your code
 - Check [Templates](../templates/) for example configurations

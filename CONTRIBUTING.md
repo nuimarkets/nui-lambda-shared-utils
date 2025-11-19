@@ -14,18 +14,21 @@ We welcome contributions to the NUI Lambda Shared Utilities project! This docume
 
 1. Fork the repository on GitHub
 2. Clone your fork locally:
+
    ```bash
    git clone https://github.com/your-username/nui-lambda-shared-utils.git
    cd nui-lambda-shared-utils
    ```
 
 3. Create a virtual environment:
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 4. Install development dependencies:
+
    ```bash
    pip install -e .[dev]
    ```
@@ -74,6 +77,7 @@ make lint  # If Makefile exists
 ### Submitting Changes
 
 1. Create a new branch for your feature/fix:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -85,11 +89,13 @@ make lint  # If Makefile exists
    - Documentation is updated
 
 3. Commit your changes:
+
    ```bash
    git commit -m "Add: brief description of your changes"
    ```
 
 4. Push to your fork:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -114,6 +120,7 @@ Use conventional commits format:
 - `chore:` for maintenance tasks
 
 Examples:
+
 - `feat: add retry decorator for database operations`
 - `fix: handle missing environment variables gracefully`
 - `docs: update configuration examples in README`
@@ -184,6 +191,7 @@ class MyUtility:
 - Use `test_<functionality>_<condition>_<expected_result>` pattern
 
 Example:
+
 ```python
 class TestSlackClient:
     def test_send_message_success_returns_true(self):
@@ -241,6 +249,7 @@ def example_function(param1: str, param2: Optional[int] = None) -> Dict[str, Any
 ### README Updates
 
 When adding new functionality, update the README.md with:
+
 - Usage examples
 - Configuration options
 - Any new dependencies
@@ -273,6 +282,7 @@ By contributing to this project, you agree that your contributions will be licen
 ## Questions?
 
 If you have questions about contributing, please:
+
 - Open an issue with the "question" label
 - Check the existing documentation
 - Look at similar implementations in the codebase

@@ -49,12 +49,14 @@ tests/
 Fast, isolated tests that mock external dependencies.
 
 **Characteristics:**
+
 - No AWS service calls
 - Use mocking extensively
 - Fast execution (< 1 second per test)
 - High coverage of code paths
 
 **Example:**
+
 ```python
 @pytest.mark.unit
 def test_config_defaults():
@@ -69,12 +71,14 @@ def test_config_defaults():
 Tests requiring actual AWS services or external dependencies.
 
 **Characteristics:**
+
 - May require AWS credentials
 - Use `moto` for AWS service mocking
 - Slower execution
 - Test actual integration patterns
 
 **Example:**
+
 ```python
 @pytest.mark.integration
 def test_secrets_manager_integration():
@@ -89,6 +93,7 @@ def test_secrets_manager_integration():
 Long-running tests that may timeout or require special attention.
 
 **Example:**
+
 ```python
 @pytest.mark.slow
 def test_large_elasticsearch_query():
@@ -329,6 +334,7 @@ xdg-open htmlcov/index.html  # Linux
 ### Coverage Improvements
 
 When adding new code:
+
 1. Write tests before implementation (TDD)
 2. Aim for 90%+ coverage on new modules
 3. Include edge cases and error paths
@@ -361,11 +367,13 @@ pytest --cov=nui_lambda_shared_utils --cov-fail-under=90 -v
 #### AWS Credentials Not Found
 
 **Error:**
+
 ```
 NoCredentialsError: Unable to locate credentials
 ```
 
 **Solution:**
+
 ```bash
 # Set dummy credentials for testing
 export AWS_ACCESS_KEY_ID=test
@@ -376,11 +384,13 @@ export AWS_DEFAULT_REGION=us-east-1
 #### Import Errors
 
 **Error:**
+
 ```
 ImportError: No module named 'elasticsearch'
 ```
 
 **Solution:**
+
 ```bash
 # Install dev dependencies
 pip install -e .[dev]
@@ -389,11 +399,13 @@ pip install -e .[dev]
 #### Fixture Not Found
 
 **Error:**
+
 ```
 fixture 'mock_config' not found
 ```
 
 **Solution:**
+
 - Check `conftest.py` for fixture definitions
 - Ensure fixture scope is correct
 - Verify fixture name matches usage

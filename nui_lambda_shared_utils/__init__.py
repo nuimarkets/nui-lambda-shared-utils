@@ -114,6 +114,12 @@ from .cloudwatch_metrics import (
     publish_health_metric,
 )
 
+# AWS Powertools integration - optional import
+try:
+    from .powertools_helpers import get_powertools_logger, powertools_handler
+except ImportError:
+    get_powertools_logger = None  # type: ignore
+    powertools_handler = None  # type: ignore
 
 # Slack setup utilities (for CLI usage) - optional import
 try:
@@ -197,4 +203,7 @@ __all__ = [
     "track_lambda_performance",
     "create_service_dimensions",
     "publish_health_metric",
+    # AWS Powertools integration
+    "get_powertools_logger",
+    "powertools_handler",
 ]

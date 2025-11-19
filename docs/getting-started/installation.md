@@ -54,6 +54,7 @@ pip install -e .[dev]
 ## Dependency Overview
 
 ### Core Dependencies (Always Installed)
+
 - `boto3` - AWS SDK for Python
 - `pytz` - Timezone handling
 - `click` - CLI framework
@@ -62,16 +63,20 @@ pip install -e .[dev]
 ### Optional Dependencies by Extra
 
 #### elasticsearch
+
 - `elasticsearch>=7.17.0,<8.0.0` - Elasticsearch client
 
 #### database
+
 - `pymysql>=1.0.0` - MySQL driver
 - `psycopg2-binary>=2.9.0` - PostgreSQL driver
 
 #### slack
+
 - `slack-sdk>=3.19.0` - Official Slack SDK
 
 #### dev
+
 - `pytest>=7.0.0` - Testing framework
 - `pytest-cov>=4.0.0` - Coverage reporting
 - `pytest-mock>=3.10.0` - Mocking utilities
@@ -214,16 +219,19 @@ print(f"Database: {nui.DatabaseClient is not None}")
 ### Common Issues
 
 #### Import Errors with Optional Dependencies
+
 ```
 ImportError: No module named 'elasticsearch'
 ```
 
 **Solution**: Install with the appropriate extra:
+
 ```bash
 pip install nui-lambda-shared-utils[elasticsearch]
 ```
 
 #### AWS Credentials Not Found
+
 ```
 NoCredentialsError: Unable to locate credentials
 ```
@@ -231,6 +239,7 @@ NoCredentialsError: Unable to locate credentials
 **Solution**: Configure AWS credentials using `aws configure` or environment variables.
 
 #### Version Conflicts
+
 ```
 ERROR: pip's dependency resolver does not currently consider all the ways...
 ```

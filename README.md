@@ -28,6 +28,7 @@ Production-ready utilities for AWS Lambda functions with Slack, Elasticsearch, d
 
 ## Key Features
 
+- **AWS Powertools Integration** - Standardized logging, metrics, and error handling for Lambda functions
 - **AWS Secrets Manager Integration** - Secure credential management with caching
 - **Slack Messaging** - Rich formatting, threading, file uploads, and channel management
 - **Elasticsearch Operations** - Query builders, index management, and health monitoring
@@ -49,6 +50,12 @@ Production-ready utilities for AWS Lambda functions with Slack, Elasticsearch, d
 
 **Complete documentation**: See [docs/](docs/README.md) for all guides and references.
 
+**Component Guides:**
+
+- **[AWS Powertools Integration Guide](docs/guides/powertools-integration.md)** - Logging, metrics, error handling
+- **[Slack Integration Guide](docs/guides/slack-integration.md)** - Messaging, blocks, threading, files
+- **[Testing Guide](docs/development/testing.md)** - Test strategies and coverage
+
 ## Quick Start
 
 ### Installation
@@ -58,6 +65,7 @@ pip install nui-lambda-shared-utils
 
 # With specific extras for optional dependencies
 pip install nui-lambda-shared-utils[all]          # All integrations
+pip install nui-lambda-shared-utils[powertools]   # AWS Powertools only
 pip install nui-lambda-shared-utils[slack]        # Slack only
 pip install nui-lambda-shared-utils[elasticsearch] # Elasticsearch only
 pip install nui-lambda-shared-utils[database]     # Database only
@@ -112,6 +120,36 @@ slack_creds = get_slack_credentials()  # Uses configured secret name
 ```
 
 **[→ See full secrets management guide](docs/getting-started/configuration.md#aws-secrets-manager)**
+
+### AWS Powertools Integration
+
+```python
+from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+
+# Create logger with Elasticsearch-compatible formatting
+logger = get_powertools_logger("my-service", level="INFO")
+
+# Decorate Lambda handler with logging, metrics, and error handling
+@powertools_handler(
+    service_name="my-service",
+    metrics_namespace="MyApp/Service",
+    slack_alert_channel="#production-alerts"
+)
+@logger.inject_lambda_context
+def lambda_handler(event, context):
+    logger.info("Processing event", extra={"event_id": event.get("id")})
+    return {"statusCode": 200, "body": "Success"}
+```
+
+**Features:**
+
+- ✅ Elasticsearch-compatible timestamps (`2025-01-18T04:39:27.788Z`)
+- ✅ Automatic Lambda context injection (function name, request ID, cold start)
+- ✅ CloudWatch metrics publishing
+- ✅ Slack error alerts with graceful degradation
+- ✅ Local development with colored logs
+
+**[→ See comprehensive Powertools integration guide](docs/guides/powertools-integration.md)**
 
 ### Slack Integration
 
@@ -223,11 +261,13 @@ This package requires AWS Secrets Manager for credential storage and IAM permiss
 ### Quick Reference
 
 **Secrets Manager** - Store credentials as JSON:
+
 - Elasticsearch: `{"host": "...", "username": "...", "password": "..."}`
 - Database: `{"host": "...", "port": 3306, "username": "...", "password": "...", "database": "..."}`
 - Slack: `{"bot_token": "xoxb-...", "webhook_url": "..."}`
 
 **IAM Permissions** - Lambda execution role needs:
+
 - `secretsmanager:GetSecretValue` for credential access
 - `cloudwatch:PutMetricData` for metrics publishing
 
@@ -288,6 +328,7 @@ slack-channel-setup --config channels.yaml
 ## Documentation & Support
 
 ### 📚 Documentation
+
 - **[Complete Documentation](docs/README.md)** - Comprehensive guides and references
 - **[Quick Start Guide](docs/getting-started/quickstart.md)** - Get up and running fast
 - **[Configuration Guide](docs/getting-started/configuration.md)** - Setup and AWS integration
@@ -295,12 +336,14 @@ slack-channel-setup --config channels.yaml
 - **[Testing Guide](docs/development/testing.md)** - Test strategies and coverage
 
 ### 🔗 Links
+
 - **GitHub Repository**: https://github.com/nuimarkets/nui-lambda-shared-utils
 - **Issue Tracker**: https://github.com/nuimarkets/nui-lambda-shared-utils/issues
 - **PyPI Package**: https://pypi.org/project/nui-lambda-shared-utils/
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
 ### 💬 Support
+
 - **Bug Reports**: [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
 - **Feature Requests**: [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
 - **Questions**: Check [docs/](docs/README.md) first, then open an issue
@@ -312,4 +355,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## About NUI Markets
 
 NUI Markets is a technology company focused on building innovative trading and marketplace platforms. This package represents our commitment to open-source tooling and production-grade infrastructure patterns for AWS Lambda development.
-
