@@ -275,9 +275,12 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         except Exception:
             return "Unknown"
 
-    def _create_lambda_header_block(self) -> List[Dict]:
+    def _create_lambda_header_block(self, event_type: Optional[str] = None) -> List[Dict]:
         """
         Create Lambda context header block.
+
+        Args:
+            event_type: Optional event type label (e.g., "Scheduled", "API", "SQS")
 
         Returns:
             List of Slack blocks for Lambda context
@@ -289,8 +292,10 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         # Use custom service name if provided, otherwise use full function name
         display_name = self._service_name or self._lambda_context['function_name']
 
-        # Build header lines (2 lines total)
+        # Build header lines (line1 includes optional event type)
         line1 = f"🤖 {display_name}"
+        if event_type:
+            line1 += f" • {event_type}"
         line2 = f"{simple_account} ({account_id}) • {self._lambda_context['aws_region']} • 📋 Log: `{self._lambda_context['log_group']}`"
 
         return [{
@@ -301,10 +306,13 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             }]
         }]
 
-    def _create_local_header_block(self) -> List[Dict]:
+    def _create_local_header_block(self, event_type: Optional[str] = None) -> List[Dict]:
         """
         Create header block for local/manual execution.
-        
+
+        Args:
+            event_type: Optional event type label (e.g., "Scheduled", "API", "SQS")
+
         Returns:
             List of blocks for local context
         """
@@ -323,6 +331,8 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         )
 
         line1 = f"👤 `Local Testing` • {username}"
+        if event_type:
+            line1 += f" • {event_type}"
         line2 = f"📍 {account_name} • {self._lambda_context['aws_region']} • {timestamp}"
         line3 = "📋 Context: Manual/Development Testing"
 
@@ -340,17 +350,19 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         channel: str,
         text: str,
         blocks: Optional[List[Dict]] = None,
-        include_lambda_header: bool = True
+        include_lambda_header: bool = True,
+        event_type: Optional[str] = None
     ) -> bool:
         """
         Send message to Slack channel with standardized error handling.
-        
+
         Args:
             channel: Channel ID
             text: Fallback text
             blocks: Rich formatted blocks
             include_lambda_header: Whether to include context header
-            
+            event_type: Optional event type label for header (e.g., "Scheduled", "API", "SQS")
+
         Returns:
             True if successful, False otherwise
         """
@@ -358,9 +370,9 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             # Add context header if requested
             if include_lambda_header:
                 if self._lambda_context["function_name"] != "Unknown":
-                    header_blocks = self._create_lambda_header_block()
+                    header_blocks = self._create_lambda_header_block(event_type=event_type)
                 else:
-                    header_blocks = self._create_local_header_block()
+                    header_blocks = self._create_local_header_block(event_type=event_type)
 
                 if blocks:
                     blocks_with_header = header_blocks + blocks
