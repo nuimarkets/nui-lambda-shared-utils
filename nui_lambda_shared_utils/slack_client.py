@@ -461,18 +461,20 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         thread_ts: str,
         text: str,
         blocks: Optional[List[Dict]] = None,
-        include_lambda_header: bool = False
+        include_lambda_header: bool = False,
+        event_type: Optional[str] = None
     ) -> bool:
         """
         Send thread reply with standardized error handling.
-        
+
         Args:
             channel: Channel ID
             thread_ts: Parent message timestamp
             text: Reply text
             blocks: Optional blocks
             include_lambda_header: Whether to include header
-            
+            event_type: Optional event type label for header (e.g., "Scheduled", "API", "SQS")
+
         Returns:
             True if successful, False otherwise
         """
@@ -480,7 +482,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             # Add header if requested (uncommon for thread replies)
             blocks_with_header = blocks
             if include_lambda_header and self._lambda_context["function_name"] != "Unknown":
-                header_blocks = self._create_lambda_header_block()
+                header_blocks = self._create_lambda_header_block(event_type=event_type)
                 if blocks:
                     blocks_with_header = header_blocks + blocks
                 else:
