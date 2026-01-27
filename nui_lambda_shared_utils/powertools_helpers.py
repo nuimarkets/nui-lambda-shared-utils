@@ -50,7 +50,7 @@ def get_powertools_logger(
     - Lambda environment: AWS Powertools Logger with JSON structured logging
     - Local environment: Standard Python logger with coloredlogs (if available)
 
-    The logger uses Elasticsearch-compatible timestamp format (%Y-%m-%dT%H:%M:%S.%fZ)
+    The logger uses Elasticsearch-compatible timestamp format (%Y-%m-%dT%H:%M:%SZ)
     and enforces UTC timezone for consistency with log aggregation systems.
 
     Args:
@@ -105,12 +105,13 @@ def get_powertools_logger(
 
     # Create Powertools Logger with ES-compatible timestamp format
     # Powertools default: '2025-01-18 04:39:27,788+0000'
-    # Elasticsearch expects: '2025-01-18T04:39:27.788Z'
+    # Elasticsearch expects: '2025-01-18T04:39:27Z' (ISO 8601)
+    # Note: %f (microseconds) is not supported by time.strftime() which logging uses internally
     powertools_logger = Logger(
         service=service_name,
         level=level,
         sampling_rate=1,
-        datefmt="%Y-%m-%dT%H:%M:%S.%fZ",
+        datefmt="%Y-%m-%dT%H:%M:%SZ",
         utc=True,
     )
 

@@ -56,7 +56,7 @@ class TestGetPowertoolsLogger:
                     service="test-service",
                     level="INFO",
                     sampling_rate=1,
-                    datefmt="%Y-%m-%dT%H:%M:%S.%fZ",
+                    datefmt="%Y-%m-%dT%H:%M:%SZ",
                     utc=True,
                 )
 
