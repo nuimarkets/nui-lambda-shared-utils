@@ -469,7 +469,7 @@ class DatabaseClient(BaseClient, ServiceHealthMixin):
 
 class PostgreSQLClient(BaseClient, ServiceHealthMixin):
     """
-    Refactored PostgreSQL client for auth database.
+    PostgreSQL client with connection management.
     """
 
     def __init__(
