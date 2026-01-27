@@ -32,8 +32,9 @@ Command-line utilities included with the package:
 
 ### 📋 Reference
 
-API reference and detailed component documentation (planned):
+API reference and detailed component documentation:
 
+- **[Shared Types & Data Structures](guides/shared-types.md)** - Core types, interfaces, and response structures
 - Client APIs (planned)
 - Utility Functions (planned)
 - Configuration Options (planned)
@@ -118,6 +119,7 @@ When contributing to documentation:
 - Getting started guides (installation, configuration, quickstart)
 - AWS Powertools integration guide (guides/powertools-integration.md)
 - Slack integration guide (guides/slack-integration.md)
+- Shared types reference (guides/shared-types.md)
 - CLI tools guide (guides/cli-tools.md)
 - Testing guide (development/testing.md)
 - Configuration templates (Slack account names, channel setup)
