@@ -2,12 +2,10 @@
 Tests for slack_client module.
 """
 
-import pytest
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 from slack_sdk.errors import SlackApiError
 from nui_lambda_shared_utils.slack_client import SlackClient, DEFAULT_ACCOUNT_NAMES
 import os
-from datetime import datetime
 
 
 class TestSlackClient:

@@ -5,7 +5,6 @@ Tests for es_client module.
 import pytest
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock
-from elasticsearch import Elasticsearch
 from nui_lambda_shared_utils.es_client import ElasticsearchClient
 
 
@@ -313,3 +312,148 @@ class TestGetServiceStats:
         expected_start = (mock_now - timedelta(hours=48)).isoformat()
         assert query["gte"] == expected_start
         assert query["lte"] == mock_now.isoformat()
+
+
+class TestStreamingBulk:
+    """Tests for streaming_bulk method."""
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_success(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test successful bulk indexing."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_es.return_value = Mock()
+
+        # Simulate 3 successful documents
+        mock_streaming_bulk.return_value = iter([
+            (True, {"index": {"_index": "test-index", "_id": "1"}}),
+            (True, {"index": {"_index": "test-index", "_id": "2"}}),
+            (True, {"index": {"_index": "test-index", "_id": "3"}}),
+        ])
+
+        client = ElasticsearchClient()
+
+        def generate_docs():
+            for i in range(3):
+                yield {"_index": "test-index", "_source": {"doc_id": i}}
+
+        success, failed = client.streaming_bulk(generate_docs())
+
+        assert success == 3
+        assert failed == 0
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_partial_failures(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test bulk indexing with partial failures."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_es.return_value = Mock()
+
+        # Simulate 2 successes and 1 failure
+        mock_streaming_bulk.return_value = iter([
+            (True, {"index": {"_index": "test-index", "_id": "1"}}),
+            (False, {"index": {"_index": "test-index", "_id": "2", "error": {"type": "mapper_parsing_exception"}}}),
+            (True, {"index": {"_index": "test-index", "_id": "3"}}),
+        ])
+
+        client = ElasticsearchClient()
+
+        def generate_docs():
+            for i in range(3):
+                yield {"_index": "test-index", "_source": {"doc_id": i}}
+
+        success, failed = client.streaming_bulk(generate_docs())
+
+        assert success == 2
+        assert failed == 1
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_all_failures(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test bulk indexing with all failures."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_es.return_value = Mock()
+
+        # Simulate all failures
+        mock_streaming_bulk.return_value = iter([
+            (False, {"index": {"_index": "test-index", "_id": "1", "error": {"type": "validation_exception"}}}),
+            (False, {"index": {"_index": "test-index", "_id": "2", "error": {"type": "validation_exception"}}}),
+        ])
+
+        client = ElasticsearchClient()
+
+        def generate_docs():
+            for i in range(2):
+                yield {"_index": "test-index", "_source": {"doc_id": i}}
+
+        success, failed = client.streaming_bulk(generate_docs())
+
+        assert success == 0
+        assert failed == 2
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_custom_chunk_size(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test streaming_bulk with custom chunk_size."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_client = Mock()
+        mock_es.return_value = mock_client
+        mock_streaming_bulk.return_value = iter([])
+
+        client = ElasticsearchClient()
+        client.streaming_bulk(iter([]), chunk_size=500, max_retries=5)
+
+        # Verify parameters passed to streaming_bulk
+        call_kwargs = mock_streaming_bulk.call_args[1]
+        assert call_kwargs["chunk_size"] == 500
+        assert call_kwargs["max_retries"] == 5
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_exception_no_raise(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test streaming_bulk handles exceptions gracefully when raise_on_error=False."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_es.return_value = Mock()
+        mock_streaming_bulk.side_effect = Exception("Connection error")
+
+        client = ElasticsearchClient()
+
+        # Should not raise, return zeros
+        success, failed = client.streaming_bulk(iter([]))
+
+        assert success == 0
+        assert failed == 0
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_exception_with_raise(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test streaming_bulk raises exception when raise_on_error=True."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_es.return_value = Mock()
+        mock_streaming_bulk.side_effect = Exception("Connection error")
+
+        client = ElasticsearchClient()
+
+        with pytest.raises(Exception, match="Connection error"):
+            client.streaming_bulk(iter([]), raise_on_error=True)
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_lambda_shared_utils.es_client.es_streaming_bulk")
+    def test_streaming_bulk_empty_iterator(self, mock_streaming_bulk, mock_es, mock_get_secret):
+        """Test streaming_bulk with empty iterator."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_es.return_value = Mock()
+        mock_streaming_bulk.return_value = iter([])
+
+        client = ElasticsearchClient()
+        success, failed = client.streaming_bulk(iter([]))
+
+        assert success == 0
+        assert failed == 0

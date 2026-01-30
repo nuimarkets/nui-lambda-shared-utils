@@ -3,11 +3,10 @@ Tests for base client functionality and contract compliance.
 """
 
 import pytest
-import time
 import logging
 
 pytestmark = pytest.mark.unit
-from unittest.mock import patch, Mock, MagicMock, call
+from unittest.mock import patch, Mock
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 

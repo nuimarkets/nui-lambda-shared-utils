@@ -3,7 +3,7 @@ Elasticsearch query builder utilities for consistent query patterns across Lambd
 Provides helper functions for building common ES queries used in application monitoring.
 """
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Union
 from datetime import datetime, timedelta
 
 

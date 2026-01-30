@@ -17,8 +17,9 @@ Welcome to the comprehensive documentation for `nui-lambda-shared-utils`.
 Component-specific guides for major features:
 
 - **[AWS Powertools Integration](guides/powertools-integration.md)** - Standardized logging, metrics, and error handling
+- **[Lambda Context Helpers](guides/lambda-utilities.md)** - Environment info extraction for logging and metrics
 - **[Slack Integration](guides/slack-integration.md)** - Messaging, formatting, and file uploads
-- Elasticsearch Operations (planned)
+- **[Elasticsearch Integration](guides/elasticsearch-integration.md)** - Search, bulk indexing, health checks
 - Database Connections (planned)
 - Error Handling Patterns (planned)
 - CloudWatch Metrics (planned)
@@ -118,7 +119,9 @@ When contributing to documentation:
 - Main documentation (this README)
 - Getting started guides (installation, configuration, quickstart)
 - AWS Powertools integration guide (guides/powertools-integration.md)
+- Lambda context helpers guide (guides/lambda-utilities.md)
 - Slack integration guide (guides/slack-integration.md)
+- Elasticsearch integration guide (guides/elasticsearch-integration.md)
 - Shared types reference (guides/shared-types.md)
 - CLI tools guide (guides/cli-tools.md)
 - Testing guide (development/testing.md)
@@ -126,7 +129,7 @@ When contributing to documentation:
 
 ### 🚧 Planned
 
-- Component-specific guides (Elasticsearch, Database, Metrics, Error Handling)
+- Component-specific guides (Database, Metrics, Error Handling)
 - API reference documentation
 - Advanced topics (AWS infrastructure, Lambda integration)
 - Troubleshooting guide

@@ -4,9 +4,10 @@ Refactored Elasticsearch client using BaseClient for DRY code patterns.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any
+from typing import Dict, Iterator, List, Optional, Any, Tuple
 from urllib.parse import urlparse
 from elasticsearch import Elasticsearch
+from elasticsearch.helpers import streaming_bulk as es_streaming_bulk
 
 from .base_client import BaseClient, ServiceHealthMixin
 from .utils import handle_client_errors, resolve_config_value
@@ -338,10 +339,10 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
     def get_indices_info(self, pattern: str = "*") -> List[Dict]:
         """
         Get information about indices.
-        
+
         Args:
             pattern: Index pattern to match
-            
+
         Returns:
             List of index information dictionaries
         """
@@ -358,3 +359,80 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
             _indices_operation,
             pattern=pattern
         )
+
+    def streaming_bulk(
+        self,
+        actions: Iterator[Dict],
+        chunk_size: int = 100,
+        max_retries: int = 2,
+        raise_on_error: bool = False,
+        **kwargs
+    ) -> Tuple[int, int]:
+        """
+        Stream documents to Elasticsearch with error handling.
+
+        Wrapper around elasticsearch.helpers.streaming_bulk() that provides
+        automatic error logging and returns success/failure counts.
+
+        Args:
+            actions: Iterator of action dictionaries. Each dict should have
+                     '_index' and '_source' keys (and optionally '_id', '_op_type').
+            chunk_size: Number of documents to send per batch (default: 100)
+            max_retries: Number of retries for failed documents (default: 2)
+            raise_on_error: If True, raise exception on first error (default: False)
+            **kwargs: Additional arguments passed to streaming_bulk()
+
+        Returns:
+            Tuple of (success_count, failure_count)
+
+        Example:
+            def generate_docs():
+                for item in items:
+                    yield {
+                        "_index": "my-index",
+                        "_source": {"field": item.value}
+                    }
+
+            success, failed = client.streaming_bulk(generate_docs())
+            print(f"Indexed {success} documents, {failed} failures")
+        """
+        success_count = 0
+        failure_count = 0
+        context = {"client_type": self.__class__.__name__, "operation": "streaming_bulk"}
+
+        try:
+            for ok, response in es_streaming_bulk(
+                client=self._service_client,
+                actions=actions,
+                chunk_size=chunk_size,
+                max_retries=max_retries,
+                raise_on_error=raise_on_error,
+                **kwargs
+            ):
+                if ok:
+                    success_count += 1
+                else:
+                    failure_count += 1
+                    action_type = list(response.keys())[0] if response else "unknown"
+                    error_info = response.get(action_type, {})
+                    log.error(
+                        f"Bulk indexing failure: {action_type}",
+                        extra={
+                            **context,
+                            "index": error_info.get("_index", "unknown"),
+                            "error": error_info.get("error", "unknown"),
+                        }
+                    )
+        except Exception as e:
+            log.error(
+                f"streaming_bulk failed: {e}",
+                extra={**context, "error_type": type(e).__name__, "error_message": str(e)}
+            )
+            if raise_on_error:
+                raise
+
+        log.debug(
+            f"streaming_bulk completed: {success_count} successful, {failure_count} failed",
+            extra={**context, "success_count": success_count, "failure_count": failure_count}
+        )
+        return success_count, failure_count

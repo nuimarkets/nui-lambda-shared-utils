@@ -123,7 +123,7 @@ def setup_channels(config, token, check_only, dry_run, output, output_format, no
         channel_names = [d.name for d in definitions]
         existing_channels = creator.check_existing_channels(channel_names)
 
-        click.echo(f"\n📊 Channel Status:")
+        click.echo("\n📊 Channel Status:")
         for name, channel_id in existing_channels.items():
             if channel_id:
                 click.echo(click.style(f"  ✅ #{name} exists (ID: {channel_id})", fg="green"))

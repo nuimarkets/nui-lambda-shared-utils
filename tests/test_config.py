@@ -2,7 +2,6 @@
 Tests for config module.
 """
 
-import pytest
 import os
 from unittest.mock import patch
 from nui_lambda_shared_utils.config import (

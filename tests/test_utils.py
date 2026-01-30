@@ -7,7 +7,7 @@ import os
 import logging
 
 pytestmark = pytest.mark.unit
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from botocore.exceptions import ClientError, NoCredentialsError
 
 from nui_lambda_shared_utils.utils import (

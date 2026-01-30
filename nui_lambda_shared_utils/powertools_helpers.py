@@ -34,6 +34,8 @@ except ImportError:
     SLACK_CLIENT_AVAILABLE = False
     SlackClient = None  # type: ignore
 
+from .lambda_helpers import get_lambda_environment_info
+
 
 __all__ = ["get_powertools_logger", "powertools_handler"]
 
@@ -74,11 +76,11 @@ def get_powertools_logger(
         ...     return {"statusCode": 200}
     """
     # Detect Lambda environment
-    is_lambda = os.getenv("AWS_LAMBDA_RUNTIME_API") is not None
+    env_info = get_lambda_environment_info()
     is_sam_local = os.getenv("AWS_SAM_LOCAL") is not None
 
-    # Local development environment
-    if not is_lambda or is_sam_local:
+    # Local development environment (or SAM local for dev-friendly logging)
+    if env_info["is_local"] or is_sam_local:
         logging.captureWarnings(True)
 
         # Use coloredlogs for local development if available and enabled
