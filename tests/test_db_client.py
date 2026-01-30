@@ -3,6 +3,8 @@ Tests for db_client module.
 """
 
 import pytest
+
+pytestmark = pytest.mark.unit
 from unittest.mock import patch, Mock, MagicMock
 import time
 import pymysql

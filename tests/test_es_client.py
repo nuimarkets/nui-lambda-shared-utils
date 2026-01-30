@@ -3,6 +3,8 @@ Tests for es_client module.
 """
 
 import pytest
+
+pytestmark = pytest.mark.unit
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock
 from nui_lambda_shared_utils.es_client import ElasticsearchClient

@@ -192,11 +192,12 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         env_info = get_lambda_environment_info()
 
         # Build context with "Unknown" defaults for display purposes
+        # Cast to str() for type safety - these keys are always strings in practice
         context = {
-            "function_name": env_info["function_name"] or "Unknown",
-            "function_version": env_info["function_version"] or "Unknown",
-            "aws_region": env_info["aws_region"] or "Unknown",
-            "stage": env_info["environment"] if env_info["environment"] != "unknown" else "Unknown",
+            "function_name": str(env_info["function_name"]) or "Unknown",
+            "function_version": str(env_info["function_version"]) or "Unknown",
+            "aws_region": str(env_info["aws_region"]) or "Unknown",
+            "stage": str(env_info["environment"]) if env_info["environment"] != "unknown" else "Unknown",
             # Extra fields not in shared helper
             "log_group": os.environ.get("AWS_LAMBDA_LOG_GROUP_NAME", "Unknown"),
             "log_stream": os.environ.get("AWS_LAMBDA_LOG_STREAM_NAME", "Unknown"),

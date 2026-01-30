@@ -5,13 +5,13 @@ Provides standardized environment info extraction for logging and metrics contex
 """
 
 import os
-from typing import Dict
+from typing import Dict, Union
 
 
 __all__ = ["get_lambda_environment_info"]
 
 
-def get_lambda_environment_info() -> Dict[str, str | bool]:
+def get_lambda_environment_info() -> Dict[str, Union[str, bool]]:
     """
     Extract standard Lambda environment info.
 

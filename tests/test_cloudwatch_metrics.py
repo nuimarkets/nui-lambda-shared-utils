@@ -3,6 +3,8 @@ Tests for cloudwatch_metrics module.
 """
 
 import pytest
+
+pytestmark = pytest.mark.unit
 import os
 from unittest.mock import patch, Mock
 from datetime import datetime
