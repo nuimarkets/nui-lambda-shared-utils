@@ -2,8 +2,7 @@
 Tests for slack_formatter module.
 """
 
-import pytest
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from datetime import datetime, timedelta
 import pytz
 

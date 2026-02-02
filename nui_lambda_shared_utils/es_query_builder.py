@@ -3,7 +3,7 @@ Elasticsearch query builder utilities for consistent query patterns across Lambd
 Provides helper functions for building common ES queries used in application monitoring.
 """
 
-from typing import Dict, List, Optional, Any, Union
+from typing import Dict, List, Optional, Union
 from datetime import datetime, timedelta
 
 
@@ -250,7 +250,7 @@ def build_user_activity_query(start_time: datetime, end_time: datetime, user_fie
 
 
 def build_pattern_detection_query(
-    pattern: str, field: str = "message", start_time: datetime = None, hours_back: int = 24
+    pattern: str, field: str = "message", start_time: Optional[datetime] = None, hours_back: int = 24
 ) -> Dict:
     """Build query to detect specific patterns in logs."""
     if not start_time:

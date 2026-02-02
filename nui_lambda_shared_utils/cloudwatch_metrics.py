@@ -6,7 +6,7 @@ Provides efficient batching and standardized metric publishing patterns.
 import os
 import time
 import logging
-from typing import Dict, List, Optional, Union, Any
+from typing import Dict, List, Optional, Union
 from datetime import datetime
 from collections import defaultdict
 import boto3
@@ -283,7 +283,7 @@ def track_lambda_performance(namespace: str = "Application"):
 
                 return result
 
-            except Exception as e:
+            except Exception:
                 # Track error
                 publisher.put_metric(StandardMetrics.LAMBDA_ERRORS, 1, unit="Count")
                 raise

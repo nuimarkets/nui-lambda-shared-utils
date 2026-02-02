@@ -9,7 +9,6 @@ from pathlib import Path
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 from datetime import datetime
-import json
 
 try:
     import yaml
@@ -19,7 +18,7 @@ except ImportError:
 
 from .base_client import BaseClient, ServiceHealthMixin
 from .utils import create_aws_client, handle_client_errors
-from .slack_formatter import format_nz_time
+from .lambda_helpers import get_lambda_environment_info
 
 log = logging.getLogger(__name__)
 
@@ -185,17 +184,23 @@ class SlackClient(BaseClient, ServiceHealthMixin):
     def _collect_lambda_context(self) -> Dict[str, str]:
         """
         Collect Lambda runtime context with AWS client integration.
-        
+
         Returns:
             Dictionary containing Lambda and AWS context
         """
+        # Get base environment info from shared helper
+        env_info = get_lambda_environment_info()
+
+        # Build context with "Unknown" defaults for display purposes
+        # Cast to str() for type safety - these keys are always strings in practice
         context = {
-            "function_name": os.environ.get("AWS_LAMBDA_FUNCTION_NAME", "Unknown"),
-            "function_version": os.environ.get("AWS_LAMBDA_FUNCTION_VERSION", "Unknown"),
+            "function_name": str(env_info["function_name"]) or "Unknown",
+            "function_version": str(env_info["function_version"]) or "Unknown",
+            "aws_region": str(env_info["aws_region"]) or "Unknown",
+            "stage": str(env_info["environment"]) if env_info["environment"] != "unknown" else "Unknown",
+            # Extra fields not in shared helper
             "log_group": os.environ.get("AWS_LAMBDA_LOG_GROUP_NAME", "Unknown"),
             "log_stream": os.environ.get("AWS_LAMBDA_LOG_STREAM_NAME", "Unknown"),
-            "aws_region": os.environ.get("AWS_REGION", "Unknown"),
-            "stage": os.environ.get("STAGE", os.environ.get("ENV", "Unknown")),
             "execution_env": os.environ.get("AWS_EXECUTION_ENV", "Unknown"),
         }
 

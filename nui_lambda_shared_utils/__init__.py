@@ -121,6 +121,9 @@ except ImportError:
     get_powertools_logger = None  # type: ignore
     powertools_handler = None  # type: ignore
 
+# Lambda context helpers (no external dependencies)
+from .lambda_helpers import get_lambda_environment_info
+
 # Slack setup utilities (for CLI usage) - optional import
 try:
     from . import slack_setup
@@ -206,4 +209,6 @@ __all__ = [
     # AWS Powertools integration
     "get_powertools_logger",
     "powertools_handler",
+    # Lambda context helpers
+    "get_lambda_environment_info",
 ]

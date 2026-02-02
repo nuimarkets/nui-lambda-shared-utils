@@ -224,7 +224,7 @@ class ChannelCreator:
         """Post welcome message to channel."""
         try:
             blocks = [
-                {"type": "header", "text": {"type": "plain_text", "text": f"🎉 Channel Initialized!"}},
+                {"type": "header", "text": {"type": "plain_text", "text": "🎉 Channel Initialized!"}},
                 {"type": "section", "text": {"type": "mrkdwn", "text": f"*{definition.description}*"}},
             ]
 

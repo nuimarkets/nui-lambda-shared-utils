@@ -3,12 +3,8 @@ Tests for error_handler module.
 """
 
 import pytest
-import time
-from unittest.mock import patch, Mock, call
-from datetime import datetime
+from unittest.mock import patch
 from nui_lambda_shared_utils.error_handler import (
-    RetryableError,
-    NonRetryableError,
     ErrorPatternMatcher,
     with_retry,
     categorize_retryable_error,

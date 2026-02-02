@@ -2,9 +2,7 @@
 Tests for AWS utility functions.
 """
 
-import pytest
 from unittest.mock import patch, Mock
-import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
 

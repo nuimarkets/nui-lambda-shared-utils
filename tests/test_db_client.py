@@ -3,8 +3,9 @@ Tests for db_client module.
 """
 
 import pytest
-from unittest.mock import patch, Mock, MagicMock, call
-from contextlib import contextmanager
+
+pytestmark = pytest.mark.unit
+from unittest.mock import patch, Mock, MagicMock
 import time
 import pymysql
 from nui_lambda_shared_utils.db_client import (

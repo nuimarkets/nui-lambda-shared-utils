@@ -2,9 +2,7 @@
 Tests for timezone module.
 """
 
-import pytest
 from datetime import datetime, timezone
-import pytz
 from unittest.mock import patch
 from nui_lambda_shared_utils.timezone import nz_time, format_nz_time, NZ_TZ
 

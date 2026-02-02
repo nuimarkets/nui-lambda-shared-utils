@@ -3,9 +3,10 @@ Tests for cloudwatch_metrics module.
 """
 
 import pytest
-import time
+
+pytestmark = pytest.mark.unit
 import os
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 from datetime import datetime
 from botocore.exceptions import ClientError
 

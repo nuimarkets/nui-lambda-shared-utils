@@ -3,9 +3,7 @@ Tests for AWS Powertools integration utilities.
 """
 
 import logging
-import os
-import sys
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

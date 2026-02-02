@@ -7,7 +7,7 @@ import time
 import logging
 import functools
 import random
-from typing import Callable, Dict, List, Optional, Any, Union, Type
+from typing import Callable, Dict, List, Optional, Any, Union
 from datetime import datetime
 import re
 
