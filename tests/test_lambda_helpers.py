@@ -245,3 +245,9 @@ class TestExportedAPI:
         from nui_lambda_shared_utils.lambda_helpers import __all__
 
         assert "get_lambda_environment_info" in __all__
+
+    def test_importable_from_package_root(self):
+        """Test function is accessible from package root"""
+        from nui_lambda_shared_utils import get_lambda_environment_info
+
+        assert callable(get_lambda_environment_info)

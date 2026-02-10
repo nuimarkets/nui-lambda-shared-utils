@@ -994,3 +994,22 @@ account_names:
 
         # Should fall back to defaults due to type validation failure
         assert slack._lambda_context["aws_account_name"] == "Production"
+
+    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_lambda_shared_utils.slack_client.get_lambda_environment_info")
+    @patch.dict(os.environ, {})
+    def test_uses_shared_lambda_environment_helper(self, mock_env_info, mock_webclient, mock_get_secret, mock_boto3):
+        """Verify SlackClient delegates to get_lambda_environment_info"""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_env_info.return_value = {
+            "function_name": "test-fn",
+            "function_version": "$LATEST",
+            "aws_region": "ap-southeast-2",
+            "environment": "unknown",
+            "memory_limit": "",
+            "is_local": True,
+        }
+        SlackClient(secret_name="test-secret")
+        mock_env_info.assert_called_once()
