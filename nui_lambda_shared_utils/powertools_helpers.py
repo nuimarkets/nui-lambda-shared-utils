@@ -94,7 +94,12 @@ def get_powertools_logger(
         logger.setLevel(level)
 
         # Add mock inject_lambda_context decorator for local compatibility
-        logger.inject_lambda_context = lambda func: func  # type: ignore
+        # Must handle both @logger.inject_lambda_context and @logger.inject_lambda_context(log_event=False)
+        def _mock_inject_lambda_context(func=None, **kwargs):
+            if func is not None:
+                return func
+            return lambda f: f
+        logger.inject_lambda_context = _mock_inject_lambda_context  # type: ignore
 
         return logger
 
