@@ -121,6 +121,14 @@ except ImportError:
     get_powertools_logger = None  # type: ignore
     powertools_handler = None  # type: ignore
 
+# Log processing utilities (no external dependencies)
+from .log_processors import (
+    CloudWatchLogEvent,
+    CloudWatchLogsData,
+    derive_index_name,
+    extract_cloudwatch_logs_from_kinesis,
+)
+
 # Lambda context helpers (no external dependencies)
 from .lambda_helpers import get_lambda_environment_info
 
@@ -209,6 +217,11 @@ __all__ = [
     # AWS Powertools integration
     "get_powertools_logger",
     "powertools_handler",
+    # Log processing
+    "extract_cloudwatch_logs_from_kinesis",
+    "derive_index_name",
+    "CloudWatchLogEvent",
+    "CloudWatchLogsData",
     # Lambda context helpers
     "get_lambda_environment_info",
 ]
