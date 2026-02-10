@@ -5,6 +5,8 @@ from datetime import datetime, timezone
 
 import pytest
 
+pytestmark = pytest.mark.unit
+
 from nui_lambda_shared_utils.log_processors import (
     derive_index_name,
     extract_cloudwatch_logs_from_kinesis,
@@ -146,6 +148,35 @@ class TestExtractCloudwatchLogsFromKinesis:
 
         assert len(results) == 0
         assert len(errors) == 1
+
+    def test_missing_keys_with_error_handler(self):
+        """Missing required keys (e.g. logGroup) should route to on_error."""
+        data = {"messageType": "DATA_MESSAGE"}  # missing logGroup, logStream, logEvents
+        json_bytes = json.dumps(data).encode("utf-8")
+        compressed = gzip.compress(json_bytes)
+        encoded = base64.b64encode(compressed).decode("utf-8")
+        records = [{"kinesis": {"data": encoded}}]
+
+        errors = []
+        results = list(extract_cloudwatch_logs_from_kinesis(
+            records, self._passthrough_processor,
+            on_error=lambda exc, data: errors.append(exc),
+        ))
+
+        assert len(results) == 0
+        assert len(errors) == 1
+        assert isinstance(errors[0], KeyError)
+
+    def test_missing_keys_raises_without_handler(self):
+        """Missing required keys should raise KeyError when no on_error handler."""
+        data = {"messageType": "DATA_MESSAGE"}  # missing logGroup, logStream, logEvents
+        json_bytes = json.dumps(data).encode("utf-8")
+        compressed = gzip.compress(json_bytes)
+        encoded = base64.b64encode(compressed).decode("utf-8")
+        records = [{"kinesis": {"data": encoded}}]
+
+        with pytest.raises(KeyError):
+            list(extract_cloudwatch_logs_from_kinesis(records, self._passthrough_processor))
 
     def test_malformed_record_raises_without_handler(self):
         records = [{"kinesis": {"data": "not-valid-base64!!!"}}]

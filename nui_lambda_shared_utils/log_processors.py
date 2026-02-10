@@ -88,19 +88,27 @@ def extract_cloudwatch_logs_from_kinesis(
             ).decode("utf-8")
             data = json.loads(decompressed)
         except Exception as e:
-            logger.error(f"Failed to decode/decompress Kinesis record: {e}")
+            logger.exception("Failed to decode/decompress Kinesis record")
             if on_error:
                 on_error(e, {"raw_data": raw_data[:100]})
                 continue
             raise
 
-        if data["messageType"] == "CONTROL_MESSAGE":
+        try:
+            message_type = data["messageType"]
+            log_group = data["logGroup"]
+            log_stream = data["logStream"]
+            log_events = data["logEvents"]
+        except KeyError as e:
+            logger.exception("Malformed CloudWatch logs payload missing key: %s", e)
+            if on_error:
+                on_error(e, data)
+                continue
+            raise
+
+        if message_type == "CONTROL_MESSAGE":
             logger.debug("Skipping CONTROL_MESSAGE")
             continue
-
-        log_group = data["logGroup"]
-        log_stream = data["logStream"]
-        log_events = data["logEvents"]
 
         log_counts.append(len(log_events))
 
