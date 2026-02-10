@@ -80,7 +80,14 @@ def extract_cloudwatch_logs_from_kinesis(
     log_counts = []
 
     for row in records:
-        raw_data = row["kinesis"]["data"]
+        try:
+            raw_data = row["kinesis"]["data"]
+        except (KeyError, TypeError) as e:
+            logger.exception("Kinesis record missing 'kinesis.data' key")
+            if on_error:
+                on_error(e, {"row": row})
+                continue
+            raise
 
         try:
             decompressed = zlib.decompress(

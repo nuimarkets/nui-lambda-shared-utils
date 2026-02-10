@@ -1,6 +1,8 @@
 import base64
+import binascii
 import gzip
 import json
+import zlib
 from datetime import datetime, timezone
 
 import pytest
@@ -35,7 +37,7 @@ class TestExtractCloudwatchLogsFromKinesis:
         encoded = base64.b64encode(compressed).decode("utf-8")
         return {"kinesis": {"data": encoded}}
 
-    def _passthrough_processor(self, log_group, log_stream, events):
+    def _passthrough_processor(self, _log_group, _log_stream, events):
         """Simple processor that yields minimal ES docs."""
         for event in events:
             yield {"_index": "test", "_id": event["id"], "_source": {"message": event["message"]}}
@@ -117,7 +119,7 @@ class TestExtractCloudwatchLogsFromKinesis:
 
         errors = []
 
-        def failing_processor(log_group, log_stream, events):
+        def failing_processor(_log_group, _log_stream, _events):
             raise ValueError("Processing failed")
 
         results = list(extract_cloudwatch_logs_from_kinesis(
@@ -131,7 +133,7 @@ class TestExtractCloudwatchLogsFromKinesis:
     def test_error_raised_without_handler(self):
         records = [self._make_kinesis_record(self._make_log_data())]
 
-        def failing_processor(log_group, log_stream, events):
+        def failing_processor(_log_group, _log_stream, _events):
             raise ValueError("Processing failed")
 
         with pytest.raises(ValueError, match="Processing failed"):
@@ -143,7 +145,7 @@ class TestExtractCloudwatchLogsFromKinesis:
         errors = []
         results = list(extract_cloudwatch_logs_from_kinesis(
             records, self._passthrough_processor,
-            on_error=lambda exc, data: errors.append(exc),
+            on_error=lambda exc, _data: errors.append(exc),
         ))
 
         assert len(results) == 0
@@ -160,7 +162,7 @@ class TestExtractCloudwatchLogsFromKinesis:
         errors = []
         results = list(extract_cloudwatch_logs_from_kinesis(
             records, self._passthrough_processor,
-            on_error=lambda exc, data: errors.append(exc),
+            on_error=lambda exc, _data: errors.append(exc),
         ))
 
         assert len(results) == 0
@@ -178,10 +180,31 @@ class TestExtractCloudwatchLogsFromKinesis:
         with pytest.raises(KeyError):
             list(extract_cloudwatch_logs_from_kinesis(records, self._passthrough_processor))
 
+    def test_missing_kinesis_key_with_error_handler(self):
+        """Records missing 'kinesis' or 'data' keys should route to on_error."""
+        records = [{"not_kinesis": {}}]
+
+        errors = []
+        results = list(extract_cloudwatch_logs_from_kinesis(
+            records, self._passthrough_processor,
+            on_error=lambda exc, _data: errors.append(exc),
+        ))
+
+        assert len(results) == 0
+        assert len(errors) == 1
+        assert isinstance(errors[0], KeyError)
+
+    def test_missing_kinesis_key_raises_without_handler(self):
+        """Records missing 'kinesis' key should raise when no on_error handler."""
+        records = [{"not_kinesis": {}}]
+
+        with pytest.raises(KeyError):
+            list(extract_cloudwatch_logs_from_kinesis(records, self._passthrough_processor))
+
     def test_malformed_record_raises_without_handler(self):
         records = [{"kinesis": {"data": "not-valid-base64!!!"}}]
 
-        with pytest.raises(Exception):
+        with pytest.raises((binascii.Error, zlib.error)):
             list(extract_cloudwatch_logs_from_kinesis(records, self._passthrough_processor))
 
 
