@@ -20,6 +20,7 @@ Component-specific guides for major features:
 - **[Lambda Context Helpers](guides/lambda-utilities.md)** - Environment info extraction for logging and metrics
 - **[Slack Integration](guides/slack-integration.md)** - Messaging, formatting, and file uploads
 - **[Elasticsearch Integration](guides/elasticsearch-integration.md)** - Search, bulk indexing, health checks
+- **[Log Processing](guides/log-processing.md)** - Kinesis log extraction and ES index naming
 - Database Connections (planned)
 - Error Handling Patterns (planned)
 - CloudWatch Metrics (planned)
