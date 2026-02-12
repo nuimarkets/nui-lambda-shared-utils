@@ -4,7 +4,7 @@ Refactored Slack client using BaseClient for DRY code patterns.
 
 import os
 import logging
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 from pathlib import Path
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -165,6 +165,30 @@ class SlackClient(BaseClient, ServiceHealthMixin):
 
         return mappings
 
+    def set_handler_context(self, context: Any) -> None:
+        """
+        Extract AWS account ID from the Lambda handler context object.
+
+        Call this from your handler with the Lambda context to populate
+        account info without an STS API call. The powertools_handler
+        decorator calls this automatically.
+
+        Args:
+            context: Lambda context object (second arg to handler)
+        """
+        arn = getattr(context, "invoked_function_arn", None)
+        if not arn:
+            return
+
+        # ARN format: arn:aws:lambda:REGION:ACCOUNT_ID:function:NAME
+        parts = arn.split(":")
+        if len(parts) >= 5:
+            account_id = parts[4]
+            self._lambda_context["aws_account_id"] = account_id
+            self._lambda_context["aws_account_arn"] = arn
+            self._lambda_context["aws_account_name"] = self._account_names.get(account_id, "Unknown")
+            log.debug(f"Account ID from Lambda ARN: {account_id}")
+
     def _get_default_config_prefix(self) -> str:
         """Return configuration prefix for Slack."""
         return "slack"
@@ -204,23 +228,12 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             "execution_env": os.environ.get("AWS_EXECUTION_ENV", "Unknown"),
         }
 
-        # Get AWS account info using utility
-        try:
-            sts_client = create_aws_client("sts")
-            account_info = sts_client.get_caller_identity()
-            context["aws_account_id"] = account_info.get("Account", "Unknown")
-            context["aws_account_arn"] = account_info.get("Arn", "Unknown")
-            context["aws_account_name"] = self._account_names.get(
-                context["aws_account_id"],
-                f"Unknown Account ({context['aws_account_id']})"
-            )
-        except Exception as e:
-            log.debug(f"Could not fetch AWS account info: {e}")
-            context.update({
-                "aws_account_id": "Unknown",
-                "aws_account_name": "Unknown", 
-                "aws_account_arn": "Unknown"
-            })
+        # Account info populated later by set_handler_context() from Lambda ARN
+        context.update({
+            "aws_account_id": "Unknown",
+            "aws_account_name": "Unknown",
+            "aws_account_arn": "Unknown",
+        })
 
         # Get deployment info
         context["deploy_time"] = self._get_deployment_age()
@@ -290,9 +303,10 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         Returns:
             List of Slack blocks for Lambda context
         """
-        # Get account name from configured mappings or show as Unknown
+        # Build account display from pre-resolved name + ID
         account_id = self._lambda_context['aws_account_id']
-        simple_account = self._account_names.get(account_id, f"Unknown ({account_id})")
+        account_name = self._lambda_context['aws_account_name']
+        account_display = f"{account_name} ({account_id})" if account_id != "Unknown" else "Unknown"
 
         # Use custom service name if provided, otherwise use full function name
         display_name = self._service_name or self._lambda_context['function_name']
@@ -301,13 +315,14 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         line1 = f"🤖 {display_name}"
         if event_type:
             line1 += f" • {event_type}"
-        line2 = f"{simple_account} ({account_id}) • {self._lambda_context['aws_region']} • 📋 Log: `{self._lambda_context['log_group']}`"
+        line2 = f"{account_display} • {self._lambda_context['aws_region']}"
+        line3 = f"📋 Log: `{self._lambda_context['log_group']}`"
 
         return [{
             "type": "context",
             "elements": [{
                 "type": "mrkdwn",
-                "text": f"{line1}\n{line2}"
+                "text": f"{line1}\n{line2}\n{line3}"
             }]
         }]
 
@@ -330,15 +345,14 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             username = "Unknown"
 
         timestamp = datetime.now(timezone.utc).strftime("%H:%M UTC")
-        account_name = self._account_names.get(
-            self._lambda_context["aws_account_id"],
-            f"Unknown ({self._lambda_context['aws_account_id']})"
-        )
+        account_id = self._lambda_context["aws_account_id"]
+        account_name = self._lambda_context["aws_account_name"]
+        account_display = f"{account_name} ({account_id})" if account_id != "Unknown" else "Unknown"
 
         line1 = f"👤 `Local Testing` • {username}"
         if event_type:
             line1 += f" • {event_type}"
-        line2 = f"📍 {account_name} • {self._lambda_context['aws_region']} • {timestamp}"
+        line2 = f"📍 {account_display} • {self._lambda_context['aws_region']} • {timestamp}"
         line3 = "📋 Context: Manual/Development Testing"
 
         return [{
@@ -355,6 +369,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         channel: str,
         text: str,
         blocks: Optional[List[Dict]] = None,
+        attachments: Optional[List[Dict]] = None,
         include_lambda_header: bool = True,
         event_type: Optional[str] = None
     ) -> bool:
@@ -365,6 +380,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             channel: Channel ID
             text: Fallback text
             blocks: Rich formatted blocks
+            attachments: Legacy attachment objects (supports color sidebars)
             include_lambda_header: Whether to include context header
             event_type: Optional event type label for header (e.g., "Scheduled", "API", "SQS")
 
@@ -389,7 +405,8 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             response = self._service_client.chat_postMessage(
                 channel=channel,
                 text=text,
-                blocks=blocks_with_header
+                blocks=blocks_with_header,
+                attachments=attachments
             )
 
             if response["ok"]:

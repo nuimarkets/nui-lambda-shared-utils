@@ -69,7 +69,7 @@ class TestSendMessage:
         result = slack.send_message("C123", "Test message", include_lambda_header=False)
 
         assert result is True
-        mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Test message", blocks=None)
+        mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Test message", blocks=None, attachments=None)
 
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
@@ -86,7 +86,26 @@ class TestSendMessage:
         result = slack.send_message("C123", "Fallback text", blocks=blocks, include_lambda_header=False)
 
         assert result is True
-        mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Fallback text", blocks=blocks)
+        mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Fallback text", blocks=blocks, attachments=None)
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    def test_send_message_with_attachments(self, mock_webclient, mock_get_secret):
+        """Test sending message with legacy attachments (color sidebars)."""
+        mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
+        mock_client = Mock()
+        mock_webclient.return_value = mock_client
+        mock_client.chat_postMessage.return_value = {"ok": True, "ts": "1234567890.123456"}
+
+        attachments = [{"color": "#36a64f", "text": "Green sidebar message"}]
+
+        slack = SlackClient(secret_name="test-secret")
+        result = slack.send_message("C123", "Fallback", attachments=attachments, include_lambda_header=False)
+
+        assert result is True
+        mock_client.chat_postMessage.assert_called_once_with(
+            channel="C123", text="Fallback", blocks=None, attachments=attachments
+        )
 
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
@@ -359,17 +378,9 @@ class TestLambdaContextHeader:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock STS for account info
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "123456789012",  # Production
-            "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/test-function",
-        }
-
         # Mock Lambda client for deployment time
         mock_lambda = Mock()
-        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_boto3.return_value = mock_lambda
         mock_lambda.get_function.return_value = {"Configuration": {"LastModified": "2023-11-15T10:30:45.123+0000"}}
 
         # Mock config file check
@@ -377,6 +388,12 @@ class TestLambdaContextHeader:
             mock_exists.return_value = True  # .lambda-deploy.yml exists
 
             slack = SlackClient(secret_name="test-secret")
+
+            # Simulate Lambda handler providing context with ARN
+            mock_context = Mock()
+            mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:test-function"
+            slack.set_handler_context(mock_context)
+
             result = slack.send_message("C123", "Test message")
 
             # Verify the header was included
@@ -421,17 +438,9 @@ class TestLambdaContextHeader:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock STS for account info
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "234567890123",  # Development
-            "Arn": "arn:aws:sts::234567890123:assumed-role/test-role/nui-service",
-        }
-
         # Mock Lambda client - deployment time fails
         mock_lambda = Mock()
-        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_boto3.return_value = mock_lambda
         mock_lambda.get_function.side_effect = Exception("Access denied")
 
         # Mock config file check
@@ -439,6 +448,12 @@ class TestLambdaContextHeader:
             mock_exists.side_effect = lambda path: path.endswith("serverless.yml")
 
             slack = SlackClient(secret_name="test-secret")
+
+            # Simulate Lambda handler providing context with ARN
+            mock_context = Mock()
+            mock_context.invoked_function_arn = "arn:aws:lambda:ap-southeast-2:234567890123:function:nui-service"
+            slack.set_handler_context(mock_context)
+
             result = slack.send_message("C123", "Test message")
 
             # Verify the header was included
@@ -481,17 +496,9 @@ class TestLambdaContextHeader:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock STS for account info
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "123456789012",  # Production
-            "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/connect-prod-long-service-name-12345",
-        }
-
         # Mock Lambda client
         mock_lambda = Mock()
-        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_boto3.return_value = mock_lambda
         mock_lambda.get_function.return_value = {
             "Configuration": {"FunctionName": "connect-prod-long-service-name-12345"}
         }
@@ -506,6 +513,12 @@ class TestLambdaContextHeader:
                 service_name="my-service",
                 account_names={"123456789012": "Production"}
             )
+
+            # Simulate Lambda handler providing context with ARN
+            mock_context = Mock()
+            mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:connect-prod-long-service-name-12345"
+            slack.set_handler_context(mock_context)
+
             result = slack.send_message("C123", "Test message")
 
             # Verify the header was included
@@ -550,17 +563,9 @@ class TestLambdaContextHeader:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock STS for account info
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "123456789012",
-            "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/test-function",
-        }
-
         # Mock Lambda client
         mock_lambda = Mock()
-        mock_boto3.side_effect = lambda service: mock_sts if service == "sts" else mock_lambda
+        mock_boto3.return_value = mock_lambda
         mock_lambda.get_function.return_value = {
             "Configuration": {"FunctionName": "test-function"}
         }
@@ -574,6 +579,12 @@ class TestLambdaContextHeader:
                 secret_name="test-secret",
                 account_names={"123456789012": "Production"}
             )
+
+            # Simulate Lambda handler providing context with ARN
+            mock_context = Mock()
+            mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:test-function"
+            slack.set_handler_context(mock_context)
+
             result = slack.send_message("C123", "Test message")
 
             # Verify the header was included
@@ -688,15 +699,13 @@ class TestLambdaContextHeader:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock STS with unknown account
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "999999999999",  # Unknown account
-            "Arn": "arn:aws:sts::999999999999:assumed-role/test-role/test-function",
-        }
-
         slack = SlackClient(secret_name="test-secret")
+
+        # Simulate Lambda handler providing context with unknown account
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:999999999999:function:test-function"
+        slack.set_handler_context(mock_context)
+
         result = slack.send_message("C123", "Test message")
 
         # Check header contains unknown account info
@@ -721,15 +730,13 @@ class TestLambdaContextHeader:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock STS for Production account
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "123456789012",  # Production
-            "Arn": "arn:aws:sts::123456789012:assumed-role/test-role/test-function",
-        }
-
         slack = SlackClient(secret_name="test-secret")
+
+        # Simulate Lambda handler providing context with Production account
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:dev-test-function"
+        slack.set_handler_context(mock_context)
+
         result = slack.send_message("C123", "Test message")
 
         # Check header shows account name only (not stage)
@@ -758,12 +765,12 @@ class TestAccountNameConsistency:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Test Development ID specifically (the one that was inconsistent)
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {"Account": "234567890123"}  # Development
-
         slack = SlackClient(secret_name="test-secret")
+
+        # Simulate handler providing Development account via ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:ap-southeast-2:234567890123:function:test"
+        slack.set_handler_context(mock_context)
 
         # Verify lambda context uses centralized mapping
         assert slack._lambda_context["aws_account_name"] == "Development"
@@ -815,17 +822,15 @@ class TestAccountNameConsistency:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock custom account ID
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "999888777666",
-            "Arn": "arn:aws:sts::999888777666:assumed-role/test-role/custom-function",
-        }
-
         # Create client with custom account names
         custom_accounts = {"999888777666": "MyCustomAccount"}
         slack = SlackClient(secret_name="test-secret", account_names=custom_accounts)
+
+        # Simulate Lambda handler providing context with ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:us-east-1:999888777666:function:custom-function"
+        slack.set_handler_context(mock_context)
+
         result = slack.send_message("C123", "Test message")
         assert result is True
 
@@ -855,14 +860,6 @@ class TestAccountNameConsistency:
         mock_webclient.return_value = mock_client
         mock_client.chat_postMessage.return_value = {"ok": True, "ts": "123"}
 
-        # Mock custom account ID
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {
-            "Account": "111222333444",
-            "Arn": "arn:aws:sts::111222333444:assumed-role/test-role/yaml-config-function",
-        }
-
         # Create YAML config file
         config_file = tmp_path / "slack_config.yaml"
         config_file.write_text("""
@@ -873,6 +870,12 @@ account_names:
 
         # Create client with config file
         slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+
+        # Simulate Lambda handler providing context with ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-central-1:111222333444:function:yaml-config-function"
+        slack.set_handler_context(mock_context)
+
         result = slack.send_message("C123", "Test message")
         assert result is True
 
@@ -884,18 +887,13 @@ account_names:
         assert "YAMLConfiguredAccount" in header_text
         assert "(111222333444)" in header_text
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
-    def test_malformed_yaml_fallback_to_defaults(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+    def test_malformed_yaml_fallback_to_defaults(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that malformed YAML falls back to defaults gracefully."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
         mock_webclient.return_value = Mock()
-
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
 
         # Create malformed YAML file
         config_file = tmp_path / "bad_config.yaml"
@@ -904,21 +902,21 @@ account_names:
         # Should initialize without error and use defaults
         slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
 
+        # Simulate handler providing Production account via ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:test-function"
+        slack.set_handler_context(mock_context)
+
         # Should fall back to default account name
         assert slack._lambda_context["aws_account_name"] == "Production"  # From defaults
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
-    def test_empty_yaml_file_fallback(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+    def test_empty_yaml_file_fallback(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that empty YAML file falls back to defaults."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
         mock_webclient.return_value = Mock()
-
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {"Account": "234567890123"}
 
         # Create empty YAML file
         config_file = tmp_path / "empty_config.yaml"
@@ -926,61 +924,61 @@ account_names:
 
         slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
 
+        # Simulate handler providing Development account via ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:ap-southeast-2:234567890123:function:test-function"
+        slack.set_handler_context(mock_context)
+
         # Should use default account name
         assert slack._lambda_context["aws_account_name"] == "Development"
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
-    def test_missing_yaml_file_fallback(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+    def test_missing_yaml_file_fallback(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that missing YAML file falls back to defaults."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
         mock_webclient.return_value = Mock()
-
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {"Account": "345678901234"}
 
         # Reference non-existent file
         config_file = tmp_path / "nonexistent.yaml"
 
         slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
 
+        # Simulate handler providing Staging account via ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:345678901234:function:test-function"
+        slack.set_handler_context(mock_context)
+
         # Should use default account name
         assert slack._lambda_context["aws_account_name"] == "Staging"
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
-    def test_invalid_account_names_type_ignored(self, mock_webclient, mock_get_secret, mock_boto3):
+    def test_invalid_account_names_type_ignored(self, mock_webclient, mock_get_secret):
         """Test that invalid account_names parameter type is ignored gracefully."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
         mock_webclient.return_value = Mock()
 
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
-
         # Pass invalid type (list instead of dict)
         slack = SlackClient(secret_name="test-secret", account_names=["not", "a", "dict"])
+
+        # Simulate handler providing Production account via ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:test-function"
+        slack.set_handler_context(mock_context)
 
         # Should use default account name, ignoring invalid parameter
         assert slack._lambda_context["aws_account_name"] == "Production"
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
-    def test_yaml_with_non_string_values_ignored(self, mock_webclient, mock_get_secret, mock_boto3, tmp_path):
+    def test_yaml_with_non_string_values_ignored(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that YAML with non-string values is validated and ignored."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
         mock_webclient.return_value = Mock()
-
-        mock_sts = Mock()
-        mock_boto3.return_value = mock_sts
-        mock_sts.get_caller_identity.return_value = {"Account": "123456789012"}
 
         # Create YAML with non-string values
         config_file = tmp_path / "invalid_types.yaml"
@@ -991,6 +989,11 @@ account_names:
 """)
 
         slack = SlackClient(secret_name="test-secret", account_names_config=str(config_file))
+
+        # Simulate handler providing Production account via ARN
+        mock_context = Mock()
+        mock_context.invoked_function_arn = "arn:aws:lambda:eu-west-1:123456789012:function:test-function"
+        slack.set_handler_context(mock_context)
 
         # Should fall back to defaults due to type validation failure
         assert slack._lambda_context["aws_account_name"] == "Production"

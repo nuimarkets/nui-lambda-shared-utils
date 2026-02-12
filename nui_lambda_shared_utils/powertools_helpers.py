@@ -194,11 +194,15 @@ def powertools_handler(
 
         @functools.wraps(func)
         def wrapper(event: dict, context: Any) -> dict:
+            # Populate SlackClient account info from Lambda context ARN
+            if slack_client:
+                slack_client.set_handler_context(context)
+
             try:
                 # Apply logger context injection
                 # Note: inject_lambda_context is added dynamically to logging.Logger (line 95)
                 # and is native to Powertools Logger. Type checker can't verify this union.
-                handler_with_logging = logger.inject_lambda_context(func)  # type: ignore[attr-defined]
+                handler_with_logging = logger.inject_lambda_context(func)  # type: ignore[union-attr, attr-defined]
 
                 # Apply metrics if configured
                 if metrics:
