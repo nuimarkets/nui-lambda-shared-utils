@@ -194,6 +194,10 @@ def powertools_handler(
 
         @functools.wraps(func)
         def wrapper(event: dict, context: Any) -> dict:
+            # Populate SlackClient account info from Lambda context ARN
+            if slack_client:
+                slack_client.set_handler_context(context)
+
             try:
                 # Apply logger context injection
                 # Note: inject_lambda_context is added dynamically to logging.Logger (line 95)
