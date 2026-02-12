@@ -4,7 +4,7 @@ Refactored Slack client using BaseClient for DRY code patterns.
 
 import os
 import logging
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 from pathlib import Path
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
@@ -165,7 +165,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
 
         return mappings
 
-    def set_handler_context(self, context) -> None:
+    def set_handler_context(self, context: Any) -> None:
         """
         Extract AWS account ID from the Lambda handler context object.
 

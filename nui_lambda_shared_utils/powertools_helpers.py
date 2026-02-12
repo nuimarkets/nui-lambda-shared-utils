@@ -202,7 +202,7 @@ def powertools_handler(
                 # Apply logger context injection
                 # Note: inject_lambda_context is added dynamically to logging.Logger (line 95)
                 # and is native to Powertools Logger. Type checker can't verify this union.
-                handler_with_logging = logger.inject_lambda_context(func)  # type: ignore[attr-defined]
+                handler_with_logging = logger.inject_lambda_context(func)  # type: ignore[union-attr, attr-defined]
 
                 # Apply metrics if configured
                 if metrics:
