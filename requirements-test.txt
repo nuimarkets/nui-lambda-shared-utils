@@ -23,3 +23,5 @@ elasticsearch>=7.17.0,<8.0.0
 pymysql>=1.0.0
 psycopg2-binary>=2.9.0
 slack-sdk>=3.19.0
+rsa>=4.9
+cryptography>=41.0.0
