@@ -132,6 +132,22 @@ from .log_processors import (
 # Lambda context helpers (no external dependencies)
 from .lambda_helpers import get_lambda_environment_info
 
+# JWT authentication - optional import
+try:
+    from .jwt_auth import (
+        validate_jwt,
+        require_auth,
+        get_jwt_public_key,
+        JWTValidationError,
+        AuthenticationError,
+    )
+except ImportError:
+    validate_jwt = None  # type: ignore
+    require_auth = None  # type: ignore
+    get_jwt_public_key = None  # type: ignore
+    JWTValidationError = None  # type: ignore
+    AuthenticationError = None  # type: ignore
+
 # Slack setup utilities (for CLI usage) - optional import
 try:
     from . import slack_setup
@@ -224,4 +240,10 @@ __all__ = [
     "CloudWatchLogsData",
     # Lambda context helpers
     "get_lambda_environment_info",
+    # JWT authentication
+    "validate_jwt",
+    "require_auth",
+    "get_jwt_public_key",
+    "JWTValidationError",
+    "AuthenticationError",
 ]

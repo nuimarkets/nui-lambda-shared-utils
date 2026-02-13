@@ -31,6 +31,9 @@ pip install nui-lambda-shared-utils[elasticsearch]
 # Database integration only
 pip install nui-lambda-shared-utils[database]
 
+# JWT authentication only
+pip install nui-lambda-shared-utils[jwt]
+
 # All integrations
 pip install nui-lambda-shared-utils[all]
 
@@ -74,6 +77,10 @@ pip install -e .[dev]
 #### slack
 
 - `slack-sdk>=3.19.0` - Official Slack SDK
+
+#### jwt
+
+- `rsa>=4.9` - Pure Python RSA implementation (~100KB, no C extensions)
 
 #### dev
 

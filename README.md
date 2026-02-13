@@ -34,6 +34,7 @@ Production-ready utilities for AWS Lambda functions with Slack, Elasticsearch, d
 - **Elasticsearch Operations** - Query builders, index management, and health monitoring
 - **Database Connections** - Connection pooling, automatic retries, and transaction management
 - **CloudWatch Metrics** - Batched publishing with custom dimensions
+- **JWT Authentication** - RS256 token validation for API Gateway Lambdas (lightweight, no PyJWT needed)
 - **Error Handling** - Intelligent retry patterns with exponential backoff
 - **Timezone Utilities** - Timezone handling and formatting
 - **Configurable Defaults** - Environment-aware configuration system
@@ -69,6 +70,7 @@ pip install nui-lambda-shared-utils[powertools]   # AWS Powertools only
 pip install nui-lambda-shared-utils[slack]        # Slack only
 pip install nui-lambda-shared-utils[elasticsearch] # Elasticsearch only
 pip install nui-lambda-shared-utils[database]     # Database only
+pip install nui-lambda-shared-utils[jwt]          # JWT authentication only
 ```
 
 ### Basic Configuration
@@ -211,6 +213,23 @@ def lambda_handler(event, context):
 
 **[→ See full metrics guide](docs/getting-started/quickstart.md#cloudwatch-metrics)**
 
+### JWT Authentication
+
+```python
+from nui_lambda_shared_utils import require_auth, AuthenticationError
+
+def lambda_handler(event, context):
+    try:
+        claims = require_auth(event)  # Validates Bearer token from Authorization header
+    except AuthenticationError as e:
+        return {"statusCode": 401, "body": "Unauthorized"}
+
+    user_id = claims["sub"]
+    return {"statusCode": 200, "body": f"Hello {user_id}"}
+```
+
+**[→ See JWT authentication guide](docs/guides/jwt-authentication.md)**
+
 ### Error Handling
 
 ```python
@@ -265,6 +284,7 @@ This package requires AWS Secrets Manager for credential storage and IAM permiss
 - Elasticsearch: `{"host": "...", "username": "...", "password": "..."}`
 - Database: `{"host": "...", "port": 3306, "username": "...", "password": "...", "database": "..."}`
 - Slack: `{"bot_token": "xoxb-...", "webhook_url": "..."}`
+- JWT Public Key: `{"TOKEN_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\n..."}`
 
 **IAM Permissions** - Lambda execution role needs:
 

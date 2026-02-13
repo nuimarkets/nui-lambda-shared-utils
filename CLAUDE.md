@@ -37,6 +37,7 @@ This is `nui-lambda-shared-utils`, a Python package providing production-ready u
 - **Elasticsearch** (`es_client.py`, `es_query_builder.py`) - Query builders and health monitoring
 - **Database** (`db_client.py`) - Connection pooling with retry logic
 - **Metrics** (`cloudwatch_metrics.py`) - Batched CloudWatch publishing with decorators
+- **JWT Authentication** (`jwt_auth.py`) - RS256 token validation for API Gateway Lambdas (uses `rsa` package)
 - **Error Handling** (`error_handler.py`) - Retry patterns with exponential backoff
 - **Timezone Utils** (`timezone.py`) - Timezone conversion and formatting utilities
 
@@ -47,6 +48,7 @@ The package uses optional extras to minimize Lambda bundle size:
 - `elasticsearch` - Elasticsearch client and query builders
 - `database` - MySQL/PostgreSQL drivers
 - `slack` - Slack SDK
+- `jwt` - RS256 JWT validation (`rsa` package)
 - `all` - All integrations
 - `dev` - Development and testing tools
 
