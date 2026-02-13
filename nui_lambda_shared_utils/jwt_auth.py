@@ -12,11 +12,17 @@ import json
 import base64
 import time
 import logging
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from .secrets_helper import get_secret
 
+if TYPE_CHECKING:
+    import rsa
+
 log = logging.getLogger(__name__)
+
+JWT_CLOCK_SKEW_SECONDS = 30
+"""Tolerance in seconds for clock differences between token issuer and validator."""
 
 _rsa = None
 
@@ -91,7 +97,7 @@ def _base64url_decode(data: str) -> bytes:
     return base64.urlsafe_b64decode(data)
 
 
-def validate_jwt(token: str, public_key) -> dict:
+def validate_jwt(token: str, public_key: "rsa.PublicKey") -> dict:
     """
     Decode and verify an RS256-signed JWT.
 
@@ -99,7 +105,8 @@ def validate_jwt(token: str, public_key) -> dict:
     - Token structure (3 dot-separated segments)
     - Algorithm is RS256
     - RSA signature using the provided public key
-    - Expiration (exp claim, if present)
+    - Expiration (exp claim, if present) with clock skew tolerance
+    - Not-before (nbf claim, if present) with clock skew tolerance
 
     Args:
         token: Raw JWT string (without "Bearer " prefix).
@@ -152,10 +159,16 @@ def validate_jwt(token: str, public_key) -> dict:
     except Exception as e:
         raise JWTValidationError(f"Invalid JWT payload: {e}") from e
 
-    # Check expiration
+    # Check expiration (with clock skew tolerance for distributed systems)
+    now = time.time()
     exp = claims.get("exp")
-    if exp is not None and time.time() > exp:
+    if exp is not None and now > exp + JWT_CLOCK_SKEW_SECONDS:
         raise JWTValidationError("JWT has expired")
+
+    # Check not-before
+    nbf = claims.get("nbf")
+    if nbf is not None and now < nbf - JWT_CLOCK_SKEW_SECONDS:
+        raise JWTValidationError("JWT is not yet valid (nbf)")
 
     return claims
 

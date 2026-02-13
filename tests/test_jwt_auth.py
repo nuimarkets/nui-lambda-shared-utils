@@ -151,6 +151,34 @@ class TestValidateJwt:
         result = validate_jwt(token, public_key)
         assert result["sub"] == "service-account"
 
+    def test_nbf_future_rejected(self, rsa_keypair):
+        """Token with nbf far in the future is rejected."""
+        private_key, _, public_key = rsa_keypair
+        claims = {"sub": "user123", "nbf": time.time() + 3600}
+        token = _sign_jwt(private_key, claims)
+
+        with pytest.raises(JWTValidationError, match="not yet valid"):
+            validate_jwt(token, public_key)
+
+    def test_nbf_past_accepted(self, rsa_keypair):
+        """Token with nbf in the past is accepted."""
+        private_key, _, public_key = rsa_keypair
+        claims = {"sub": "user123", "nbf": time.time() - 60}
+        token = _sign_jwt(private_key, claims)
+
+        result = validate_jwt(token, public_key)
+        assert result["sub"] == "user123"
+
+    def test_clock_skew_tolerance(self, rsa_keypair):
+        """Token expired within clock skew window is still accepted."""
+        private_key, _, public_key = rsa_keypair
+        # Expired 15 seconds ago — within 30s tolerance
+        claims = {"sub": "user123", "exp": time.time() - 15}
+        token = _sign_jwt(private_key, claims)
+
+        result = validate_jwt(token, public_key)
+        assert result["sub"] == "user123"
+
 
 # ---------------------------------------------------------------------------
 # require_auth tests
