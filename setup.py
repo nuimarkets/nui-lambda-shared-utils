@@ -52,11 +52,19 @@ setup(
         "elasticsearch": ["elasticsearch>=7.17.0,<8.0.0"],
         "database": ["pymysql>=1.0.0", "psycopg2-binary>=2.9.0"],
         "slack": ["slack-sdk>=3.19.0"],
+        "powertools": [
+            "aws-lambda-powertools>=3.6.0,<4.0.0",
+            "coloredlogs>=15.0",
+        ],
+        "jwt": ["rsa>=4.9"],
         "all": [
             "elasticsearch>=7.17.0,<8.0.0",
             "pymysql>=1.0.0",
             "psycopg2-binary>=2.9.0",
             "slack-sdk>=3.19.0",
+            "aws-lambda-powertools>=3.6.0,<4.0.0",
+            "coloredlogs>=15.0",
+            "rsa>=4.9",
         ],
         "dev": [
             "pytest>=7.0.0",
@@ -70,6 +78,8 @@ setup(
             "types-pytz>=2021.3.0",
             "twine>=4.0.0",
             "build>=0.8.0",
+            "rsa>=4.9",
+            "cryptography>=41.0.0",
         ],
     },
     python_requires=">=3.9",

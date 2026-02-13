@@ -2,7 +2,7 @@
 
 Welcome to the comprehensive documentation for `nui-lambda-shared-utils`.
 
-**Last Updated**: 2025-01-19
+**Last Updated**: 2026-02-13
 
 ## Quick Navigation
 

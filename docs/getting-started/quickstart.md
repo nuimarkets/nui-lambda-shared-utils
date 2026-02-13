@@ -258,7 +258,7 @@ pip install nui-lambda-shared-utils[jwt]
 
 **See:** [JWT Authentication Guide](../guides/jwt-authentication.md) for key management and advanced usage.
 
-### 5. AWS Powertools Integration
+### 8. AWS Powertools Integration
 
 For production Lambda functions, use AWS Powertools for standardized logging, metrics, and error handling:
 

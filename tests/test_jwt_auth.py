@@ -4,6 +4,7 @@ import json
 import time
 import base64
 import pytest
+from typing import Optional
 from unittest.mock import patch, Mock
 
 from cryptography.hazmat.primitives.asymmetric import rsa as crypto_rsa, padding
@@ -66,7 +67,7 @@ def _b64url_encode(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).rstrip(b"=").decode("ascii")
 
 
-def _sign_jwt(private_key, claims: dict, header: dict = None) -> str:
+def _sign_jwt(private_key, claims: dict, header: Optional[dict] = None) -> str:
     """Create an RS256-signed JWT using the cryptography library."""
     if header is None:
         header = {"alg": "RS256", "typ": "JWT"}
@@ -83,6 +84,7 @@ def _sign_jwt(private_key, claims: dict, header: dict = None) -> str:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestValidateJwt:
     def test_valid_token(self, rsa_keypair):
         """RS256 sign + verify round-trip succeeds."""
@@ -120,7 +122,7 @@ class TestValidateJwt:
         claims = {"sub": "user123"}
         token = _sign_jwt(private_key, claims, header={"alg": "HS256", "typ": "JWT"})
 
-        with pytest.raises(JWTValidationError, match="Unsupported algorithm.*HS256"):
+        with pytest.raises(JWTValidationError, match=r"Unsupported algorithm.*HS256"):
             validate_jwt(token, public_key)
 
     def test_malformed_token_missing_segments(self, rsa_keypair):
@@ -155,6 +157,7 @@ class TestValidateJwt:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestRequireAuth:
     def test_valid_header(self, rsa_keypair, mock_jwt_secret):
         """Authorization: Bearer <token> is extracted and validated."""
@@ -210,6 +213,7 @@ class TestRequireAuth:
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.unit
 class TestGetJwtPublicKey:
     def test_caching_via_secrets_helper(self, mock_jwt_secret):
         """get_secret() is called once for multiple key fetches (secrets_helper cache)."""

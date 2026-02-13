@@ -14,11 +14,24 @@ import time
 import logging
 from typing import Optional
 
-import rsa
-
 from .secrets_helper import get_secret
 
 log = logging.getLogger(__name__)
+
+_rsa = None
+
+
+def _require_rsa():
+    """Lazy-import the rsa package, raising a clear error if not installed."""
+    global _rsa
+    if _rsa is None:
+        try:
+            import rsa
+
+            _rsa = rsa
+        except ImportError:
+            raise ImportError("The 'rsa' package is required for JWT support. Install with: pip install nui-lambda-shared-utils[jwt]")
+    return _rsa
 
 
 class JWTValidationError(Exception):
@@ -33,7 +46,7 @@ class AuthenticationError(JWTValidationError):
     pass
 
 
-def get_jwt_public_key(secret_name: Optional[str] = None, key_field: str = "TOKEN_PUBLIC_KEY") -> rsa.PublicKey:
+def get_jwt_public_key(secret_name: Optional[str] = None, key_field: str = "TOKEN_PUBLIC_KEY"):
     """
     Fetch PEM public key from AWS Secrets Manager and return as rsa.PublicKey.
 
@@ -50,6 +63,8 @@ def get_jwt_public_key(secret_name: Optional[str] = None, key_field: str = "TOKE
     Raises:
         JWTValidationError: If secret or key field is missing/invalid.
     """
+    rsa = _require_rsa()
+
     secret_name = secret_name or os.environ.get("JWT_PUBLIC_KEY_SECRET")
     if not secret_name:
         raise JWTValidationError("No JWT public key secret name provided (set JWT_PUBLIC_KEY_SECRET or pass secret_name)")
@@ -65,7 +80,7 @@ def get_jwt_public_key(secret_name: Optional[str] = None, key_field: str = "TOKE
     except Exception as e:
         raise JWTValidationError(
             f"Failed to load public key from '{key_field}' — expected PKCS#8 PEM format (BEGIN PUBLIC KEY): {e}"
-        )
+        ) from e
 
 
 def _base64url_decode(data: str) -> bytes:
@@ -76,7 +91,7 @@ def _base64url_decode(data: str) -> bytes:
     return base64.urlsafe_b64decode(data)
 
 
-def validate_jwt(token: str, public_key: rsa.PublicKey) -> dict:
+def validate_jwt(token: str, public_key) -> dict:
     """
     Decode and verify an RS256-signed JWT.
 
@@ -96,6 +111,8 @@ def validate_jwt(token: str, public_key: rsa.PublicKey) -> dict:
     Raises:
         JWTValidationError: On any structural, signature, or expiration failure.
     """
+    rsa = _require_rsa()
+
     # Split into segments
     parts = token.split(".")
     if len(parts) != 3:
@@ -107,7 +124,7 @@ def validate_jwt(token: str, public_key: rsa.PublicKey) -> dict:
     try:
         header = json.loads(_base64url_decode(header_b64))
     except Exception as e:
-        raise JWTValidationError(f"Invalid JWT header: {e}")
+        raise JWTValidationError(f"Invalid JWT header: {e}") from e
 
     alg = header.get("alg")
     if alg != "RS256":
@@ -117,14 +134,14 @@ def validate_jwt(token: str, public_key: rsa.PublicKey) -> dict:
     try:
         signature = _base64url_decode(signature_b64)
     except Exception as e:
-        raise JWTValidationError(f"Invalid JWT signature encoding: {e}")
+        raise JWTValidationError(f"Invalid JWT signature encoding: {e}") from e
 
     # Verify RS256 signature over "<header_b64>.<payload_b64>"
     signing_input = f"{header_b64}.{payload_b64}".encode("ascii")
     try:
         hash_method = rsa.verify(signing_input, signature, public_key)
     except rsa.VerificationError:
-        raise JWTValidationError("JWT signature verification failed")
+        raise JWTValidationError("JWT signature verification failed") from None
 
     if hash_method != "SHA-256":
         raise JWTValidationError(f"Unexpected hash method '{hash_method}' — expected SHA-256 for RS256")
@@ -133,7 +150,7 @@ def validate_jwt(token: str, public_key: rsa.PublicKey) -> dict:
     try:
         claims = json.loads(_base64url_decode(payload_b64))
     except Exception as e:
-        raise JWTValidationError(f"Invalid JWT payload: {e}")
+        raise JWTValidationError(f"Invalid JWT payload: {e}") from e
 
     # Check expiration
     exp = claims.get("exp")
