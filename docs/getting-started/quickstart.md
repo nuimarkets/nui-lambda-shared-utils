@@ -223,7 +223,42 @@ def lambda_handler(event, context):
         raise
 ```
 
-### 5. AWS Powertools Integration
+### 7. JWT Authentication for API Gateway
+
+```python
+import nui_lambda_shared_utils as nui
+
+def lambda_handler(event, context):
+    """API Gateway Lambda with JWT auth."""
+    # Validate Bearer token from Authorization header
+    # Fetches public key from Secrets Manager (cached automatically)
+    try:
+        claims = nui.require_auth(event)
+    except nui.AuthenticationError:
+        return {"statusCode": 401, "body": "Unauthorized"}
+
+    # Access token claims
+    user_id = claims["sub"]
+    role = claims.get("role", "user")
+
+    return {"statusCode": 200, "body": f"Hello {user_id} ({role})"}
+```
+
+**Installation:**
+
+```bash
+pip install nui-lambda-shared-utils[jwt]
+```
+
+**Requirements:**
+
+- `JWT_PUBLIC_KEY_SECRET` env var pointing to Secrets Manager secret
+- Secret contains `{"TOKEN_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\n..."}` (PKCS#8 PEM)
+- IAM permission: `secretsmanager:GetSecretValue`
+
+**See:** [JWT Authentication Guide](../guides/jwt-authentication.md) for key management and advanced usage.
+
+### 8. AWS Powertools Integration
 
 For production Lambda functions, use AWS Powertools for standardized logging, metrics, and error handling:
 

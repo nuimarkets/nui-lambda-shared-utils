@@ -20,6 +20,7 @@ The package uses a hierarchical configuration system with the following priority
 | `ES_CREDENTIALS_SECRET` | AWS secret name for Elasticsearch credentials | `elasticsearch-credentials` |
 | `DB_CREDENTIALS_SECRET` | AWS secret name for database credentials | `database-credentials` |
 | `SLACK_CREDENTIALS_SECRET` | AWS secret name for Slack credentials | `slack-credentials` |
+| `JWT_PUBLIC_KEY_SECRET` | AWS secret name for JWT public key | *(none)* |
 | `AWS_REGION` | AWS region for services | `us-east-1` |
 
 ### Alternative Variable Names
@@ -142,6 +143,16 @@ The package expects AWS secrets in specific JSON formats:
 **Optional Fields:**
 
 - `webhook_url` - Alternative to bot token for simple messaging
+
+#### JWT Public Key
+
+```json
+{
+  "TOKEN_PUBLIC_KEY": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqh...\n-----END PUBLIC KEY-----"
+}
+```
+
+The key must be in PKCS#8 PEM format (`BEGIN PUBLIC KEY`). The field name is configurable via the `key_field` parameter on `get_jwt_public_key()`.
 
 ### Creating Secrets
 

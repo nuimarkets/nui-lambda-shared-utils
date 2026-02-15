@@ -43,6 +43,7 @@ powertools = [
     "aws-lambda-powertools>=3.6.0,<4.0.0",
     "coloredlogs>=15.0",
 ]
+jwt = ["rsa>=4.9"]
 all = [
     "elasticsearch>=7.17.0,<8.0.0",
     "pymysql>=1.0.0",
@@ -50,6 +51,7 @@ all = [
     "slack-sdk>=3.19.0",
     "aws-lambda-powertools>=3.6.0,<4.0.0",
     "coloredlogs>=15.0",
+    "rsa>=4.9",
 ]
 dev = [
     "pytest>=7.0.0",
@@ -59,8 +61,12 @@ dev = [
     "black>=22.0.0",
     "mypy>=0.990",
     "boto3-stubs[essential]>=1.20.0",
+    "types-PyYAML>=6.0.0",
+    "types-pytz>=2021.3.0",
     "twine>=4.0.0",
     "build>=0.8.0",
+    "rsa>=4.9",
+    "cryptography>=41.0.0",
 ]
 
 [project.urls]
