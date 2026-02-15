@@ -41,7 +41,7 @@ One-call authentication for API Gateway Lambda handlers. Extracts the Bearer tok
 
 Lower-level validation when you already have the public key. Verifies token structure, RS256 signature, and expiration.
 
-- **token** — Raw JWT string (no `Bearer ` prefix)
+- **token** — Raw JWT string (no `Bearer` prefix)
 - **public_key** — `rsa.PublicKey` instance
 - **Returns** — Decoded claims dict
 - **Raises** — `JWTValidationError` on failure
