@@ -342,7 +342,8 @@ class TestCheckAuth:
         assert body["errors"][0]["status"] == "401"
         assert body["errors"][0]["detail"] == "Authentication required"
 
-    def test_valid_auth_returns_claims(self, rsa_keypair, mock_jwt_secret):
+    @pytest.mark.usefixtures("mock_jwt_secret")
+    def test_valid_auth_returns_claims(self, rsa_keypair):
         """Valid JWT returns (claims, None)."""
         private_key, _, _ = rsa_keypair
         token = _sign_jwt(private_key, {"sub": "user1", "exp": time.time() + 3600})
@@ -354,7 +355,8 @@ class TestCheckAuth:
         assert error is None
         assert claims["sub"] == "user1"
 
-    def test_invalid_token_returns_401(self, rsa_keypair, mock_jwt_secret):
+    @pytest.mark.usefixtures("mock_jwt_secret")
+    def test_invalid_token_returns_401(self):
         """Invalid JWT returns 401 response, not an exception."""
         event = {"path": "/static-lists", "headers": {"Authorization": "Bearer bad.token.here"}}
 
@@ -367,7 +369,7 @@ class TestCheckAuth:
     def test_path_traversal_does_not_bypass_auth(self):
         """Crafted paths like /anything/health don't bypass auth."""
         event = {"path": "/anything/health", "headers": {}}
-        claims, error = check_auth(event, public_paths={"/health"})
+        _, error = check_auth(event, public_paths={"/health"})
         assert error is not None
         assert error["statusCode"] == 401
 
@@ -381,6 +383,6 @@ class TestCheckAuth:
     def test_empty_public_paths_requires_auth_on_all(self):
         """Empty public_paths means all paths require auth."""
         event = {"path": "/health", "headers": {}}
-        claims, error = check_auth(event)
+        _, error = check_auth(event)
         assert error is not None
         assert error["statusCode"] == 401

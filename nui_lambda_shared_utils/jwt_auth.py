@@ -13,7 +13,7 @@ import re
 import base64
 import time
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, AbstractSet, Any, Dict, Optional, Tuple
 from urllib.parse import unquote
 
 from .secrets_helper import get_secret
@@ -233,9 +233,9 @@ def _normalize_path(path: str) -> str:
 
 def check_auth(
     event: dict,
-    public_paths: set = frozenset(),
+    public_paths: AbstractSet[str] = frozenset(),
     secret_name: Optional[str] = None,
-) -> tuple:
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
     """Check JWT authentication on an API Gateway event, skipping public paths.
 
     Combines path normalization, public-path bypass, JWT validation,
