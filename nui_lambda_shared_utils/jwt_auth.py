@@ -9,10 +9,12 @@ Install: pip install nui-lambda-shared-utils[jwt]
 
 import os
 import json
+import re
 import base64
 import time
 import logging
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, AbstractSet, Any, Dict, Optional, Tuple
+from urllib.parse import unquote
 
 from .secrets_helper import get_secret
 
@@ -216,3 +218,60 @@ def require_auth(event: dict, secret_name: Optional[str] = None) -> dict:
         return validate_jwt(token, public_key)
     except JWTValidationError as e:
         raise AuthenticationError(f"Authentication failed: {e}") from e
+
+
+def _normalize_path(path: str) -> str:
+    """Normalize a URL path for safe comparison.
+
+    URL-decodes, collapses duplicate slashes, ensures a single leading slash,
+    and strips any trailing slash (except for root "/").
+    """
+    path = unquote(path)
+    path = re.sub(r"/+", "/", path)
+    return "/" + path.strip("/") if path.strip("/") else "/"
+
+
+def check_auth(
+    event: dict,
+    public_paths: AbstractSet[str] = frozenset(),
+    secret_name: Optional[str] = None,
+) -> Tuple[Optional[Dict[str, Any]], Optional[Dict[str, Any]]]:
+    """Check JWT authentication on an API Gateway event, skipping public paths.
+
+    Combines path normalization, public-path bypass, JWT validation,
+    and a standard JSON:API 401 error response in one call.
+
+    Args:
+        event: API Gateway Lambda proxy integration event.
+        public_paths: Set of normalized paths that skip auth (e.g. {"/health"}).
+        secret_name: Optional Secrets Manager secret name for the public key.
+
+    Returns:
+        (claims, None) on success — claims is the decoded JWT dict,
+            or None if the path is public.
+        (None, response) on auth failure — response is a 401 dict
+            ready to return from your Lambda handler.
+    """
+    raw_path = event.get("path") or event.get("rawPath") or ""
+    if _normalize_path(raw_path) in public_paths:
+        return None, None
+
+    try:
+        claims = require_auth(event, secret_name=secret_name)
+        return claims, None
+    except AuthenticationError as e:
+        log.warning("Authentication failed: %s", e)
+        return None, {
+            "statusCode": 401,
+            "headers": {
+                "Content-Type": "application/json",
+                "Access-Control-Allow-Origin": "*",
+            },
+            "body": json.dumps({
+                "errors": [{
+                    "status": "401",
+                    "title": "Unauthorized",
+                    "detail": "Authentication required",
+                }]
+            }),
+        }

@@ -15,10 +15,12 @@ import rsa as rsa_lib
 from nui_lambda_shared_utils.jwt_auth import (
     validate_jwt,
     require_auth,
+    check_auth,
     get_jwt_public_key,
     JWTValidationError,
     AuthenticationError,
     _base64url_decode,
+    _normalize_path,
 )
 
 
@@ -274,3 +276,113 @@ class TestGetJwtPublicKey:
 
         with pytest.raises(JWTValidationError, match="Field 'TOKEN_PUBLIC_KEY' not found"):
             get_jwt_public_key(secret_name="test/jwt-key")
+
+
+# ---------------------------------------------------------------------------
+# _normalize_path tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestNormalizePath:
+    def test_simple_path(self):
+        assert _normalize_path("/health") == "/health"
+
+    def test_strips_trailing_slash(self):
+        assert _normalize_path("/health/") == "/health"
+
+    def test_ensures_leading_slash(self):
+        assert _normalize_path("health") == "/health"
+
+    def test_collapses_duplicate_slashes(self):
+        assert _normalize_path("//health///check//") == "/health/check"
+
+    def test_url_decodes(self):
+        assert _normalize_path("/he%61lth") == "/health"
+
+    def test_root_path(self):
+        assert _normalize_path("/") == "/"
+
+    def test_empty_string(self):
+        assert _normalize_path("") == "/"
+
+    def test_full_api_gateway_path(self):
+        assert _normalize_path("/v4/fields/static-lists") == "/v4/fields/static-lists"
+
+
+# ---------------------------------------------------------------------------
+# check_auth tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestCheckAuth:
+    def test_public_path_skips_auth(self):
+        """Public paths return (None, None) without checking JWT."""
+        event = {"path": "/health", "headers": {}}
+        claims, error = check_auth(event, public_paths={"/health"})
+        assert claims is None
+        assert error is None
+
+    def test_public_path_with_trailing_slash(self):
+        """Public path matching normalizes trailing slashes."""
+        event = {"path": "/health/", "headers": {}}
+        claims, error = check_auth(event, public_paths={"/health"})
+        assert claims is None
+        assert error is None
+
+    def test_non_public_path_without_token_returns_401(self):
+        """Missing auth on protected path returns 401 response."""
+        event = {"path": "/static-lists", "headers": {}}
+        claims, error = check_auth(event, public_paths={"/health"})
+        assert claims is None
+        assert error is not None
+        assert error["statusCode"] == 401
+        body = json.loads(error["body"])
+        assert body["errors"][0]["status"] == "401"
+        assert body["errors"][0]["detail"] == "Authentication required"
+
+    @pytest.mark.usefixtures("mock_jwt_secret")
+    def test_valid_auth_returns_claims(self, rsa_keypair):
+        """Valid JWT returns (claims, None)."""
+        private_key, _, _ = rsa_keypair
+        token = _sign_jwt(private_key, {"sub": "user1", "exp": time.time() + 3600})
+        event = {"path": "/static-lists", "headers": {"Authorization": f"Bearer {token}"}}
+
+        with patch.dict("os.environ", {"JWT_PUBLIC_KEY_SECRET": "test/jwt-key"}):
+            claims, error = check_auth(event, public_paths={"/health"})
+
+        assert error is None
+        assert claims["sub"] == "user1"
+
+    @pytest.mark.usefixtures("mock_jwt_secret")
+    def test_invalid_token_returns_401(self):
+        """Invalid JWT returns 401 response, not an exception."""
+        event = {"path": "/static-lists", "headers": {"Authorization": "Bearer bad.token.here"}}
+
+        with patch.dict("os.environ", {"JWT_PUBLIC_KEY_SECRET": "test/jwt-key"}):
+            claims, error = check_auth(event, public_paths={"/health"})
+
+        assert claims is None
+        assert error["statusCode"] == 401
+
+    def test_path_traversal_does_not_bypass_auth(self):
+        """Crafted paths like /anything/health don't bypass auth."""
+        event = {"path": "/anything/health", "headers": {}}
+        _, error = check_auth(event, public_paths={"/health"})
+        assert error is not None
+        assert error["statusCode"] == 401
+
+    def test_uses_rawPath_fallback(self):
+        """Falls back to rawPath when path is missing (API Gateway v2)."""
+        event = {"rawPath": "/health", "headers": {}}
+        claims, error = check_auth(event, public_paths={"/health"})
+        assert claims is None
+        assert error is None
+
+    def test_empty_public_paths_requires_auth_on_all(self):
+        """Empty public_paths means all paths require auth."""
+        event = {"path": "/health", "headers": {}}
+        _, error = check_auth(event)
+        assert error is not None
+        assert error["statusCode"] == 401

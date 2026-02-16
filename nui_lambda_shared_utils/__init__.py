@@ -137,6 +137,7 @@ try:
     from .jwt_auth import (
         validate_jwt,
         require_auth,
+        check_auth,
         get_jwt_public_key,
         JWTValidationError,
         AuthenticationError,
@@ -144,6 +145,7 @@ try:
 except ImportError:
     validate_jwt = None  # type: ignore
     require_auth = None  # type: ignore
+    check_auth = None  # type: ignore
     get_jwt_public_key = None  # type: ignore
     JWTValidationError = None  # type: ignore
     AuthenticationError = None  # type: ignore
@@ -243,6 +245,7 @@ __all__ = [
     # JWT authentication
     "validate_jwt",
     "require_auth",
+    "check_auth",
     "get_jwt_public_key",
     "JWTValidationError",
     "AuthenticationError",
