@@ -2,6 +2,7 @@
 Refactored Database client using BaseClient for DRY code patterns.
 """
 
+import os
 import time
 import logging
 from typing import Dict, List, Optional, Any
@@ -120,23 +121,26 @@ class DatabaseClient(BaseClient, ServiceHealthMixin):
         use_pool: bool = True,
         pool_size: int = 5,
         pool_recycle: int = 3600,
+        credentials: Optional[Dict[str, Any]] = None,
         **kwargs
     ):
         """
         Initialize database client.
-        
+
         Args:
             secret_name: Override secret name
             use_pool: Enable connection pooling
             pool_size: Maximum pooled connections
             pool_recycle: Recycle connections after seconds
+            credentials: Direct credentials dict (keys: host, port, username, password, database),
+                bypasses Secrets Manager
             **kwargs: Additional configuration
         """
         self.use_pool = use_pool
         self.pool_size = pool_size
         self.pool_recycle = pool_recycle
-        
-        super().__init__(secret_name=secret_name, **kwargs)
+
+        super().__init__(secret_name=secret_name, credentials=credentials, **kwargs)
         
         # Build pool key for connection management
         self._pool_key = f"{self.credentials['host']}:{self.credentials['port']}"
@@ -153,32 +157,26 @@ class DatabaseClient(BaseClient, ServiceHealthMixin):
         """Database client doesn't have a single service client - uses connections."""
         return None
 
-    def _resolve_credentials(self, secret_name: Optional[str]) -> Dict[str, Any]:
+    def _resolve_credentials_from_env(self) -> Optional[Dict[str, Any]]:
+        """Resolve MySQL credentials from environment variables.
+
+        Requires both DB_HOST and DB_PASSWORD to trigger.
         """
-        Override to use get_database_credentials for normalized field names.
+        host = os.environ.get("DB_HOST")
+        password = os.environ.get("DB_PASSWORD")
+        if not host or not password:
+            return None
+        return {
+            "host": host,
+            "port": int(os.environ.get("DB_PORT", "3306")),
+            "username": os.environ.get("DB_USERNAME", "root"),
+            "password": password,
+            "database": os.environ.get("DB_DATABASE", "app"),
+        }
 
-        Args:
-            secret_name: Optional secret name override
-
-        Returns:
-            Normalized database credentials
-        """
-        # Use BaseClient's resolution logic to determine the secret name
-        from .utils import resolve_config_value, validate_required_param
-
-        resolved_secret_name = resolve_config_value(
-            secret_name,
-            [
-                f"{self.config_key_prefix.upper()}_CREDENTIALS_SECRET",
-                f"{self.config_key_prefix.upper()}CREDENTIALS_SECRET"  # Alternative format
-            ],
-            getattr(self.config, f"{self.config_key_prefix}_credentials_secret", self._get_default_secret_name())
-        )
-
-        validate_required_param(resolved_secret_name, "secret_name")
-
-        # Now use the resolved secret name with get_database_credentials
-        return get_database_credentials(resolved_secret_name)
+    def _fetch_credentials_from_sm(self, secret_name: Optional[str]) -> Dict[str, Any]:
+        """Override to use get_database_credentials for normalized field names."""
+        return get_database_credentials(self._resolve_secret_name(secret_name))
 
     def _clean_expired_connections(self, pool_key: str) -> None:
         """
@@ -476,21 +474,24 @@ class PostgreSQLClient(BaseClient, ServiceHealthMixin):
         self,
         secret_name: Optional[str] = None,
         use_auth_credentials: bool = True,
+        credentials: Optional[Dict[str, Any]] = None,
         **kwargs
     ):
         """
         Initialize PostgreSQL client.
-        
+
         Args:
             secret_name: Override secret name
             use_auth_credentials: Use auth-specific credentials
+            credentials: Direct credentials dict (keys: host, port, username, password, database),
+                bypasses Secrets Manager
             **kwargs: Additional configuration
         """
         if not HAS_POSTGRESQL:
             raise ImportError("psycopg2 is not installed. Install with: pip install psycopg2-binary")
 
         self.use_auth_credentials = use_auth_credentials
-        super().__init__(secret_name=secret_name, **kwargs)
+        super().__init__(secret_name=secret_name, credentials=credentials, **kwargs)
 
     def _get_default_config_prefix(self) -> str:
         """Return configuration prefix for PostgreSQL."""
@@ -504,19 +505,27 @@ class PostgreSQLClient(BaseClient, ServiceHealthMixin):
         """PostgreSQL client doesn't have a single service client - uses connections."""
         return None
 
-    def _resolve_credentials(self, secret_name: Optional[str]) -> Dict[str, Any]:
+    def _resolve_credentials_from_env(self) -> Optional[Dict[str, Any]]:
+        """Resolve PostgreSQL credentials from environment variables.
+
+        Requires both DB_HOST and DB_PASSWORD to trigger.
         """
-        Resolve PostgreSQL credentials with auth-specific handling.
-        
-        Args:
-            secret_name: Optional secret name override
-            
-        Returns:
-            PostgreSQL credentials
-        """
+        host = os.environ.get("DB_HOST")
+        password = os.environ.get("DB_PASSWORD")
+        if not host or not password:
+            return None
+        return {
+            "host": host,
+            "port": int(os.environ.get("DB_PORT", "5432")),
+            "username": os.environ.get("DB_USERNAME", "postgres"),
+            "password": password,
+            "database": os.environ.get("DB_DATABASE", "postgres"),
+        }
+
+    def _fetch_credentials_from_sm(self, secret_name: Optional[str]) -> Dict[str, Any]:
+        """Override with auth-specific credential handling."""
         from .secrets_helper import get_secret
-        
-        # Get raw secret to access auth-specific fields
+
         resolved_secret_name = secret_name or self._get_default_secret_name()
         raw_creds = get_secret(resolved_secret_name)
 
@@ -530,7 +539,6 @@ class PostgreSQLClient(BaseClient, ServiceHealthMixin):
                 "database": raw_creds.get("auth_database", "auth-service-db"),
             }
         else:
-            # Fall back to normalized credentials
             return get_database_credentials(resolved_secret_name)
 
     @contextmanager

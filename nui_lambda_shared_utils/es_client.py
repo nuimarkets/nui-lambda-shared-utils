@@ -2,6 +2,7 @@
 Refactored Elasticsearch client using BaseClient for DRY code patterns.
 """
 
+import os
 import logging
 from datetime import datetime, timedelta
 from typing import Dict, Iterator, List, Optional, Any, Tuple
@@ -20,18 +21,25 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
     Refactored Elasticsearch client with standardized patterns.
     """
 
-    def __init__(self, host: Optional[str] = None, secret_name: Optional[str] = None, **kwargs):
+    def __init__(
+        self,
+        host: Optional[str] = None,
+        secret_name: Optional[str] = None,
+        credentials: Optional[Dict] = None,
+        **kwargs,
+    ):
         """
         Initialize Elasticsearch client.
-        
+
         Args:
             host: Override ES host
             secret_name: Override secret name
+            credentials: Direct credentials dict (keys: username, password), bypasses Secrets Manager
             **kwargs: Additional ES client configuration
         """
         # Store host for later use in service client creation
         self._host_override = host
-        super().__init__(secret_name=secret_name, **kwargs)
+        super().__init__(secret_name=secret_name, credentials=credentials, **kwargs)
 
     def _get_default_config_prefix(self) -> str:
         """Return configuration prefix for Elasticsearch."""
@@ -40,6 +48,20 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
     def _get_default_secret_name(self) -> str:
         """Return default secret name for ES credentials."""
         return "elasticsearch-credentials"
+
+    def _resolve_credentials_from_env(self) -> Optional[Dict[str, Any]]:
+        """Resolve Elasticsearch credentials from environment variables.
+
+        Checks for ES_PASSWORD (required to trigger).
+        ES_USERNAME defaults to "elastic" if not set.
+        """
+        password = os.environ.get("ES_PASSWORD")
+        if not password:
+            return None
+        return {
+            "username": os.environ.get("ES_USERNAME", "elastic"),
+            "password": password,
+        }
 
     def _create_service_client(self) -> Elasticsearch:
         """Create Elasticsearch client with resolved configuration."""

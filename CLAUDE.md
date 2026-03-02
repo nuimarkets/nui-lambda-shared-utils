@@ -182,15 +182,32 @@ python -m twine upload dist/*
 
 ## Configuration Patterns
 
+### Credential Resolution
+
+Clients resolve credentials in this order (first match wins):
+
+1. **Explicit `credentials` dict** — constructor param, skips everything else
+2. **Environment variables** — per-client patterns, skips Secrets Manager
+3. **AWS Secrets Manager** — default behavior
+
 ### Environment Variables
 
-The package expects these environment variables for runtime configuration:
+Runtime configuration:
 
 - `ES_HOST` - Elasticsearch endpoint
 - `ES_CREDENTIALS_SECRET` - AWS secret name for ES credentials
-- `DB_CREDENTIALS_SECRET` - AWS secret name for database credentials  
+- `DB_CREDENTIALS_SECRET` - AWS secret name for database credentials
 - `SLACK_CREDENTIALS_SECRET` - AWS secret name for Slack token
 - `AWS_REGION` - AWS region for services
+
+Direct credential env vars (bypass Secrets Manager when set):
+
+| Client | Required | Optional |
+|--------|----------|----------|
+| Slack | `SLACK_BOT_TOKEN` | `SLACK_WEBHOOK_URL` |
+| Elasticsearch | `ES_PASSWORD` | `ES_USERNAME` (default: `elastic`) |
+| Database (MySQL) | `DB_HOST` + `DB_PASSWORD` | `DB_PORT` (3306), `DB_USERNAME` (root), `DB_DATABASE` (app) |
+| Database (PostgreSQL) | `DB_HOST` + `DB_PASSWORD` | `DB_PORT` (5432), `DB_USERNAME` (postgres), `DB_DATABASE` (postgres) |
 
 ### AWS Secrets Format
 
@@ -212,15 +229,16 @@ Secrets should follow standardized JSON structures:
 ```python
 import nui_lambda_shared_utils as nui
 
-# Configure specific settings
+# Pass credentials directly (no Secrets Manager needed)
+slack = nui.SlackClient(credentials={"bot_token": "xoxb-..."})
+es = nui.ElasticsearchClient(credentials={"username": "elastic", "password": "pass"})
+db = nui.DatabaseClient(credentials={"host": "localhost", "port": 3306, "username": "root", "password": "pass", "database": "app"})
+
+# Or configure globally
 nui.configure(
     es_host="localhost:9200",
     slack_credentials_secret="dev/slack-token"
 )
-
-# Or use Config object
-config = nui.Config(es_host="prod:9200")
-nui.set_config(config)
 ```
 
 ## Common Usage Patterns

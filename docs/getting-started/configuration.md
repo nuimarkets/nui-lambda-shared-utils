@@ -10,6 +10,14 @@ The package uses a hierarchical configuration system with the following priority
 2. **Environment Variables** - System environment variables
 3. **Configuration Defaults** - Package default values
 
+### Credential Resolution Precedence
+
+All clients (Slack, Elasticsearch, Database) resolve credentials in this order:
+
+1. **Explicit `credentials` dict** - Passed to constructor, skips everything else
+2. **Credential environment variables** - Per-client env vars, skips Secrets Manager
+3. **AWS Secrets Manager** - Default behavior (unchanged)
+
 ## Environment Variables
 
 ### Core Configuration
@@ -34,19 +42,60 @@ The package supports alternative environment variable names for compatibility:
 | `DB_CREDENTIALS_SECRET` | `DATABASE_CREDENTIALS_SECRET` |
 | `AWS_REGION` | `AWS_DEFAULT_REGION` |
 
+### Credential Environment Variables
+
+These environment variables provide credentials directly, bypassing AWS Secrets Manager:
+
+#### Slack
+
+| Variable | Required | Default |
+|----------|----------|---------|
+| `SLACK_BOT_TOKEN` | Yes (triggers env var path) | - |
+| `SLACK_WEBHOOK_URL` | No | - |
+
+#### Elasticsearch
+
+| Variable | Required | Default |
+|----------|----------|---------|
+| `ES_PASSWORD` | Yes (triggers env var path) | - |
+| `ES_USERNAME` | No | `elastic` |
+
+#### Database (MySQL)
+
+| Variable | Required | Default |
+|----------|----------|---------|
+| `DB_HOST` | Yes (both required) | - |
+| `DB_PASSWORD` | Yes (both required) | - |
+| `DB_PORT` | No | `3306` |
+| `DB_USERNAME` | No | `root` |
+| `DB_DATABASE` | No | `app` |
+
+#### Database (PostgreSQL)
+
+| Variable | Required | Default |
+|----------|----------|---------|
+| `DB_HOST` | Yes (both required) | - |
+| `DB_PASSWORD` | Yes (both required) | - |
+| `DB_PORT` | No | `5432` |
+| `DB_USERNAME` | No | `postgres` |
+| `DB_DATABASE` | No | `postgres` |
+
 ### Example Environment Setup
 
 ```bash
-# Basic configuration
+# Secrets Manager configuration (default)
 export ES_HOST="prod-elasticsearch:9200"
 export ES_CREDENTIALS_SECRET="prod/elasticsearch-creds"
 export DB_CREDENTIALS_SECRET="prod/database-creds"
 export SLACK_CREDENTIALS_SECRET="prod/slack-token"
 export AWS_REGION="us-west-2"
 
-# Alternative names (equivalent)
-export ELASTICSEARCH_HOST="prod-elasticsearch:9200"
-export DATABASE_CREDENTIALS_SECRET="prod/database-creds"
+# Direct credentials (bypass Secrets Manager)
+export SLACK_BOT_TOKEN="xoxb-your-token"
+export ES_PASSWORD="your-password"
+export DB_HOST="localhost"
+export DB_PASSWORD="your-password"
+export DB_DATABASE="mydb"
 ```
 
 ## Programmatic Configuration
@@ -186,9 +235,21 @@ aws secretsmanager create-secret \
 4. Enter the JSON values as key-value pairs
 5. Name the secret according to your configuration
 
-### Secret Access Patterns
+### Credential Access Patterns
 
-#### Automatic Credential Loading
+#### Direct Credentials (No AWS Required)
+
+```python
+# Pass credentials directly — Secrets Manager is never called
+slack = nui.SlackClient(credentials={"bot_token": "xoxb-your-token"})
+es = nui.ElasticsearchClient(credentials={"username": "elastic", "password": "secret"})
+db = nui.DatabaseClient(credentials={
+    "host": "localhost", "port": 3306,
+    "username": "root", "password": "secret", "database": "mydb"
+})
+```
+
+#### Automatic Credential Loading (Secrets Manager)
 
 ```python
 # Credentials are automatically loaded based on configuration
@@ -197,7 +258,7 @@ db = nui.DatabaseClient()       # Uses DB_CREDENTIALS_SECRET
 slack = nui.SlackClient()       # Uses SLACK_CREDENTIALS_SECRET
 ```
 
-#### Override Credential Sources
+#### Override Secret Names
 
 ```python
 # Override default secret names
@@ -223,7 +284,17 @@ api_keys = nui.get_secret("my-service/api-keys")
 ### Development Environment
 
 ```python
-# Development configuration
+# Option 1: Direct credentials (no AWS needed)
+slack = nui.SlackClient(credentials={"bot_token": "xoxb-dev-token"})
+db = nui.DatabaseClient(credentials={
+    "host": "localhost", "port": 3306,
+    "username": "root", "password": "dev", "database": "app_dev"
+})
+
+# Option 2: Environment variables (set SLACK_BOT_TOKEN, DB_HOST, DB_PASSWORD, etc.)
+slack = nui.SlackClient()  # picks up SLACK_BOT_TOKEN from env
+
+# Option 3: Secrets Manager
 nui.configure(
     es_host="localhost:9200",
     es_credentials_secret="dev/elasticsearch",

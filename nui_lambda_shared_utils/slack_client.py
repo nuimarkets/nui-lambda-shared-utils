@@ -41,6 +41,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         account_names: Optional[Dict[str, str]] = None,
         account_names_config: Optional[str] = None,
         service_name: Optional[str] = None,
+        credentials: Optional[Dict[str, Any]] = None,
         **kwargs
     ):
         """
@@ -51,6 +52,7 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             account_names: Dict mapping AWS account IDs to display names
             account_names_config: Path to YAML file with account_names mapping
             service_name: Optional display name for service (e.g., "my-service" instead of full Lambda name)
+            credentials: Direct credentials dict (keys: bot_token, webhook_url), bypasses Secrets Manager
             **kwargs: Additional configuration options
 
         Examples:
@@ -70,14 +72,14 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             With custom service name for cleaner display:
                 >>> slack = SlackClient(service_name="my-service")
 
-            Combined (YAML + runtime overrides):
-                >>> slack = SlackClient(
-                ...     account_names_config="slack_config.yaml",
-                ...     account_names={"999888777666": "temporary-dev"},
-                ...     service_name="my-service"
-                ... )
+            With direct credentials (no Secrets Manager):
+                >>> slack = SlackClient(credentials={"bot_token": "xoxb-..."})
+
+            With environment variables (SLACK_BOT_TOKEN):
+                >>> # export SLACK_BOT_TOKEN=xoxb-...
+                >>> slack = SlackClient()
         """
-        super().__init__(secret_name=secret_name, **kwargs)
+        super().__init__(secret_name=secret_name, credentials=credentials, **kwargs)
 
         # Load account names from config file or use provided dict
         self._account_names = self._load_account_names(account_names, account_names_config)
@@ -196,6 +198,21 @@ class SlackClient(BaseClient, ServiceHealthMixin):
     def _get_default_secret_name(self) -> str:
         """Return default secret name for Slack credentials."""
         return "slack-credentials"
+
+    def _resolve_credentials_from_env(self) -> Optional[Dict[str, Any]]:
+        """Resolve Slack credentials from environment variables.
+
+        Checks for SLACK_BOT_TOKEN (required to trigger).
+        Optionally picks up SLACK_WEBHOOK_URL.
+        """
+        bot_token = os.environ.get("SLACK_BOT_TOKEN")
+        if not bot_token:
+            return None
+        creds: Dict[str, Any] = {"bot_token": bot_token}
+        webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
+        if webhook_url:
+            creds["webhook_url"] = webhook_url
+        return creds
 
     def _create_service_client(self) -> WebClient:
         """Create Slack WebClient with credentials."""
