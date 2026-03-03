@@ -620,7 +620,7 @@ class TestDatabaseCredentialResolution:
         "DB_USERNAME": "env-user",
         "DB_DATABASE": "env-db",
     }, clear=False)
-    def test_env_vars_custom_values(self, mock_get_creds):
+    def test_env_vars_custom_values(self, _mock_get_creds):
         """All DB env vars should be picked up when set."""
         client = DatabaseClient()
 
@@ -678,7 +678,7 @@ class TestDatabaseCredentialResolution:
             "database": "sm-db",
         }
 
-        client = DatabaseClient(secret_name="test-secret")
+        DatabaseClient(secret_name="test-secret")
 
         # Should fall through to SM since DB_PASSWORD is missing
         mock_get_creds.assert_called_once()

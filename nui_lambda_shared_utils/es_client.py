@@ -25,7 +25,7 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
         self,
         host: Optional[str] = None,
         secret_name: Optional[str] = None,
-        credentials: Optional[Dict] = None,
+        credentials: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
         """
@@ -154,7 +154,7 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
         )
 
     @handle_client_errors(default_return=0)
-    def count(self, index: str, body: Optional[Dict] = None) -> int:
+    def count(self, index: str, body: Optional[Dict[str, Any]] = None) -> int:
         """
         Count documents with error handling.
         

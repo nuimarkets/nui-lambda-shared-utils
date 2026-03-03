@@ -496,6 +496,7 @@ class TestElasticsearchCredentialResolution:
         """ES_USERNAME should override the default when set."""
         client = ElasticsearchClient()
 
+        mock_get_secret.assert_not_called()
         assert client.credentials["username"] == "custom-user"
         assert client.credentials["password"] == "env-pass"
 

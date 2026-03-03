@@ -1050,7 +1050,7 @@ class TestSlackCredentialResolution:
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token", "SLACK_WEBHOOK_URL": "https://hooks.slack.com/xxx"}, clear=False)
-    def test_env_var_includes_optional_webhook(self, mock_webclient, mock_get_secret):
+    def test_env_var_includes_optional_webhook(self, _mock_webclient, _mock_get_secret):
         """SLACK_WEBHOOK_URL is included when present."""
         client = SlackClient()
 
@@ -1060,7 +1060,7 @@ class TestSlackCredentialResolution:
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token"}, clear=False)
-    def test_explicit_credentials_win_over_env_vars(self, mock_webclient, mock_get_secret):
+    def test_explicit_credentials_win_over_env_vars(self, _mock_webclient, mock_get_secret):
         """Explicit credentials should take priority over env vars."""
         creds = {"bot_token": "xoxb-explicit-token"}
         client = SlackClient(credentials=creds)
@@ -1071,7 +1071,7 @@ class TestSlackCredentialResolution:
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {}, clear=False)
-    def test_falls_through_to_secrets_manager(self, mock_webclient, mock_get_secret):
+    def test_falls_through_to_secrets_manager(self, _mock_webclient, mock_get_secret):
         """Without explicit creds or env vars, should use SM."""
         # Ensure env vars are not set
         os.environ.pop("SLACK_BOT_TOKEN", None)

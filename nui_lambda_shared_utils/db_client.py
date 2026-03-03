@@ -166,9 +166,14 @@ class DatabaseClient(BaseClient, ServiceHealthMixin):
         password = os.environ.get("DB_PASSWORD")
         if not host or not password:
             return None
+        port_str = os.environ.get("DB_PORT", "3306")
+        try:
+            port = int(port_str)
+        except ValueError:
+            raise ValueError(f"DB_PORT must be an integer, got: {port_str!r}")
         return {
             "host": host,
-            "port": int(os.environ.get("DB_PORT", "3306")),
+            "port": port,
             "username": os.environ.get("DB_USERNAME", "root"),
             "password": password,
             "database": os.environ.get("DB_DATABASE", "app"),
@@ -514,9 +519,14 @@ class PostgreSQLClient(BaseClient, ServiceHealthMixin):
         password = os.environ.get("DB_PASSWORD")
         if not host or not password:
             return None
+        port_str = os.environ.get("DB_PORT", "5432")
+        try:
+            port = int(port_str)
+        except ValueError:
+            raise ValueError(f"DB_PORT must be an integer, got: {port_str!r}")
         return {
             "host": host,
-            "port": int(os.environ.get("DB_PORT", "5432")),
+            "port": port,
             "username": os.environ.get("DB_USERNAME", "postgres"),
             "password": password,
             "database": os.environ.get("DB_DATABASE", "postgres"),
@@ -526,7 +536,7 @@ class PostgreSQLClient(BaseClient, ServiceHealthMixin):
         """Override with auth-specific credential handling."""
         from .secrets_helper import get_secret
 
-        resolved_secret_name = secret_name or self._get_default_secret_name()
+        resolved_secret_name = self._resolve_secret_name(secret_name)
         raw_creds = get_secret(resolved_secret_name)
 
         # Use auth-specific credentials if available and requested
