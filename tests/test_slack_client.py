@@ -17,8 +17,10 @@ class TestSlackClient:
 
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": ""}, clear=False)
     def test_init_required_secret(self, mock_webclient, mock_get_secret):
         """Test initialization requires secret name parameter."""
+        os.environ.pop("SLACK_BOT_TOKEN", None)
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
 
         client = SlackClient(secret_name="test-secret")
@@ -28,8 +30,10 @@ class TestSlackClient:
 
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": ""}, clear=False)
     def test_init_custom_secret(self, mock_webclient, mock_get_secret):
         """Test initialization with custom secret name."""
+        os.environ.pop("SLACK_BOT_TOKEN", None)
         mock_get_secret.return_value = {"bot_token": "xoxb-custom-token"}
 
         client = SlackClient(secret_name="custom-slack-secret")
@@ -1016,3 +1020,64 @@ account_names:
         }
         SlackClient(secret_name="test-secret")  # noqa: S106
         mock_env_info.assert_called_once()
+
+
+class TestSlackCredentialResolution:
+    """Tests for Slack credential resolution precedence."""
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    def test_explicit_credentials_bypass_secrets_manager(self, mock_webclient, mock_get_secret):
+        """Explicit credentials dict should skip SM entirely."""
+        creds = {"bot_token": "xoxb-direct-token"}
+        client = SlackClient(credentials=creds)
+
+        mock_get_secret.assert_not_called()
+        mock_webclient.assert_called_once_with(token="xoxb-direct-token")
+        assert client.credentials == creds
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token"}, clear=False)
+    def test_env_var_bypasses_secrets_manager(self, mock_webclient, mock_get_secret):
+        """SLACK_BOT_TOKEN env var should skip SM."""
+        client = SlackClient()
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials["bot_token"] == "xoxb-env-token"
+        mock_webclient.assert_called_once_with(token="xoxb-env-token")
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token", "SLACK_WEBHOOK_URL": "https://hooks.slack.com/xxx"}, clear=False)
+    def test_env_var_includes_optional_webhook(self, _mock_webclient, _mock_get_secret):
+        """SLACK_WEBHOOK_URL is included when present."""
+        client = SlackClient()
+
+        assert client.credentials["bot_token"] == "xoxb-env-token"
+        assert client.credentials["webhook_url"] == "https://hooks.slack.com/xxx"
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token"}, clear=False)
+    def test_explicit_credentials_win_over_env_vars(self, _mock_webclient, mock_get_secret):
+        """Explicit credentials should take priority over env vars."""
+        creds = {"bot_token": "xoxb-explicit-token"}
+        client = SlackClient(credentials=creds)
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials["bot_token"] == "xoxb-explicit-token"
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch.dict("os.environ", {}, clear=False)
+    def test_falls_through_to_secrets_manager(self, _mock_webclient, mock_get_secret):
+        """Without explicit creds or env vars, should use SM."""
+        # Ensure env vars are not set
+        os.environ.pop("SLACK_BOT_TOKEN", None)
+        mock_get_secret.return_value = {"bot_token": "xoxb-sm-token"}
+
+        client = SlackClient(secret_name="test-secret")
+
+        mock_get_secret.assert_called_once_with("test-secret")
+        assert client.credentials["bot_token"] == "xoxb-sm-token"

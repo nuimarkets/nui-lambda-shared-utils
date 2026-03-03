@@ -23,25 +23,32 @@ class BaseClient(ABC):
     """
 
     def __init__(
-        self, 
+        self,
         secret_name: Optional[str] = None,
         config_key_prefix: Optional[str] = None,
+        credentials: Optional[Dict[str, Any]] = None,
         **kwargs
     ):
         """
         Initialize base client with standardized credential and config resolution.
-        
+
+        Credential resolution precedence:
+        1. Explicit ``credentials`` dict — skip everything else
+        2. Environment variables (per-client patterns) — skip Secrets Manager
+        3. Secrets Manager (existing behavior) — unchanged
+
         Args:
             secret_name: Override secret name for credentials
             config_key_prefix: Prefix for config keys (e.g., 'slack', 'es', 'db')
+            credentials: Direct credentials dict, bypasses Secrets Manager entirely
             **kwargs: Additional client-specific parameters
         """
         self.config = get_config()
         self.config_key_prefix = config_key_prefix or self._get_default_config_prefix()
-        
+
         # Resolve and store credentials
-        self.credentials = self._resolve_credentials(secret_name)
-        
+        self.credentials = self._resolve_credentials(secret_name, credentials)
+
         # Store additional configuration
         self.client_config = kwargs
         
@@ -72,18 +79,66 @@ class BaseClient(ABC):
         """Return the default secret name for this client type."""
         pass
 
-    def _resolve_credentials(self, secret_name: Optional[str]) -> Dict[str, Any]:
+    def _resolve_credentials_from_env(self) -> Optional[Dict[str, Any]]:
+        """
+        Resolve credentials from environment variables.
+
+        Subclasses override this to check client-specific env vars
+        (e.g. SLACK_BOT_TOKEN, ES_PASSWORD).  Return a credentials dict
+        if the required env vars are present, or ``None`` to fall through
+        to Secrets Manager.
+
+        Returns:
+            Credentials dict or None
+        """
+        return None
+
+    def _resolve_credentials(
+        self,
+        secret_name: Optional[str],
+        explicit_credentials: Optional[Dict[str, Any]] = None,
+    ) -> Dict[str, Any]:
         """
         Resolve credentials using standardized precedence.
-        
+
+        Precedence:
+        1. Explicit credentials dict (constructor param)
+        2. Environment variables (per-client ``_resolve_credentials_from_env``)
+        3. AWS Secrets Manager (via ``_fetch_credentials_from_sm``)
+
         Args:
             secret_name: Optional override for secret name
-            
+            explicit_credentials: Direct credentials dict from constructor
+
         Returns:
             Dictionary containing resolved credentials
         """
-        # Determine secret name with precedence
-        resolved_secret_name = resolve_config_value(
+        # 1. Explicit credentials dict — skip everything
+        if explicit_credentials is not None:
+            log.debug("Using explicitly provided credentials")
+            return explicit_credentials
+
+        # 2. Environment variables — skip Secrets Manager
+        env_credentials = self._resolve_credentials_from_env()
+        if env_credentials is not None:
+            log.debug("Using credentials from environment variables")
+            return env_credentials
+
+        # 3. Secrets Manager
+        return self._fetch_credentials_from_sm(secret_name)
+
+    def _resolve_secret_name(self, secret_name: Optional[str]) -> str:
+        """
+        Resolve the Secrets Manager secret name using standard precedence:
+        explicit param > env var > config default.
+
+        Args:
+            secret_name: Optional explicit override
+
+        Returns:
+            Resolved secret name string
+        """
+        resolved = resolve_config_value(
             secret_name,
             [
                 f"{self.config_key_prefix.upper()}_CREDENTIALS_SECRET",
@@ -91,10 +146,24 @@ class BaseClient(ABC):
             ],
             getattr(self.config, f"{self.config_key_prefix}_credentials_secret", self._get_default_secret_name())
         )
-        
-        validate_required_param(resolved_secret_name, "secret_name")
-        
-        # Retrieve and return credentials
+        validate_required_param(resolved, "secret_name")
+        return resolved
+
+    def _fetch_credentials_from_sm(self, secret_name: Optional[str]) -> Dict[str, Any]:
+        """
+        Fetch credentials from AWS Secrets Manager.
+
+        Subclasses override this to customize the SM fetch (e.g. DB clients
+        use ``get_database_credentials`` for field normalization).
+
+        Args:
+            secret_name: Optional override for secret name
+
+        Returns:
+            Dictionary containing resolved credentials
+        """
+        resolved_secret_name = self._resolve_secret_name(secret_name)
+
         try:
             credentials = get_secret(resolved_secret_name)
             log.debug(f"Retrieved credentials from secret: {resolved_secret_name}")

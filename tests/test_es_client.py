@@ -2,6 +2,7 @@
 Tests for es_client module.
 """
 
+import os
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -459,3 +460,66 @@ class TestStreamingBulk:
 
         assert success == 0
         assert failed == 0
+
+
+class TestElasticsearchCredentialResolution:
+    """Tests for Elasticsearch credential resolution precedence."""
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    def test_explicit_credentials_bypass_secrets_manager(self, mock_es, mock_get_secret):
+        """Explicit credentials dict should skip SM entirely."""
+        creds = {"username": "admin", "password": "direct-pass"}
+        client = ElasticsearchClient(credentials=creds)
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials == creds
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch.dict("os.environ", {"ES_PASSWORD": "env-pass"}, clear=False)
+    def test_env_var_bypasses_secrets_manager(self, mock_es, mock_get_secret):
+        """ES_PASSWORD env var should skip SM."""
+        # Ensure no SLACK/DB env vars leak in
+        os.environ.pop("ES_USERNAME", None)
+
+        client = ElasticsearchClient()
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials["password"] == "env-pass"
+        assert client.credentials["username"] == "elastic"  # default
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch.dict("os.environ", {"ES_PASSWORD": "env-pass", "ES_USERNAME": "custom-user"}, clear=False)
+    def test_env_var_custom_username(self, mock_es, mock_get_secret):
+        """ES_USERNAME should override the default when set."""
+        client = ElasticsearchClient()
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials["username"] == "custom-user"
+        assert client.credentials["password"] == "env-pass"
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch.dict("os.environ", {"ES_PASSWORD": "env-pass"}, clear=False)
+    def test_explicit_credentials_win_over_env_vars(self, mock_es, mock_get_secret):
+        """Explicit credentials should take priority over env vars."""
+        creds = {"username": "explicit-user", "password": "explicit-pass"}
+        client = ElasticsearchClient(credentials=creds)
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials["password"] == "explicit-pass"
+
+    @patch("nui_lambda_shared_utils.base_client.get_secret")
+    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch.dict("os.environ", {}, clear=False)
+    def test_falls_through_to_secrets_manager(self, mock_es, mock_get_secret):
+        """Without explicit creds or env vars, should use SM."""
+        os.environ.pop("ES_PASSWORD", None)
+        mock_get_secret.return_value = {"username": "elastic", "password": "sm-pass"}
+
+        client = ElasticsearchClient(secret_name="test-es-secret")
+
+        mock_get_secret.assert_called_once_with("test-es-secret")
+        assert client.credentials["password"] == "sm-pass"

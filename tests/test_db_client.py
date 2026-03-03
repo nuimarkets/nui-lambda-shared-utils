@@ -2,6 +2,7 @@
 Tests for db_client module.
 """
 
+import os
 import pytest
 
 pytestmark = pytest.mark.unit
@@ -572,3 +573,112 @@ class TestSafeCloseConnection:
         safe_close_connection(mock_conn)
 
         mock_conn.close.assert_called_once()
+
+
+class TestDatabaseCredentialResolution:
+    """Tests for DatabaseClient credential resolution precedence."""
+
+    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    def test_explicit_credentials_bypass_secrets_manager(self, mock_get_creds):
+        """Explicit credentials dict should skip SM entirely."""
+        creds = {
+            "host": "direct-host",
+            "port": 3306,
+            "username": "direct-user",
+            "password": "direct-pass",
+            "database": "direct-db",
+        }
+        client = DatabaseClient(credentials=creds)
+
+        mock_get_creds.assert_not_called()
+        assert client.credentials == creds
+        assert client._pool_key == "direct-host:3306"
+
+    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch.dict("os.environ", {"DB_HOST": "env-host", "DB_PASSWORD": "env-pass"}, clear=False)
+    def test_env_vars_bypass_secrets_manager(self, mock_get_creds):
+        """DB_HOST + DB_PASSWORD env vars should skip SM."""
+        # Clean other DB env vars
+        os.environ.pop("DB_PORT", None)
+        os.environ.pop("DB_USERNAME", None)
+        os.environ.pop("DB_DATABASE", None)
+
+        client = DatabaseClient()
+
+        mock_get_creds.assert_not_called()
+        assert client.credentials["host"] == "env-host"
+        assert client.credentials["password"] == "env-pass"
+        assert client.credentials["port"] == 3306  # default
+        assert client.credentials["username"] == "root"  # default
+        assert client.credentials["database"] == "app"  # default
+
+    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch.dict("os.environ", {
+        "DB_HOST": "env-host",
+        "DB_PASSWORD": "env-pass",
+        "DB_PORT": "3307",
+        "DB_USERNAME": "env-user",
+        "DB_DATABASE": "env-db",
+    }, clear=False)
+    def test_env_vars_custom_values(self, _mock_get_creds):
+        """All DB env vars should be picked up when set."""
+        client = DatabaseClient()
+
+        assert client.credentials["host"] == "env-host"
+        assert client.credentials["port"] == 3307
+        assert client.credentials["username"] == "env-user"
+        assert client.credentials["password"] == "env-pass"
+        assert client.credentials["database"] == "env-db"
+
+    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch.dict("os.environ", {"DB_HOST": "env-host", "DB_PASSWORD": "env-pass"}, clear=False)
+    def test_explicit_credentials_win_over_env_vars(self, mock_get_creds):
+        """Explicit credentials should take priority over env vars."""
+        creds = {
+            "host": "explicit-host",
+            "port": 3306,
+            "username": "explicit-user",
+            "password": "explicit-pass",
+            "database": "explicit-db",
+        }
+        client = DatabaseClient(credentials=creds)
+
+        mock_get_creds.assert_not_called()
+        assert client.credentials["host"] == "explicit-host"
+
+    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch.dict("os.environ", {}, clear=False)
+    def test_falls_through_to_secrets_manager(self, mock_get_creds):
+        """Without explicit creds or env vars, should use SM."""
+        os.environ.pop("DB_HOST", None)
+        os.environ.pop("DB_PASSWORD", None)
+        mock_get_creds.return_value = {
+            "host": "sm-host",
+            "port": 3306,
+            "username": "sm-user",
+            "password": "sm-pass",
+            "database": "sm-db",
+        }
+
+        client = DatabaseClient(secret_name="test-db-secret")
+
+        mock_get_creds.assert_called_once_with("test-db-secret")
+        assert client.credentials["host"] == "sm-host"
+
+    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch.dict("os.environ", {"DB_HOST": "env-host"}, clear=False)
+    def test_env_vars_require_both_host_and_password(self, mock_get_creds):
+        """Only DB_HOST without DB_PASSWORD should fall through to SM."""
+        os.environ.pop("DB_PASSWORD", None)
+        mock_get_creds.return_value = {
+            "host": "sm-host",
+            "port": 3306,
+            "username": "sm-user",
+            "password": "sm-pass",
+            "database": "sm-db",
+        }
+
+        DatabaseClient(secret_name="test-secret")
+
+        # Should fall through to SM since DB_PASSWORD is missing
+        mock_get_creds.assert_called_once()

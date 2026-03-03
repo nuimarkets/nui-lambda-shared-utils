@@ -43,42 +43,58 @@ class BaseClientContract(ABC):
 class TestClientContract:
     """Contract tests that all client implementations must pass."""
 
+    # Clear credential env vars so env var resolution doesn't short-circuit SM tests
+    _clean_env = {"SLACK_BOT_TOKEN": "", "ES_PASSWORD": "", "DB_HOST": "", "DB_PASSWORD": ""}
+
+    @staticmethod
+    def _strip_cred_env_vars():
+        """Remove credential env vars that would short-circuit SM resolution."""
+        import os
+        for var in ("SLACK_BOT_TOKEN", "ES_PASSWORD", "DB_HOST", "DB_PASSWORD"):
+            os.environ.pop(var, None)
+
     def test_initialization_with_required_secret(self, client_contract):
         """Test that all clients require a secret name for initialization."""
-        with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
-            mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
+        with patch.dict("os.environ", self._clean_env, clear=False):
+            self._strip_cred_env_vars()
+            with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
+                mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
 
-            # Should work with secret name
-            client = client_contract.create_client_instance(secret_name="test-secret")
-            assert client is not None
+                # Should work with secret name
+                client = client_contract.create_client_instance(secret_name="test-secret")
+                assert client is not None
 
     def test_secret_retrieval_consistent(self, client_contract):
         """Test that all clients retrieve secrets consistently."""
-        with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
-            mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
+        with patch.dict("os.environ", self._clean_env, clear=False):
+            self._strip_cred_env_vars()
+            with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
+                mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
 
-            client_contract.create_client_instance(secret_name="custom-secret")
+                client_contract.create_client_instance(secret_name="custom-secret")
 
-            # All clients should call get_secret with the provided name
-            mock_get_secret.assert_called_with("custom-secret")
+                # All clients should call get_secret with the provided name
+                mock_get_secret.assert_called_with("custom-secret")
 
     def test_configuration_integration(self, client_contract):
         """Test that all clients integrate with configuration system."""
-        with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
-            with patch("nui_lambda_shared_utils.base_client.get_config") as mock_get_config:
-                mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
-                mock_config = Mock()
-                mock_get_config.return_value = mock_config
+        with patch.dict("os.environ", self._clean_env, clear=False):
+            self._strip_cred_env_vars()
+            with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
+                with patch("nui_lambda_shared_utils.base_client.get_config") as mock_get_config:
+                    mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
+                    mock_config = Mock()
+                    mock_get_config.return_value = mock_config
 
-                # Set up config mock for this client type
-                setattr(mock_config, client_contract.get_expected_secret_key(), "config-secret")
+                    # Set up config mock for this client type
+                    setattr(mock_config, client_contract.get_expected_secret_key(), "config-secret")
 
-                # Create client without explicit secret (should use config)
-                client_contract.create_client_instance(**client_contract.get_client_specific_kwargs())
+                    # Create client without explicit secret (should use config)
+                    client_contract.create_client_instance(**client_contract.get_client_specific_kwargs())
 
-                # Should have consulted the config system
-                assert mock_get_config.called
-                mock_get_secret.assert_called_once_with("config-secret")
+                    # Should have consulted the config system
+                    assert mock_get_config.called
+                    mock_get_secret.assert_called_once_with("config-secret")
 
 
 # Specific client contract implementations
@@ -594,10 +610,13 @@ class TestClientInteroperability:
 class TestClientInheritanceIntegration:
     """Integration tests for client inheritance hierarchy."""
 
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": ""}, clear=False)
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     def test_slack_client_inherits_base_functionality(self, mock_web_client, mock_get_secret):
         """Test that SlackClient properly inherits BaseClient functionality."""
+        import os
+        os.environ.pop("SLACK_BOT_TOKEN", None)
         from nui_lambda_shared_utils.slack_client import SlackClient
 
         # Mock credentials and Slack client
@@ -758,12 +777,16 @@ class TestClientInheritanceIntegration:
             mock_getattr.return_value = "default"
             assert client._get_config_value("missing_key", default="default") == "default"
 
+    @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "", "ES_PASSWORD": "", "DB_HOST": "", "DB_PASSWORD": ""}, clear=False)
     @patch("nui_lambda_shared_utils.base_client.get_secret")
     @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
     @patch("nui_lambda_shared_utils.slack_client.WebClient")
     @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
     def test_cross_client_independence(self, mock_es_class, mock_web_client, mock_db_creds, mock_get_secret):
         """Test that multiple clients operate independently without interfering."""
+        import os
+        for var in ("SLACK_BOT_TOKEN", "ES_PASSWORD", "DB_HOST", "DB_PASSWORD"):
+            os.environ.pop(var, None)
         from nui_lambda_shared_utils.slack_client import SlackClient
         from nui_lambda_shared_utils.es_client import ElasticsearchClient
         from nui_lambda_shared_utils.db_client import DatabaseClient
@@ -808,3 +831,94 @@ class TestClientInheritanceIntegration:
         # get_secret should be called multiple times with different secret names
         assert mock_get_secret.call_count >= 2  # At least for slack and es clients
         mock_db_creds.assert_called_once_with("db-secret")
+
+
+class ConcreteBaseClientWithEnv(BaseClient):
+    """Concrete implementation with env var support for testing."""
+
+    def _get_default_config_prefix(self) -> str:
+        return "test"
+
+    def _create_service_client(self) -> Any:
+        return Mock()
+
+    def _get_default_secret_name(self) -> str:
+        return "test-credentials"
+
+    def _resolve_credentials_from_env(self):
+        import os
+        token = os.environ.get("TEST_TOKEN")
+        if not token:
+            return None
+        return {"token": token}
+
+
+class TestCredentialResolutionPrecedence:
+    """Tests for the three-tier credential resolution: explicit > env > SM."""
+
+    @patch('nui_lambda_shared_utils.base_client.get_secret')
+    @patch('nui_lambda_shared_utils.base_client.get_config')
+    def test_explicit_credentials_bypass_secrets_manager(self, mock_get_config, mock_get_secret):
+        """Explicit credentials dict should skip SM entirely."""
+        mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
+
+        creds = {"username": "direct_user", "password": "direct_pass"}
+        client = ConcreteBaseClient(credentials=creds)
+
+        assert client.credentials == creds
+        mock_get_secret.assert_not_called()
+
+    @patch('nui_lambda_shared_utils.base_client.get_secret')
+    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch.dict('os.environ', {'TEST_TOKEN': 'env-token-123'})
+    def test_env_vars_bypass_secrets_manager(self, mock_get_config, mock_get_secret):
+        """Env vars should skip SM when present (using subclass with env support)."""
+        mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
+
+        client = ConcreteBaseClientWithEnv()
+
+        assert client.credentials == {"token": "env-token-123"}
+        mock_get_secret.assert_not_called()
+
+    @patch('nui_lambda_shared_utils.base_client.get_secret')
+    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch.dict('os.environ', {'TEST_TOKEN': 'env-token-123'})
+    def test_explicit_credentials_win_over_env_vars(self, mock_get_config, mock_get_secret):
+        """Explicit credentials should take priority over env vars."""
+        mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
+
+        creds = {"token": "explicit-token"}
+        client = ConcreteBaseClientWithEnv(credentials=creds)
+
+        assert client.credentials == {"token": "explicit-token"}
+        mock_get_secret.assert_not_called()
+
+    @patch('nui_lambda_shared_utils.base_client.get_secret')
+    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch.dict('os.environ', {}, clear=False)
+    def test_falls_through_to_secrets_manager(self, mock_get_config, mock_get_secret):
+        """Without explicit creds or env vars, should use SM as before."""
+        mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
+        mock_get_secret.return_value = {"token": "sm-token"}
+
+        # Ensure TEST_TOKEN is not set
+        import os
+        os.environ.pop("TEST_TOKEN", None)
+
+        client = ConcreteBaseClientWithEnv()
+
+        assert client.credentials == {"token": "sm-token"}
+        mock_get_secret.assert_called_once_with("test-secret")
+
+    @patch('nui_lambda_shared_utils.base_client.get_secret')
+    @patch('nui_lambda_shared_utils.base_client.get_config')
+    def test_base_class_env_hook_returns_none(self, mock_get_config, mock_get_secret):
+        """Base class _resolve_credentials_from_env returns None by default."""
+        mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
+        mock_get_secret.return_value = {"token": "sm-token"}
+
+        client = ConcreteBaseClient()
+
+        # Should fall through to SM since base class returns None
+        assert client.credentials == {"token": "sm-token"}
+        mock_get_secret.assert_called_once()
