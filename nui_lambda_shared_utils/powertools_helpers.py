@@ -154,7 +154,11 @@ def powertools_handler(
         slack_alert_channel: Slack channel for error alerts (e.g., "#alerts", "#errors").
                             If None, Slack alerting is disabled.
         slack_account_names: Dict mapping AWS account IDs to display names
-        slack_account_names_config: Path to YAML file with account_names mapping
+        slack_account_names_config: Path to YAML file with account_names mapping.
+            The file must be bundled in the Lambda deployment package/zip.
+            Values loaded from this file are used as defaults, but any keys
+            provided in ``slack_account_names`` take precedence and override
+            the YAML-loaded values.
 
     Returns:
         Decorator function for Lambda handlers
