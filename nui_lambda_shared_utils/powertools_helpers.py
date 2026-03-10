@@ -7,7 +7,7 @@ Provides standardized logging, metrics, and error handling patterns using AWS La
 import functools
 import logging
 import os
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Dict, Optional, Union
 
 # Optional imports with graceful degradation
 try:
@@ -129,6 +129,8 @@ def powertools_handler(
     service_name: str,
     metrics_namespace: Optional[str] = None,
     slack_alert_channel: Optional[str] = None,
+    slack_account_names: Optional[Dict[str, str]] = None,
+    slack_account_names_config: Optional[str] = None,
 ):
     """
     Decorator for Lambda handlers with logging, metrics, and error handling.
@@ -151,6 +153,8 @@ def powertools_handler(
                           If None, metrics publishing is disabled.
         slack_alert_channel: Slack channel for error alerts (e.g., "#alerts", "#errors").
                             If None, Slack alerting is disabled.
+        slack_account_names: Dict mapping AWS account IDs to display names
+        slack_account_names_config: Path to YAML file with account_names mapping
 
     Returns:
         Decorator function for Lambda handlers
@@ -188,7 +192,10 @@ def powertools_handler(
         slack_client = None
         if slack_alert_channel and SLACK_CLIENT_AVAILABLE:
             try:
-                slack_client = SlackClient()
+                slack_client = SlackClient(
+                    account_names=slack_account_names,
+                    account_names_config=slack_account_names_config,
+                )
             except Exception as e:
                 logger.warning("Failed to initialize Slack client: %s", e)
 
