@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nui-lambda-shared-utils"
+version = "2.0.0"
+authors = [
+    {name = "NUI Markets", email = "develop@nuimarkets.com"},
+]
+description = "Redirect package: use nui-python-shared-utils instead"
+readme = "README.md"
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 7 - Inactive",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "nui-python-shared-utils>=1.2.3",
+]
+
+[project.optional-dependencies]
+elasticsearch = ["nui-python-shared-utils[elasticsearch]"]
+database = ["nui-python-shared-utils[database]"]
+slack = ["nui-python-shared-utils[slack]"]
+powertools = ["nui-python-shared-utils[powertools]"]
+jwt = ["nui-python-shared-utils[jwt]"]
+all = ["nui-python-shared-utils[all]"]
+dev = ["nui-python-shared-utils[dev]"]
+
+[project.urls]
+Homepage = "https://github.com/nuimarkets/nui-python-shared-utils"
+"Bug Tracker" = "https://github.com/nuimarkets/nui-python-shared-utils/issues"

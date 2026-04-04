@@ -4,7 +4,7 @@ JWT validation utilities for AWS Lambda functions behind API Gateway.
 Uses RS256 signature verification with public keys stored in AWS Secrets Manager.
 Requires the `rsa` package (pure Python, ~100KB) — no PyJWT or cryptography needed at runtime.
 
-Install: pip install nui-lambda-shared-utils[jwt]
+Install: pip install nui-python-shared-utils[jwt]
 """
 
 import os
@@ -38,7 +38,7 @@ def _require_rsa():
 
             _rsa = rsa
         except ImportError:
-            raise ImportError("The 'rsa' package is required for JWT support. Install with: pip install nui-lambda-shared-utils[jwt]")
+            raise ImportError("The 'rsa' package is required for JWT support. Install with: pip install nui-python-shared-utils[jwt]") from None
     return _rsa
 
 

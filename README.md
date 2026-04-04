@@ -1,10 +1,10 @@
-# NUI Lambda Shared Utilities
+# NUI Python Shared Utilities
 
-[![PyPI version](https://badge.fury.io/py/nui-lambda-shared-utils.svg)](https://badge.fury.io/py/nui-lambda-shared-utils)
+[![PyPI version](https://badge.fury.io/py/nui-python-shared-utils.svg)](https://badge.fury.io/py/nui-python-shared-utils)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Production-ready utilities for AWS Lambda functions with Slack, Elasticsearch, database, and monitoring integrations. Built and battle-tested on the NUI platform, this package provides standardized patterns for common serverless operations with sensible defaults that can be configured for any AWS environment.
+Production-ready shared Python utilities for AWS Lambda functions, CLI tools, and agents. Provides standardized integrations for Slack, Elasticsearch, database, and monitoring. Built and battle-tested on the NUI platform with sensible defaults configurable for any environment.
 
 ## Table of Contents
 
@@ -62,15 +62,15 @@ Production-ready utilities for AWS Lambda functions with Slack, Elasticsearch, d
 ### Installation
 
 ```bash
-pip install nui-lambda-shared-utils
+pip install nui-python-shared-utils
 
 # With specific extras for optional dependencies
-pip install nui-lambda-shared-utils[all]          # All integrations
-pip install nui-lambda-shared-utils[powertools]   # AWS Powertools only
-pip install nui-lambda-shared-utils[slack]        # Slack only
-pip install nui-lambda-shared-utils[elasticsearch] # Elasticsearch only
-pip install nui-lambda-shared-utils[database]     # Database only
-pip install nui-lambda-shared-utils[jwt]          # JWT authentication only
+pip install nui-python-shared-utils[all]          # All integrations
+pip install nui-python-shared-utils[powertools]   # AWS Powertools only
+pip install nui-python-shared-utils[slack]        # Slack only
+pip install nui-python-shared-utils[elasticsearch] # Elasticsearch only
+pip install nui-python-shared-utils[database]     # Database only
+pip install nui-python-shared-utils[jwt]          # JWT authentication only
 ```
 
 ### Basic Configuration
@@ -299,7 +299,7 @@ This package requires AWS Secrets Manager for credential storage and IAM permiss
 
 ```bash
 # Install with dev dependencies
-pip install nui-lambda-shared-utils[dev]
+pip install nui-python-shared-utils[dev]
 
 # Run all tests
 pytest
@@ -341,7 +341,7 @@ The package includes `slack-channel-setup` - a CLI tool for automating Slack wor
 
 ```bash
 # Install and use
-pip install nui-lambda-shared-utils[slack]
+pip install nui-python-shared-utils[slack]
 slack-channel-setup --config channels.yaml
 ```
 
@@ -357,15 +357,15 @@ slack-channel-setup --config channels.yaml
 
 ### 🔗 Links
 
-- **GitHub Repository**: https://github.com/nuimarkets/nui-lambda-shared-utils
-- **Issue Tracker**: https://github.com/nuimarkets/nui-lambda-shared-utils/issues
-- **PyPI Package**: https://pypi.org/project/nui-lambda-shared-utils/
+- **GitHub Repository**: https://github.com/nuimarkets/nui-python-shared-utils
+- **Issue Tracker**: https://github.com/nuimarkets/nui-python-shared-utils/issues
+- **PyPI Package**: https://pypi.org/project/nui-python-shared-utils/
 - **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
 ### 💬 Support
 
-- **Bug Reports**: [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
-- **Feature Requests**: [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
+- **Bug Reports**: [GitHub Issues](https://github.com/nuimarkets/nui-python-shared-utils/issues)
+- **Feature Requests**: [GitHub Issues](https://github.com/nuimarkets/nui-python-shared-utils/issues)
 - **Questions**: Check [docs/](docs/README.md) first, then open an issue
 
 ## License

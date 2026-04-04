@@ -1,6 +1,6 @@
 # Documentation
 
-Welcome to the comprehensive documentation for `nui-lambda-shared-utils`.
+Welcome to the comprehensive documentation for `nui-python-shared-utils` (formerly `nui-lambda-shared-utils`).
 
 **Last Updated**: 2026-02-13
 
@@ -162,8 +162,8 @@ make html
 
 ## Online Documentation
 
-- GitHub Repository: https://github.com/nuimarkets/nui-lambda-shared-utils
-- Package Page: https://pypi.org/project/nui-lambda-shared-utils/
+- GitHub Repository: https://github.com/nuimarkets/nui-python-shared-utils
+- Package Page: https://pypi.org/project/nui-python-shared-utils/
 
 ---
 

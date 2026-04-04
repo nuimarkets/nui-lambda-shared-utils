@@ -12,7 +12,7 @@ The `slack-channel-setup` command automates Slack workspace channel creation and
 
 ```bash
 # Install with Slack support
-pip install nui-lambda-shared-utils[slack]
+pip install nui-python-shared-utils[slack]
 
 # Verify installation
 slack-channel-setup --help

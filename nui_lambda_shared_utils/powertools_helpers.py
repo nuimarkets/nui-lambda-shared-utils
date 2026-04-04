@@ -107,7 +107,7 @@ def get_powertools_logger(
     if not POWERTOOLS_AVAILABLE:
         raise ImportError(
             "aws-lambda-powertools is required for Lambda environment. "
-            "Install with: pip install nui-lambda-shared-utils[powertools]"
+            "Install with: pip install nui-python-shared-utils[powertools]"
         )
 
     # Create Powertools Logger with ES-compatible timestamp format

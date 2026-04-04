@@ -1,6 +1,6 @@
 # Installation Guide
 
-This guide covers installation, dependency management, and environment setup for `nui-lambda-shared-utils`.
+This guide covers installation, dependency management, and environment setup for `nui-python-shared-utils`.
 
 ## Requirements
 
@@ -14,7 +14,7 @@ This guide covers installation, dependency management, and environment setup for
 
 ```bash
 # Basic installation with core dependencies
-pip install nui-lambda-shared-utils
+pip install nui-python-shared-utils
 ```
 
 ### Installation with Optional Dependencies
@@ -23,22 +23,22 @@ The package uses optional extras to minimize Lambda bundle size. Install only th
 
 ```bash
 # Slack integration only
-pip install nui-lambda-shared-utils[slack]
+pip install nui-python-shared-utils[slack]
 
 # Elasticsearch integration only
-pip install nui-lambda-shared-utils[elasticsearch]
+pip install nui-python-shared-utils[elasticsearch]
 
 # Database integration only
-pip install nui-lambda-shared-utils[database]
+pip install nui-python-shared-utils[database]
 
 # JWT authentication only
-pip install nui-lambda-shared-utils[jwt]
+pip install nui-python-shared-utils[jwt]
 
 # All integrations
-pip install nui-lambda-shared-utils[all]
+pip install nui-python-shared-utils[all]
 
 # Development dependencies
-pip install nui-lambda-shared-utils[dev]
+pip install nui-python-shared-utils[dev]
 ```
 
 ### Development Installation
@@ -47,8 +47,8 @@ For local development and testing:
 
 ```bash
 # Clone the repository
-git clone https://github.com/nuimarkets/nui-lambda-shared-utils.git
-cd nui-lambda-shared-utils
+git clone https://github.com/nuimarkets/nui-python-shared-utils.git
+cd nui-python-shared-utils
 
 # Install in development mode with all dependencies
 pip install -e .[dev]
@@ -109,7 +109,7 @@ source venv/bin/activate
 venv\Scripts\activate
 
 # Install package
-pip install nui-lambda-shared-utils[all]
+pip install nui-python-shared-utils[all]
 ```
 
 ### Using conda
@@ -122,7 +122,7 @@ conda create -n nui-utils python=3.9
 conda activate nui-utils
 
 # Install package
-pip install nui-lambda-shared-utils[all]
+pip install nui-python-shared-utils[all]
 ```
 
 ## AWS Configuration
@@ -176,7 +176,7 @@ For AWS Lambda deployment, consider using the package as a layer:
 ```bash
 # Create layer directory structure
 mkdir python
-pip install nui-lambda-shared-utils[all] -t python/
+pip install nui-python-shared-utils[all] -t python/
 
 # Create layer zip
 zip -r nui-utils-layer.zip python/
@@ -234,7 +234,7 @@ ImportError: No module named 'elasticsearch'
 **Solution**: Install with the appropriate extra:
 
 ```bash
-pip install nui-lambda-shared-utils[elasticsearch]
+pip install nui-python-shared-utils[elasticsearch]
 ```
 
 #### AWS Credentials Not Found
@@ -256,5 +256,5 @@ ERROR: pip's dependency resolver does not currently consider all the ways...
 ### Getting Help
 
 - Check the [Troubleshooting Guide](troubleshooting.md)
-- Review [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
+- Review [GitHub Issues](https://github.com/nuimarkets/nui-python-shared-utils/issues)
 - Consult the [Configuration Guide](configuration.md) for setup details

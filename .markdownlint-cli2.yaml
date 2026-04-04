@@ -1,4 +1,4 @@
-# Markdownlint configuration for nui-lambda-shared-utils
+# Markdownlint configuration for nui-python-shared-utils
 # Extends workspace config with project-specific overrides
 
 config:

@@ -9,7 +9,7 @@ The `jwt_auth` module validates RS256-signed JWTs using public keys stored in AW
 ## Installation
 
 ```bash
-pip install nui-lambda-shared-utils[jwt]
+pip install nui-python-shared-utils[jwt]
 ```
 
 ## Quick Start

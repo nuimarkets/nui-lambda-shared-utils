@@ -1,6 +1,6 @@
 # AWS Powertools Integration Guide
 
-This guide covers the AWS Powertools integration utilities provided by `nui-lambda-shared-utils`. These utilities standardize logging, metrics, and error handling patterns across Lambda functions using [AWS Lambda Powertools for Python](https://docs.powertools.aws.dev/lambda/python/).
+This guide covers the AWS Powertools integration utilities provided by `nui-python-shared-utils`. These utilities standardize logging, metrics, and error handling patterns across Lambda functions using [AWS Lambda Powertools for Python](https://docs.powertools.aws.dev/lambda/python/).
 
 ## Table of Contents
 
@@ -18,10 +18,10 @@ Install the package with Powertools support:
 
 ```bash
 # Install with Powertools integration
-pip install nui-lambda-shared-utils[powertools]
+pip install nui-python-shared-utils[powertools]
 
 # Or install everything
-pip install nui-lambda-shared-utils[all]
+pip install nui-python-shared-utils[all]
 ```
 
 This installs:
@@ -426,7 +426,7 @@ def handler(event, context):
 
 ```bash
 # Add to requirements.txt
-nui-lambda-shared-utils[powertools]
+nui-python-shared-utils[powertools]
 
 # Or install directly
 pip install aws-lambda-powertools>=3.6.0
@@ -456,7 +456,7 @@ pip install aws-lambda-powertools>=3.6.0
 2. **Slack client not installed**
 
    ```bash
-   pip install nui-lambda-shared-utils[slack]
+   pip install nui-python-shared-utils[slack]
    ```
 
 3. **Invalid channel name**
@@ -589,5 +589,5 @@ def handler(event, context):
 
 For issues or questions:
 
-- [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
-- [Package Documentation](https://github.com/nuimarkets/nui-lambda-shared-utils)
+- [GitHub Issues](https://github.com/nuimarkets/nui-python-shared-utils/issues)
+- [Package Documentation](https://github.com/nuimarkets/nui-python-shared-utils)

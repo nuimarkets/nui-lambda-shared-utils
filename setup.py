@@ -1,5 +1,5 @@
 """
-Setup for nui-lambda-shared-utils package.
+Setup for nui-python-shared-utils package.
 """
 
 from setuptools import setup, find_packages
@@ -8,19 +8,19 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="nui-lambda-shared-utils",
+    name="nui-python-shared-utils",
     use_scm_version=True,
     setup_requires=["setuptools-scm>=8.0"],
     author="NUI Markets",
     author_email="develop@nuimarkets.com",
-    description="Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, and monitoring integrations",
+    description="Shared Python utilities for AWS Lambda, CLI tools, and agents with Slack, Elasticsearch, and monitoring integrations",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/nuimarkets/nui-lambda-shared-utils",
+    url="https://github.com/nuimarkets/nui-python-shared-utils",
     project_urls={
-        "Bug Tracker": "https://github.com/nuimarkets/nui-lambda-shared-utils/issues",
-        "Documentation": "https://github.com/nuimarkets/nui-lambda-shared-utils/blob/main/README.md",
-        "Source": "https://github.com/nuimarkets/nui-lambda-shared-utils",
+        "Bug Tracker": "https://github.com/nuimarkets/nui-python-shared-utils/issues",
+        "Documentation": "https://github.com/nuimarkets/nui-python-shared-utils/blob/main/README.md",
+        "Source": "https://github.com/nuimarkets/nui-python-shared-utils",
     },
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -83,5 +83,5 @@ setup(
         ],
     },
     python_requires=">=3.9",
-    keywords="aws lambda utilities slack elasticsearch monitoring serverless",
+    keywords="aws lambda utilities slack elasticsearch monitoring serverless python shared",
 )

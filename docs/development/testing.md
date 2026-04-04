@@ -1,6 +1,6 @@
 # Testing Guide
 
-Comprehensive testing guide for `nui-lambda-shared-utils` developers.
+Comprehensive testing guide for `nui-python-shared-utils` developers.
 
 **Last Updated**: 2025-11-16
 

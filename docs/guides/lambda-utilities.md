@@ -1,6 +1,6 @@
 # Lambda Context Helpers Guide
 
-This guide covers the Lambda context helpers provided by `nui-lambda-shared-utils`. These utilities provide standardized environment info extraction for logging context, metric dimensions, and conditional behavior based on execution environment.
+This guide covers the Lambda context helpers provided by `nui-python-shared-utils`. These utilities provide standardized environment info extraction for logging context, metric dimensions, and conditional behavior based on execution environment.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ No additional dependencies required. Lambda helpers use only Python standard lib
 
 ```bash
 # Base package includes lambda_helpers
-pip install nui-lambda-shared-utils
+pip install nui-python-shared-utils
 ```
 
 ## Quick Start
@@ -270,5 +270,5 @@ def test_handler_lambda_behavior(monkeypatch):
 
 For issues or questions:
 
-- [GitHub Issues](https://github.com/nuimarkets/nui-lambda-shared-utils/issues)
-- [Package Documentation](https://github.com/nuimarkets/nui-lambda-shared-utils)
+- [GitHub Issues](https://github.com/nuimarkets/nui-python-shared-utils/issues)
+- [Package Documentation](https://github.com/nuimarkets/nui-python-shared-utils)
