@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is `nui-lambda-shared-utils`, a Python package providing production-ready utilities for AWS Lambda functions. Built and battle-tested on the NUI platform, it offers standardized integrations for Slack, Elasticsearch, database operations, CloudWatch metrics, and error handling patterns. The package is designed to be generic and configurable for any AWS Lambda environment.
+This is `nui-python-shared-utils`, a Python package providing production-ready utilities for AWS Lambda functions and CLI tools. Built and battle-tested on the NUI platform, it offers standardized integrations for Slack, Elasticsearch, database operations, CloudWatch metrics, and error handling patterns. The package is designed to be generic and configurable for any Python environment.
 
 ## Architecture
 
@@ -321,7 +321,7 @@ Version is defined in both `setup.py` and `pyproject.toml` and should be kept in
 
 ### PyPI Publishing
 
-The package is published to PyPI as `nui-lambda-shared-utils` with GitHub Actions automation for releases.
+The package is published to PyPI as `nui-python-shared-utils`. The old name `nui-lambda-shared-utils` is a redirect package that depends on `nui-python-shared-utils`.
 
 ### CLI Tools
 

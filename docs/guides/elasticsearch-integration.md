@@ -1,6 +1,6 @@
 # Elasticsearch Integration Guide
 
-Comprehensive guide for using Elasticsearch utilities in `nui-lambda-shared-utils`.
+Comprehensive guide for using Elasticsearch utilities in `nui-python-shared-utils`.
 
 **Last Updated**: 2026-01-30
 
@@ -32,7 +32,7 @@ results = es.search(
 Install with the elasticsearch extra:
 
 ```bash
-pip install nui-lambda-shared-utils[elasticsearch]
+pip install nui-python-shared-utils[elasticsearch]
 ```
 
 ## Configuration

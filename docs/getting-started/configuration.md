@@ -1,6 +1,6 @@
 # Configuration Guide
 
-This guide covers all configuration options for `nui-lambda-shared-utils`, including environment variables, programmatic configuration, and AWS integration.
+This guide covers all configuration options for `nui-python-shared-utils`, including environment variables, programmatic configuration, and AWS integration.
 
 ## Configuration System Overview
 

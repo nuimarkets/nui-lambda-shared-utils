@@ -1,12 +1,12 @@
 # Quick Start Guide
 
-Get up and running with `nui-lambda-shared-utils` in minutes.
+Get up and running with `nui-python-shared-utils` in minutes.
 
 ## Installation
 
 ```bash
 # Install with all integrations
-pip install nui-lambda-shared-utils[all]
+pip install nui-python-shared-utils[all]
 ```
 
 ## Basic Configuration
@@ -247,7 +247,7 @@ def lambda_handler(event, context):
 **Installation:**
 
 ```bash
-pip install nui-lambda-shared-utils[jwt]
+pip install nui-python-shared-utils[jwt]
 ```
 
 **Requirements:**
@@ -306,7 +306,7 @@ def lambda_handler(event, context):
 **Installation:**
 
 ```bash
-pip install nui-lambda-shared-utils[powertools]
+pip install nui-python-shared-utils[powertools]
 ```
 
 **Benefits:**

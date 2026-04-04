@@ -3,12 +3,12 @@ requires = ["setuptools>=61.0", "wheel", "setuptools-scm>=8.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nui-lambda-shared-utils"
+name = "nui-python-shared-utils"
 dynamic = ["version"]
 authors = [
     {name = "NUI Markets", email = "develop@nuimarkets.com"},
 ]
-description = "Enterprise-grade utilities for AWS Lambda functions with Slack, Elasticsearch, and monitoring integrations"
+description = "Shared Python utilities for AWS Lambda, CLI tools, and agents with Slack, Elasticsearch, and monitoring integrations"
 readme = "README.md"
 requires-python = ">=3.9"
 classifiers = [
@@ -27,7 +27,7 @@ classifiers = [
     "Environment :: Console",
     "Framework :: AWS CDK",
 ]
-keywords = ["aws", "lambda", "utilities", "slack", "elasticsearch", "monitoring", "serverless"]
+keywords = ["aws", "lambda", "utilities", "slack", "elasticsearch", "monitoring", "serverless", "python", "shared"]
 dependencies = [
     "boto3>=1.20.0",
     "pytz>=2021.3",
@@ -70,10 +70,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nuimarkets/nui-lambda-shared-utils"
-"Bug Tracker" = "https://github.com/nuimarkets/nui-lambda-shared-utils/issues"
-Documentation = "https://github.com/nuimarkets/nui-lambda-shared-utils/blob/main/README.md"
-Source = "https://github.com/nuimarkets/nui-lambda-shared-utils"
+Homepage = "https://github.com/nuimarkets/nui-python-shared-utils"
+"Bug Tracker" = "https://github.com/nuimarkets/nui-python-shared-utils/issues"
+Documentation = "https://github.com/nuimarkets/nui-python-shared-utils/blob/main/README.md"
+Source = "https://github.com/nuimarkets/nui-python-shared-utils"
 
 [project.scripts]
 slack-channel-setup = "nui_lambda_shared_utils.cli:main"

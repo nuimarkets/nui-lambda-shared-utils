@@ -81,3 +81,7 @@ CHANGELOG.md
 docs/archive/
 
 
+
+# Serena MCP
+.serena/cache/
+.serena/logs/
