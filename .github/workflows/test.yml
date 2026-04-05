@@ -29,8 +29,8 @@ jobs:
     
     - name: Check formatting with black
       run: |
-        black --check --diff nui_lambda_shared_utils tests || {
-          echo "::warning::Code formatting issues found - run 'black nui_lambda_shared_utils tests' locally"
+        black --check --diff nui_shared_utils tests || {
+          echo "::warning::Code formatting issues found - run 'black nui_shared_utils tests' locally"
           echo "Continuing build despite formatting issues..."
         }
     
@@ -41,4 +41,4 @@ jobs:
     
     - name: Test with pytest
       run: |
-        pytest --cov=nui_lambda_shared_utils --cov-report=xml
+        pytest --cov=nui_shared_utils --cov-report=xml

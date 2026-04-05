@@ -17,7 +17,7 @@ class TestGetLambdaEnvironmentInfo:
         """Test is_local=True when AWS_LAMBDA_RUNTIME_API not set"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -27,7 +27,7 @@ class TestGetLambdaEnvironmentInfo:
         """Test is_local=False when AWS_LAMBDA_RUNTIME_API is set"""
         monkeypatch.setenv("AWS_LAMBDA_RUNTIME_API", "127.0.0.1:9001")
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -37,7 +37,7 @@ class TestGetLambdaEnvironmentInfo:
         """Test all expected keys are present in result"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -56,7 +56,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("ENVIRONMENT", "prod")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -68,7 +68,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("ENV", "staging")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -81,7 +81,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("STAGE", "dev")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -103,7 +103,7 @@ class TestGetLambdaEnvironmentInfo:
         ]:
             monkeypatch.delenv(var, raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -119,7 +119,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("AWS_REGION", "ap-southeast-2")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -131,7 +131,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("AWS_DEFAULT_REGION", "us-west-2")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -142,7 +142,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", "my-lambda")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -153,7 +153,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("AWS_LAMBDA_FUNCTION_VERSION", "$LATEST")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -164,7 +164,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("AWS_LAMBDA_FUNCTION_MEMORY_SIZE", "512")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -175,7 +175,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("ENVIRONMENT", "production")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -186,7 +186,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("ENVIRONMENT", "prd")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -197,7 +197,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("ENVIRONMENT", "development")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -208,7 +208,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("ENVIRONMENT", "PROD")
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -223,7 +223,7 @@ class TestGetLambdaEnvironmentInfo:
         monkeypatch.setenv("AWS_LAMBDA_FUNCTION_VERSION", "12")
         monkeypatch.setenv("AWS_LAMBDA_FUNCTION_MEMORY_SIZE", "1024")
 
-        from nui_lambda_shared_utils.lambda_helpers import get_lambda_environment_info
+        from nui_shared_utils.lambda_helpers import get_lambda_environment_info
 
         env_info = get_lambda_environment_info()
 
@@ -242,12 +242,12 @@ class TestExportedAPI:
 
     def test_all_exports_defined(self):
         """Test __all__ exports match expected API"""
-        from nui_lambda_shared_utils.lambda_helpers import __all__
+        from nui_shared_utils.lambda_helpers import __all__
 
         assert "get_lambda_environment_info" in __all__
 
     def test_importable_from_package_root(self):
         """Test function is accessible from package root"""
-        from nui_lambda_shared_utils import get_lambda_environment_info
+        from nui_shared_utils import get_lambda_environment_info
 
         assert callable(get_lambda_environment_info)

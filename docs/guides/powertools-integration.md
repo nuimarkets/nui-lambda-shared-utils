@@ -34,7 +34,7 @@ This installs:
 Here's a complete example using both Powertools utilities:
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler
 
 # Create logger (works in both local and Lambda environments)
 logger = get_powertools_logger("my-service", level="INFO")
@@ -92,7 +92,7 @@ def get_powertools_logger(
 ### Basic Usage
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger
+from nui_shared_utils import get_powertools_logger
 
 # Create logger with default INFO level
 logger = get_powertools_logger("my-service")
@@ -173,7 +173,7 @@ def powertools_handler(
 ### Basic Usage (Logging Only)
 
 ```python
-from nui_lambda_shared_utils import powertools_handler
+from nui_shared_utils import powertools_handler
 
 @powertools_handler(service_name="simple-lambda")
 def handler(event, context):
@@ -209,7 +209,7 @@ def handler(event, context):
 ### Complete Example (All Features)
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler
 
 logger = get_powertools_logger("order-processor")
 
@@ -284,7 +284,7 @@ Environment is considered "Lambda" when:
 # In your local development environment
 # NO environment variables set
 
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler
 
 logger = get_powertools_logger("test-service")
 
@@ -340,7 +340,7 @@ logger = get_logger("my-service")
 
 ```python
 # New simplified approach
-from nui_lambda_shared_utils import get_powertools_logger
+from nui_shared_utils import get_powertools_logger
 
 logger = get_powertools_logger("my-service")
 ```
@@ -373,7 +373,7 @@ def handler(event, context):
 **After:**
 
 ```python
-from nui_lambda_shared_utils import powertools_handler
+from nui_shared_utils import powertools_handler
 
 @powertools_handler(
     service_name="my-service",
@@ -403,7 +403,7 @@ def handler(event, context):
 **After:**
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler
 
 logger = get_powertools_logger("my-service")
 
@@ -540,7 +540,7 @@ logger = get_powertools_logger("my-service", level=log_level)
 ### 3. Combine with Existing Slack Integration
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler, SlackClient
+from nui_shared_utils import get_powertools_logger, powertools_handler, SlackClient
 
 logger = get_powertools_logger("my-service")
 

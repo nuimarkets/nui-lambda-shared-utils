@@ -4,7 +4,7 @@ Tests for config module.
 
 import os
 from unittest.mock import patch
-from nui_lambda_shared_utils.config import (
+from nui_shared_utils.config import (
     Config,
     get_config,
     set_config,
@@ -131,7 +131,7 @@ class TestGlobalConfig:
     def setup_method(self):
         """Reset global config before each test."""
         # Reset the global config
-        from nui_lambda_shared_utils import config as config_module
+        from nui_shared_utils import config as config_module
         config_module._default_config = None
 
     @patch.dict(os.environ, {}, clear=True)
@@ -180,7 +180,7 @@ class TestLegacyCompatibilityFunctions:
 
     def setup_method(self):
         """Reset global config before each test."""
-        from nui_lambda_shared_utils import config as config_module
+        from nui_shared_utils import config as config_module
         config_module._default_config = None
 
     def test_get_es_host(self):

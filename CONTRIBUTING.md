@@ -1,6 +1,6 @@
-# Contributing to NUI Lambda Shared Utilities
+# Contributing to NUI Python Shared Utilities
 
-We welcome contributions to the NUI Lambda Shared Utilities project! This document provides guidelines for contributing.
+We welcome contributions to the NUI Python Shared Utilities project! This document provides guidelines for contributing.
 
 ## Getting Started
 
@@ -16,8 +16,8 @@ We welcome contributions to the NUI Lambda Shared Utilities project! This docume
 2. Clone your fork locally:
 
    ```bash
-   git clone https://github.com/your-username/nui-lambda-shared-utils.git
-   cd nui-lambda-shared-utils
+   git clone https://github.com/your-username/nui-python-shared-utils.git
+   cd nui-python-shared-utils
    ```
 
 3. Create a virtual environment:
@@ -42,7 +42,7 @@ We welcome contributions to the NUI Lambda Shared Utilities project! This docume
 pytest
 
 # Run tests with coverage
-pytest --cov=nui_lambda_shared_utils --cov-report=html
+pytest --cov=nui_shared_utils --cov-report=html
 
 # Run specific test categories
 pytest -m unit      # Unit tests only
@@ -55,10 +55,10 @@ We use several tools to maintain code quality:
 
 ```bash
 # Format code
-black nui_lambda_shared_utils tests
+black nui_shared_utils tests
 
 # Type checking
-mypy nui_lambda_shared_utils
+mypy nui_shared_utils
 
 # Run all quality checks
 make lint  # If Makefile exists
@@ -129,7 +129,7 @@ Examples:
 
 When adding new utilities to the package:
 
-1. **Create the module** in the `nui_lambda_shared_utils/` directory
+1. **Create the module** in the `nui_shared_utils/` directory
 2. **Add comprehensive tests** in the `tests/` directory
 3. **Update `__init__.py`** to export new functions/classes
 4. **Update documentation** with usage examples
@@ -139,7 +139,7 @@ When adding new utilities to the package:
 ### Example New Utility Structure
 
 ```python
-# nui_lambda_shared_utils/my_utility.py
+# nui_shared_utils/my_utility.py
 """
 My utility for doing something useful.
 """

@@ -76,7 +76,7 @@ pip install nui-python-shared-utils[jwt]          # JWT authentication only
 ### Basic Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure for your environment (optional - uses sensible defaults)
 nui.configure(
@@ -112,7 +112,7 @@ Below are minimal examples to get you started. **For complete examples and detai
 ### Secrets Management
 
 ```python
-from nui_lambda_shared_utils import get_secret, get_slack_credentials
+from nui_shared_utils import get_secret, get_slack_credentials
 
 # Generic secret retrieval
 api_keys = get_secret("my-service/api-keys")
@@ -126,7 +126,7 @@ slack_creds = get_slack_credentials()  # Uses configured secret name
 ### AWS Powertools Integration
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler
 
 # Create logger with Elasticsearch-compatible formatting
 logger = get_powertools_logger("my-service", level="INFO")
@@ -156,7 +156,7 @@ def lambda_handler(event, context):
 ### Slack Integration
 
 ```python
-from nui_lambda_shared_utils import SlackClient, SlackBlockBuilder
+from nui_shared_utils import SlackClient, SlackBlockBuilder
 
 slack = SlackClient()
 
@@ -174,7 +174,7 @@ slack.send_message(channel='#incidents', blocks=blocks)
 ### Elasticsearch Operations
 
 ```python
-from nui_lambda_shared_utils import ElasticsearchClient, ESQueryBuilder
+from nui_shared_utils import ElasticsearchClient, ESQueryBuilder
 
 es = ElasticsearchClient()
 query_builder = ESQueryBuilder()
@@ -187,7 +187,7 @@ results = es.search(index="logs-*", body={"query": query})
 ### Database Connections
 
 ```python
-from nui_lambda_shared_utils import DatabaseClient
+from nui_shared_utils import DatabaseClient
 
 db = DatabaseClient()
 
@@ -201,7 +201,7 @@ async with db.get_connection() as conn:
 ### CloudWatch Metrics
 
 ```python
-from nui_lambda_shared_utils import MetricsPublisher, track_lambda_performance
+from nui_shared_utils import MetricsPublisher, track_lambda_performance
 
 metrics = MetricsPublisher(namespace="MyApplication")
 
@@ -216,7 +216,7 @@ def lambda_handler(event, context):
 ### JWT Authentication
 
 ```python
-from nui_lambda_shared_utils import require_auth, AuthenticationError
+from nui_shared_utils import require_auth, AuthenticationError
 
 def lambda_handler(event, context):
     try:
@@ -233,7 +233,7 @@ def lambda_handler(event, context):
 ### Error Handling
 
 ```python
-from nui_lambda_shared_utils import with_retry, handle_lambda_error
+from nui_shared_utils import with_retry, handle_lambda_error
 
 @handle_lambda_error
 @with_retry(max_attempts=3)
@@ -261,7 +261,7 @@ AWS_REGION=us-east-1                      # AWS region
 ### Programmatic Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 nui.configure(
     es_host="localhost:9200",
@@ -305,7 +305,7 @@ pip install nui-python-shared-utils[dev]
 pytest
 
 # Run with coverage
-pytest --cov=nui_lambda_shared_utils --cov-report=html
+pytest --cov=nui_shared_utils --cov-report=html
 
 # Run specific test categories
 pytest -m unit           # Unit tests only

@@ -4,7 +4,7 @@ Tests for error_handler module.
 
 import pytest
 from unittest.mock import patch
-from nui_lambda_shared_utils.error_handler import (
+from nui_shared_utils.error_handler import (
     ErrorPatternMatcher,
     with_retry,
     categorize_retryable_error,
@@ -305,7 +305,7 @@ class TestErrorAggregator:
         assert aggregator.max_errors == 50
         assert len(aggregator.errors) == 0
 
-    @patch("nui_lambda_shared_utils.error_handler.datetime")
+    @patch("nui_shared_utils.error_handler.datetime")
     def test_add_error_string(self, mock_datetime):
         """Test adding string error."""
         mock_datetime.utcnow.return_value.isoformat.return_value = "2024-01-30T10:00:00"

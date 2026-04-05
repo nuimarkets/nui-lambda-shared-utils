@@ -77,14 +77,14 @@ Documentation = "https://github.com/nuimarkets/nui-python-shared-utils/blob/main
 Source = "https://github.com/nuimarkets/nui-python-shared-utils"
 
 [project.scripts]
-slack-channel-setup = "nui_lambda_shared_utils.cli:main"
+slack-channel-setup = "nui_shared_utils.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["nui_lambda_shared_utils*"]
+include = ["nui_shared_utils*", "nui_lambda_shared_utils*"]
 
 [tool.setuptools.package-data]
-"nui_lambda_shared_utils" = ["slack_setup/*.yaml"]
+"nui_shared_utils" = ["slack_setup/*.yaml"]
 
 [tool.black]
 line-length = 120
@@ -115,7 +115,7 @@ check_untyped_defs = false
 disallow_untyped_defs = false
 
 [tool.coverage.run]
-source = ["nui_lambda_shared_utils"]
+source = ["nui_shared_utils"]
 omit = [
     "*/tests/*",
     "*/__pycache__/*",

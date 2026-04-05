@@ -14,7 +14,7 @@ The package provides Elasticsearch integration through:
 ## Quick Start
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure Elasticsearch credentials
 nui.configure(es_credentials_secret="prod/elasticsearch-credentials")
@@ -67,7 +67,7 @@ aws secretsmanager create-secret \
 ### Programmatic Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure at startup
 nui.configure(
@@ -87,7 +87,7 @@ client = nui.ElasticsearchClient(
 ### Search
 
 ```python
-from nui_lambda_shared_utils import ElasticsearchClient
+from nui_shared_utils import ElasticsearchClient
 
 es = ElasticsearchClient()
 
@@ -140,7 +140,7 @@ errors = es.count(
 For efficient bulk indexing of documents, use the `streaming_bulk` method:
 
 ```python
-from nui_lambda_shared_utils import ElasticsearchClient
+from nui_shared_utils import ElasticsearchClient
 
 es = ElasticsearchClient()
 
@@ -216,7 +216,7 @@ except Exception as e:
 The `streaming_bulk` method pairs well with log extraction utilities:
 
 ```python
-from nui_lambda_shared_utils import ElasticsearchClient
+from nui_shared_utils import ElasticsearchClient
 
 es = ElasticsearchClient()
 
@@ -294,7 +294,7 @@ for idx in indices:
 For complex queries, use the query builder:
 
 ```python
-from nui_lambda_shared_utils import ElasticsearchQueryBuilder
+from nui_shared_utils import ElasticsearchQueryBuilder
 
 query = (
     ElasticsearchQueryBuilder()
@@ -314,8 +314,8 @@ Recommended pattern for Lambda functions:
 
 ```python
 import os
-import nui_lambda_shared_utils as nui
-from nui_lambda_shared_utils import (
+import nui_shared_utils as nui
+from nui_shared_utils import (
     ElasticsearchClient,
     get_powertools_logger,
     powertools_handler

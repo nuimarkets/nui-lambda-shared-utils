@@ -8,15 +8,15 @@ pytestmark = pytest.mark.unit
 
 from unittest.mock import patch, Mock
 from slack_sdk.errors import SlackApiError
-from nui_lambda_shared_utils.slack_client import SlackClient, DEFAULT_ACCOUNT_NAMES
+from nui_shared_utils.slack_client import SlackClient, DEFAULT_ACCOUNT_NAMES
 import os
 
 
 class TestSlackClient:
     """Tests for SlackClient class."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": ""}, clear=False)
     def test_init_required_secret(self, mock_webclient, mock_get_secret):
         """Test initialization requires secret name parameter."""
@@ -28,8 +28,8 @@ class TestSlackClient:
         mock_get_secret.assert_called_once_with("test-secret")
         mock_webclient.assert_called_once_with(token="xoxb-test-token")
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": ""}, clear=False)
     def test_init_custom_secret(self, mock_webclient, mock_get_secret):
         """Test initialization with custom secret name."""
@@ -41,14 +41,14 @@ class TestSlackClient:
         mock_get_secret.assert_called_once_with("custom-slack-secret")
         mock_webclient.assert_called_once_with(token="xoxb-custom-token")
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {}, clear=True)
     def test_init_with_default_secret_name(self, mock_webclient, mock_get_secret):
         """Test initialization with default secret name."""
         mock_get_secret.return_value = {"bot_token": "xoxb-default-token"}
         
-        with patch("nui_lambda_shared_utils.base_client.resolve_config_value") as mock_resolve:
+        with patch("nui_shared_utils.base_client.resolve_config_value") as mock_resolve:
             mock_resolve.return_value = "slack-credentials"
             
             client = SlackClient()
@@ -60,8 +60,8 @@ class TestSlackClient:
 class TestSendMessage:
     """Tests for send_message method."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_message_success(self, mock_webclient, mock_get_secret):
         """Test successful message sending."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -75,8 +75,8 @@ class TestSendMessage:
         assert result is True
         mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Test message", blocks=None, attachments=None)
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_message_with_blocks(self, mock_webclient, mock_get_secret):
         """Test sending message with blocks."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -92,8 +92,8 @@ class TestSendMessage:
         assert result is True
         mock_client.chat_postMessage.assert_called_once_with(channel="C123", text="Fallback text", blocks=blocks, attachments=None)
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_message_with_attachments(self, mock_webclient, mock_get_secret):
         """Test sending message with legacy attachments (color sidebars)."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -111,8 +111,8 @@ class TestSendMessage:
             channel="C123", text="Fallback", blocks=None, attachments=attachments
         )
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_message_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of Slack API error."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -127,8 +127,8 @@ class TestSendMessage:
 
         assert result is False
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_message_not_ok(self, mock_webclient, mock_get_secret):
         """Test handling of not ok response."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -141,8 +141,8 @@ class TestSendMessage:
 
         assert result is False
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_message_unexpected_error(self, mock_webclient, mock_get_secret):
         """Test handling of unexpected errors."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -159,8 +159,8 @@ class TestSendMessage:
 class TestSendFile:
     """Tests for send_file method."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_file_success(self, mock_webclient, mock_get_secret):
         """Test successful file upload."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -176,8 +176,8 @@ class TestSendFile:
             channel="C123", content="File content", filename="test.txt", title="Test File"
         )
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_file_default_title(self, mock_webclient, mock_get_secret):
         """Test file upload with default title."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -193,8 +193,8 @@ class TestSendFile:
             channel="C123", content="File content", filename="report.csv", title="report.csv"
         )
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_file_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of file upload API error."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -213,8 +213,8 @@ class TestSendFile:
 class TestSendThreadReply:
     """Tests for send_thread_reply method."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_thread_reply_success(self, mock_webclient, mock_get_secret):
         """Test successful thread reply."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -230,8 +230,8 @@ class TestSendThreadReply:
             channel="C123", thread_ts="1234567890.123456", text="Reply text", blocks=None
         )
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_send_thread_reply_with_blocks(self, mock_webclient, mock_get_secret):
         """Test thread reply with blocks."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -253,8 +253,8 @@ class TestSendThreadReply:
 class TestUpdateMessage:
     """Tests for update_message method."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_update_message_success(self, mock_webclient, mock_get_secret):
         """Test successful message update."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -270,8 +270,8 @@ class TestUpdateMessage:
             channel="C123", ts="1234567890.123456", text="Updated text", blocks=None
         )
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_update_message_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of update API error."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -290,8 +290,8 @@ class TestUpdateMessage:
 class TestAddReaction:
     """Tests for add_reaction method."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_add_reaction_success(self, mock_webclient, mock_get_secret):
         """Test successful reaction addition."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -307,8 +307,8 @@ class TestAddReaction:
             channel="C123", timestamp="1234567890.123456", name="thumbsup"
         )
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_add_reaction_already_exists(self, mock_webclient, mock_get_secret):
         """Test handling when reaction already exists."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -323,8 +323,8 @@ class TestAddReaction:
 
         assert result is True  # Should return True for already_reacted
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_add_reaction_api_error(self, mock_webclient, mock_get_secret):
         """Test handling of reaction API error."""
         mock_get_secret.return_value = {"bot_token": "xoxb-test-token"}
@@ -359,9 +359,9 @@ class TestLambdaContextHeader:
         for key, value in expected_parts.items():
             assert value in header_text, f"{failure_msg}Missing {key}: {value}"
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {
@@ -423,9 +423,9 @@ class TestLambdaContextHeader:
                 "log group": "`/aws/lambda/test-function`"
             })
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {
@@ -481,9 +481,9 @@ class TestLambdaContextHeader:
                 "log emoji": "📋"
             })
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {
@@ -548,9 +548,9 @@ class TestLambdaContextHeader:
                 "log emoji": "📋"
             })
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {
@@ -613,9 +613,9 @@ class TestLambdaContextHeader:
                 "log emoji": "📋"
             })
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {})  # No Lambda environment variables
     def test_lambda_header_not_in_lambda(self, mock_webclient, mock_get_secret, mock_boto3):
         """Test that Lambda header is not included when not running in Lambda."""
@@ -642,9 +642,9 @@ class TestLambdaContextHeader:
         assert blocks[0]["type"] == "context"  # First block is header
         assert blocks[1]["text"]["text"] == "Original block"  # Second block is original
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function", "STAGE": "prod"})
     def test_lambda_header_can_be_disabled(self, mock_webclient, mock_get_secret, mock_boto3):
         """Test that Lambda header can be disabled."""
@@ -667,9 +667,9 @@ class TestLambdaContextHeader:
 
         assert blocks is None  # No blocks added
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function", "STAGE": "prod"})
     def test_thread_reply_no_header_by_default(self, mock_webclient, mock_get_secret, mock_boto3):
         """Test that thread replies don't include header by default."""
@@ -692,9 +692,9 @@ class TestLambdaContextHeader:
 
         assert blocks is None
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function", "STAGE": "prod"})
     def test_unknown_account_id_handling(self, mock_webclient, mock_get_secret, mock_boto3):
         """Test handling of unknown AWS account IDs."""
@@ -720,9 +720,9 @@ class TestLambdaContextHeader:
 
         assert "Unknown (999999999999)" in header_text
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {"AWS_LAMBDA_FUNCTION_NAME": "dev-test-function", "STAGE": "dev", "AWS_REGION": "eu-west-1"},  # Dev stage
@@ -758,9 +758,9 @@ class TestLambdaContextHeader:
 class TestAccountNameConsistency:
     """Tests to ensure account name mappings are consistent across functions."""
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {})  # No Lambda environment variables
     def test_centralized_account_mappings(self, mock_webclient, mock_get_secret, mock_boto3):
         """Test that both lambda context and local header use the same account mappings."""
@@ -808,9 +808,9 @@ class TestAccountNameConsistency:
         assert "043836023178" not in DEFAULT_ACCOUNT_NAMES
         assert "036220212417" not in DEFAULT_ACCOUNT_NAMES
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {
@@ -846,9 +846,9 @@ class TestAccountNameConsistency:
         assert "MyCustomAccount" in header_text
         assert "(999888777666)" in header_text
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(
         os.environ,
         {
@@ -891,8 +891,8 @@ account_names:
         assert "YAMLConfiguredAccount" in header_text
         assert "(111222333444)" in header_text
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
     def test_malformed_yaml_fallback_to_defaults(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that malformed YAML falls back to defaults gracefully."""
@@ -914,8 +914,8 @@ account_names:
         # Should fall back to default account name
         assert slack._lambda_context["aws_account_name"] == "Production"  # From defaults
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
     def test_empty_yaml_file_fallback(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that empty YAML file falls back to defaults."""
@@ -936,8 +936,8 @@ account_names:
         # Should use default account name
         assert slack._lambda_context["aws_account_name"] == "Development"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
     def test_missing_yaml_file_fallback(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that missing YAML file falls back to defaults."""
@@ -957,8 +957,8 @@ account_names:
         # Should use default account name
         assert slack._lambda_context["aws_account_name"] == "Staging"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
     def test_invalid_account_names_type_ignored(self, mock_webclient, mock_get_secret):
         """Test that invalid account_names parameter type is ignored gracefully."""
@@ -976,8 +976,8 @@ account_names:
         # Should use default account name, ignoring invalid parameter
         assert slack._lambda_context["aws_account_name"] == "Production"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict(os.environ, {"AWS_LAMBDA_FUNCTION_NAME": "test-function"})
     def test_yaml_with_non_string_values_ignored(self, mock_webclient, mock_get_secret, tmp_path):
         """Test that YAML with non-string values is validated and ignored."""
@@ -1002,10 +1002,10 @@ account_names:
         # Should fall back to defaults due to type validation failure
         assert slack._lambda_context["aws_account_name"] == "Production"
 
-    @patch("nui_lambda_shared_utils.slack_client.create_aws_client")
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
-    @patch("nui_lambda_shared_utils.slack_client.get_lambda_environment_info")
+    @patch("nui_shared_utils.slack_client.create_aws_client")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.slack_client.get_lambda_environment_info")
     @patch.dict(os.environ, {})
     def test_uses_shared_lambda_environment_helper(self, mock_env_info, _mock_webclient, mock_get_secret, _mock_boto3):
         """Verify SlackClient delegates to get_lambda_environment_info"""
@@ -1025,8 +1025,8 @@ account_names:
 class TestSlackCredentialResolution:
     """Tests for Slack credential resolution precedence."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_explicit_credentials_bypass_secrets_manager(self, mock_webclient, mock_get_secret):
         """Explicit credentials dict should skip SM entirely."""
         creds = {"bot_token": "xoxb-direct-token"}
@@ -1036,8 +1036,8 @@ class TestSlackCredentialResolution:
         mock_webclient.assert_called_once_with(token="xoxb-direct-token")
         assert client.credentials == creds
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token"}, clear=False)
     def test_env_var_bypasses_secrets_manager(self, mock_webclient, mock_get_secret):
         """SLACK_BOT_TOKEN env var should skip SM."""
@@ -1047,8 +1047,8 @@ class TestSlackCredentialResolution:
         assert client.credentials["bot_token"] == "xoxb-env-token"
         mock_webclient.assert_called_once_with(token="xoxb-env-token")
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token", "SLACK_WEBHOOK_URL": "https://hooks.slack.com/xxx"}, clear=False)
     def test_env_var_includes_optional_webhook(self, _mock_webclient, _mock_get_secret):
         """SLACK_WEBHOOK_URL is included when present."""
@@ -1057,8 +1057,8 @@ class TestSlackCredentialResolution:
         assert client.credentials["bot_token"] == "xoxb-env-token"
         assert client.credentials["webhook_url"] == "https://hooks.slack.com/xxx"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "xoxb-env-token"}, clear=False)
     def test_explicit_credentials_win_over_env_vars(self, _mock_webclient, mock_get_secret):
         """Explicit credentials should take priority over env vars."""
@@ -1068,8 +1068,8 @@ class TestSlackCredentialResolution:
         mock_get_secret.assert_not_called()
         assert client.credentials["bot_token"] == "xoxb-explicit-token"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     @patch.dict("os.environ", {}, clear=False)
     def test_falls_through_to_secrets_manager(self, _mock_webclient, mock_get_secret):
         """Without explicit creds or env vars, should use SM."""

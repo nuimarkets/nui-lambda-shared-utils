@@ -12,7 +12,7 @@ pip install nui-python-shared-utils[all]
 ## Basic Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure the package
 nui.configure(
@@ -29,7 +29,7 @@ nui.configure(
 ### 1. Simple Lambda Handler with Error Handling
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure once at module level
 nui.configure(
@@ -58,7 +58,7 @@ def lambda_handler(event, context):
 ### 2. Database Operations
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure database
 nui.configure(db_credentials_secret="prod/database")
@@ -79,7 +79,7 @@ def get_user_data(user_id: int):
 ### 3. Elasticsearch Search
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure Elasticsearch
 nui.configure(
@@ -107,7 +107,7 @@ def search_logs(service: str, hours: int = 24):
 ### 4. Rich Slack Messages
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 def send_report(data: dict):
     """Send a formatted report to Slack."""
@@ -133,7 +133,7 @@ def send_report(data: dict):
 ### 5. CloudWatch Metrics
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 def track_business_metrics(records_processed: int, processing_time: float):
     """Publish custom metrics to CloudWatch."""
@@ -154,7 +154,7 @@ def track_business_metrics(records_processed: int, processing_time: float):
 
 ```python
 import os
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure once at module level
 nui.configure(
@@ -226,7 +226,7 @@ def lambda_handler(event, context):
 ### 7. JWT Authentication for API Gateway
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 def lambda_handler(event, context):
     """API Gateway Lambda with JWT auth."""
@@ -263,7 +263,7 @@ pip install nui-python-shared-utils[jwt]
 For production Lambda functions, use AWS Powertools for standardized logging, metrics, and error handling:
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler
 
 # Create logger with ES-compatible formatting
 logger = get_powertools_logger("order-processor", level="INFO")
@@ -333,7 +333,7 @@ pip install nui-python-shared-utils[powertools]
 
 ```python
 import os
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 stage = os.environ.get('STAGE', 'dev')
 

@@ -10,7 +10,7 @@ from unittest.mock import patch, Mock
 from abc import ABC, abstractmethod
 from typing import Optional, Dict, Any
 
-from nui_lambda_shared_utils.base_client import BaseClient, ServiceHealthMixin, RetryableOperationMixin
+from nui_shared_utils.base_client import BaseClient, ServiceHealthMixin, RetryableOperationMixin
 
 
 class BaseClientContract(ABC):
@@ -81,7 +81,7 @@ class TestClientContract:
         with patch.dict("os.environ", self._clean_env, clear=False):
             self._strip_cred_env_vars()
             with patch(client_contract.get_secret_patch_target()) as mock_get_secret:
-                with patch("nui_lambda_shared_utils.base_client.get_config") as mock_get_config:
+                with patch("nui_shared_utils.base_client.get_config") as mock_get_config:
                     mock_get_secret.return_value = {"token": "test-token", "host": "test-host", "port": 3306, "username": "test-user", "password": "test-pass", "database": "test"}
                     mock_config = Mock()
                     mock_get_config.return_value = mock_config
@@ -102,7 +102,7 @@ class SlackClientContract(BaseClientContract):
     """Contract implementation for SlackClient."""
 
     def create_client_instance(self, secret_name: Optional[str] = None, **kwargs):
-        from nui_lambda_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.slack_client import SlackClient
         return SlackClient(secret_name=secret_name, **kwargs)
 
     def get_expected_secret_key(self) -> str:
@@ -112,14 +112,14 @@ class SlackClientContract(BaseClientContract):
         return {}
 
     def get_secret_patch_target(self) -> str:
-        return "nui_lambda_shared_utils.base_client.get_secret"
+        return "nui_shared_utils.base_client.get_secret"
 
 
 class ElasticsearchClientContract(BaseClientContract):
     """Contract implementation for ElasticsearchClient."""
 
     def create_client_instance(self, secret_name: Optional[str] = None, **kwargs):
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.es_client import ElasticsearchClient
         return ElasticsearchClient(secret_name=secret_name, **kwargs)
 
     def get_expected_secret_key(self) -> str:
@@ -129,14 +129,14 @@ class ElasticsearchClientContract(BaseClientContract):
         return {"host": "test-es:9200"}
 
     def get_secret_patch_target(self) -> str:
-        return "nui_lambda_shared_utils.base_client.get_secret"
+        return "nui_shared_utils.base_client.get_secret"
 
 
 class DatabaseClientContract(BaseClientContract):
     """Contract implementation for DatabaseClient."""
 
     def create_client_instance(self, secret_name: Optional[str] = None, **kwargs):
-        from nui_lambda_shared_utils.db_client import DatabaseClient
+        from nui_shared_utils.db_client import DatabaseClient
         return DatabaseClient(secret_name=secret_name, **kwargs)
 
     def get_expected_secret_key(self) -> str:
@@ -146,7 +146,7 @@ class DatabaseClientContract(BaseClientContract):
         return {"use_pool": False}
 
     def get_secret_patch_target(self) -> str:
-        return "nui_lambda_shared_utils.db_client.get_database_credentials"
+        return "nui_shared_utils.db_client.get_database_credentials"
 
 
 # Pytest fixtures for contract testing
@@ -177,8 +177,8 @@ class ConcreteBaseClient(BaseClient):
 class ConcreteBaseClientImplementation:
     """Tests for the BaseClient class implementation."""
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_base_client_initialization(self, mock_get_config, mock_get_secret):
         """Test BaseClient initialization with credential resolution."""
         # Mock config
@@ -202,8 +202,8 @@ class ConcreteBaseClientImplementation:
         # Verify secret was retrieved with config value
         mock_get_secret.assert_called_once_with("config-secret")
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_explicit_secret_name_precedence(self, mock_get_config, mock_get_secret):
         """Test that explicit secret name takes precedence over config."""
         mock_config = Mock()
@@ -218,8 +218,8 @@ class ConcreteBaseClientImplementation:
         # Should use explicit secret name
         mock_get_secret.assert_called_once_with("explicit-secret")
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     @patch.dict('os.environ', {'TEST_CREDENTIALS_SECRET': 'env-secret'})
     def test_environment_variable_precedence(self, mock_get_config, mock_get_secret):
         """Test that environment variable takes precedence over config."""
@@ -235,8 +235,8 @@ class ConcreteBaseClientImplementation:
         # Should use environment variable
         mock_get_secret.assert_called_once_with("env-secret")
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_credential_resolution_failure(self, mock_get_config, mock_get_secret):
         """Test handling of credential resolution failures."""
         mock_config = Mock()
@@ -250,8 +250,8 @@ class ConcreteBaseClientImplementation:
         with pytest.raises(Exception, match="Secret not found"):
             ConcreteBaseClient()
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_get_config_value_method(self, mock_get_config, mock_get_secret):
         """Test _get_config_value method with precedence logic."""
         mock_config = Mock()
@@ -276,11 +276,11 @@ class ConcreteBaseClientImplementation:
 
         # For missing keys, should return default
         # Mock the getattr call in the _get_config_value method
-        with patch('nui_lambda_shared_utils.base_client.getattr', side_effect=config_side_effect):
+        with patch('nui_shared_utils.base_client.getattr', side_effect=config_side_effect):
             assert client._get_config_value("missing_key", default="default-value") == "default-value"
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_execute_with_error_handling_success(self, mock_get_config, mock_get_secret, caplog):
         """Test successful operation execution with error handling."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -306,8 +306,8 @@ class ConcreteBaseClientImplementation:
         assert "Executing test_operation" in caplog.text
         assert "Successfully completed test_operation" in caplog.text
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_execute_with_error_handling_failure(self, mock_get_config, mock_get_secret, caplog):
         """Test operation execution with error handling when operation fails."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -329,8 +329,8 @@ class ConcreteBaseClientImplementation:
         # Check error logging
         assert "Failed to execute test_operation: Operation failed" in caplog.text
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_get_client_info(self, mock_get_config, mock_get_secret):
         """Test get_client_info method."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -349,8 +349,8 @@ class ConcreteBaseClientImplementation:
 
         assert info == expected_info
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_custom_config_key_prefix(self, mock_get_config, mock_get_secret):
         """Test custom config key prefix override."""
         mock_config = Mock()
@@ -364,8 +364,8 @@ class ConcreteBaseClientImplementation:
         assert client.config_key_prefix == "custom"
         mock_get_secret.assert_called_once_with("custom-secret")
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_validation_required_param_error(self, mock_get_config, _mock_get_secret):
         """Test that required parameter validation works."""
         mock_config = Mock()
@@ -390,8 +390,8 @@ class TestServiceHealthMixin:
                 raise Exception("Health check failed")
             return True
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_health_check_success(self, mock_get_config, mock_get_secret):
         """Test successful health check."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -405,8 +405,8 @@ class TestServiceHealthMixin:
         assert result["client_type"] == "ConcreteClientWithHealthMixin"
         assert "timestamp" in result
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_health_check_failure(self, mock_get_config, mock_get_secret):
         """Test health check failure handling."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -431,8 +431,8 @@ class TestRetryableOperationMixin:
         """Test client that includes retry mixin."""
         pass
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_execute_with_retry_success(self, mock_get_config, mock_get_secret):
         """Test successful retry operation."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -451,8 +451,8 @@ class TestRetryableOperationMixin:
 
         assert result == "success"
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_execute_with_retry_requires_error_handling(self, mock_get_config, mock_get_secret):
         """Test that retry mixin requires _execute_with_error_handling method."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -470,9 +470,9 @@ class TestRetryableOperationMixin:
         with pytest.raises(AttributeError, match="must implement _execute_with_error_handling"):
             client.execute_with_retry(test_operation, "test_op")
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
-    @patch('nui_lambda_shared_utils.error_handler.with_retry')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.error_handler.with_retry')
     def test_execute_with_retry_configures_retry_decorator(self, mock_with_retry, mock_get_config, mock_get_secret):
         """Test that retry decorator is configured correctly."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -507,7 +507,7 @@ class TestBackwardCompatibility:
 
     def test_existing_slack_client_api_unchanged(self):
         """Test that SlackClient public API remains unchanged."""
-        from nui_lambda_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.slack_client import SlackClient
         
         # Verify constructor signature
         import inspect
@@ -520,7 +520,7 @@ class TestBackwardCompatibility:
 
     def test_existing_es_client_api_unchanged(self):
         """Test that ElasticsearchClient public API remains unchanged."""
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.es_client import ElasticsearchClient
         
         # Verify constructor signature
         import inspect
@@ -533,7 +533,7 @@ class TestBackwardCompatibility:
 
     def test_existing_db_client_api_unchanged(self):
         """Test that DatabaseClient public API remains unchanged."""
-        from nui_lambda_shared_utils.db_client import DatabaseClient
+        from nui_shared_utils.db_client import DatabaseClient
         
         # Verify constructor signature
         import inspect
@@ -548,8 +548,8 @@ class TestBackwardCompatibility:
 class TestClientInteroperability:
     """Test that different clients work together correctly."""
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.db_client.get_database_credentials")
     def test_multiple_clients_same_process(self, mock_db_creds, mock_get_secret):
         """Test that multiple clients can coexist in the same process."""
         # Mock return values - since they all use the same get_secret, return different values based on args
@@ -568,14 +568,14 @@ class TestClientInteroperability:
         }
 
         # Import and create all clients
-        from nui_lambda_shared_utils.slack_client import SlackClient
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
-        from nui_lambda_shared_utils.db_client import DatabaseClient
+        from nui_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.db_client import DatabaseClient
 
-        with patch("nui_lambda_shared_utils.slack_client.WebClient"):
+        with patch("nui_shared_utils.slack_client.WebClient"):
             slack = SlackClient(secret_name="slack-secret")
 
-        with patch("nui_lambda_shared_utils.es_client.Elasticsearch"):
+        with patch("nui_shared_utils.es_client.Elasticsearch"):
             es = ElasticsearchClient(secret_name="es-secret")
 
         db = DatabaseClient(secret_name="db-secret")
@@ -587,7 +587,7 @@ class TestClientInteroperability:
 
     def test_shared_configuration_isolation(self):
         """Test that clients don't interfere with each other's configuration."""
-        from nui_lambda_shared_utils.config import configure, get_config
+        from nui_shared_utils.config import configure, get_config
         
         # Configure global settings
         configure(
@@ -611,13 +611,13 @@ class TestClientInheritanceIntegration:
     """Integration tests for client inheritance hierarchy."""
 
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": ""}, clear=False)
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_slack_client_inherits_base_functionality(self, mock_web_client, mock_get_secret):
         """Test that SlackClient properly inherits BaseClient functionality."""
         import os
         os.environ.pop("SLACK_BOT_TOKEN", None)
-        from nui_lambda_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.slack_client import SlackClient
 
         # Mock credentials and Slack client
         mock_get_secret.return_value = {"bot_token": "test-token"}
@@ -640,11 +640,11 @@ class TestClientInheritanceIntegration:
         # Verify credentials were resolved correctly
         mock_get_secret.assert_called_once_with("test-secret")
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.es_client.Elasticsearch")
     def test_elasticsearch_client_inherits_base_functionality(self, mock_es_class, mock_get_secret):
         """Test that ElasticsearchClient properly inherits BaseClient functionality."""
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.es_client import ElasticsearchClient
 
         # Mock credentials and ES client
         mock_get_secret.return_value = {"username": "elastic", "password": "test"}
@@ -667,10 +667,10 @@ class TestClientInheritanceIntegration:
         # Verify credentials were resolved correctly
         mock_get_secret.assert_called_once_with("test-secret")
 
-    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
+    @patch("nui_shared_utils.db_client.get_database_credentials")
     def test_database_client_inherits_base_functionality(self, mock_get_creds):
         """Test that DatabaseClient properly inherits BaseClient functionality."""
-        from nui_lambda_shared_utils.db_client import DatabaseClient
+        from nui_shared_utils.db_client import DatabaseClient
 
         # Mock credentials
         mock_get_creds.return_value = {
@@ -696,10 +696,10 @@ class TestClientInheritanceIntegration:
 
     def test_client_inheritance_hierarchy_consistency(self):
         """Test that all clients follow consistent inheritance patterns."""
-        from nui_lambda_shared_utils.slack_client import SlackClient
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
-        from nui_lambda_shared_utils.db_client import DatabaseClient
-        from nui_lambda_shared_utils.base_client import BaseClient
+        from nui_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.db_client import DatabaseClient
+        from nui_shared_utils.base_client import BaseClient
 
         # All clients should inherit from BaseClient
         assert issubclass(SlackClient, BaseClient)
@@ -716,11 +716,11 @@ class TestClientInheritanceIntegration:
             for method in required_methods:
                 assert hasattr(client_class, method), f"{client_class.__name__} missing {method}"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.slack_client.WebClient")
     def test_inherited_error_handling_integration(self, mock_web_client, mock_get_secret):
         """Test that inherited error handling works in actual client implementations."""
-        from nui_lambda_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.slack_client import SlackClient
 
         # Mock credentials
         mock_get_secret.return_value = {"bot_token": "test-token"}
@@ -741,12 +741,12 @@ class TestClientInheritanceIntegration:
 
         assert result == "operation_result"
 
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
-    @patch("nui_lambda_shared_utils.base_client.get_config")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.es_client.Elasticsearch")
+    @patch("nui_shared_utils.base_client.get_config")
     def test_inherited_config_resolution_integration(self, mock_get_config, mock_es_class, mock_get_secret):
         """Test that inherited config resolution works in actual client implementations."""
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.es_client import ElasticsearchClient
 
         # Mock credentials and config
         mock_get_secret.return_value = {"username": "elastic", "password": "test"}
@@ -773,23 +773,23 @@ class TestClientInheritanceIntegration:
         assert client._host_override == "test:9200"  # Verify host override works
 
         # Test with a fresh config mock to ensure missing keys return defaults
-        with patch('nui_lambda_shared_utils.base_client.getattr') as mock_getattr:
+        with patch('nui_shared_utils.base_client.getattr') as mock_getattr:
             mock_getattr.return_value = "default"
             assert client._get_config_value("missing_key", default="default") == "default"
 
     @patch.dict("os.environ", {"SLACK_BOT_TOKEN": "", "ES_PASSWORD": "", "DB_HOST": "", "DB_PASSWORD": ""}, clear=False)
-    @patch("nui_lambda_shared_utils.base_client.get_secret")
-    @patch("nui_lambda_shared_utils.db_client.get_database_credentials")
-    @patch("nui_lambda_shared_utils.slack_client.WebClient")
-    @patch("nui_lambda_shared_utils.es_client.Elasticsearch")
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.db_client.get_database_credentials")
+    @patch("nui_shared_utils.slack_client.WebClient")
+    @patch("nui_shared_utils.es_client.Elasticsearch")
     def test_cross_client_independence(self, mock_es_class, mock_web_client, mock_db_creds, mock_get_secret):
         """Test that multiple clients operate independently without interfering."""
         import os
         for var in ("SLACK_BOT_TOKEN", "ES_PASSWORD", "DB_HOST", "DB_PASSWORD"):
             os.environ.pop(var, None)
-        from nui_lambda_shared_utils.slack_client import SlackClient
-        from nui_lambda_shared_utils.es_client import ElasticsearchClient
-        from nui_lambda_shared_utils.db_client import DatabaseClient
+        from nui_shared_utils.slack_client import SlackClient
+        from nui_shared_utils.es_client import ElasticsearchClient
+        from nui_shared_utils.db_client import DatabaseClient
 
         # Mock all credentials and services - use side effect for shared get_secret mock
         def mock_secret_side_effect(secret_name):
@@ -856,8 +856,8 @@ class ConcreteBaseClientWithEnv(BaseClient):
 class TestCredentialResolutionPrecedence:
     """Tests for the three-tier credential resolution: explicit > env > SM."""
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_explicit_credentials_bypass_secrets_manager(self, mock_get_config, mock_get_secret):
         """Explicit credentials dict should skip SM entirely."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")
@@ -868,8 +868,8 @@ class TestCredentialResolutionPrecedence:
         assert client.credentials == creds
         mock_get_secret.assert_not_called()
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     @patch.dict('os.environ', {'TEST_TOKEN': 'env-token-123'})
     def test_env_vars_bypass_secrets_manager(self, mock_get_config, mock_get_secret):
         """Env vars should skip SM when present (using subclass with env support)."""
@@ -880,8 +880,8 @@ class TestCredentialResolutionPrecedence:
         assert client.credentials == {"token": "env-token-123"}
         mock_get_secret.assert_not_called()
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     @patch.dict('os.environ', {'TEST_TOKEN': 'env-token-123'})
     def test_explicit_credentials_win_over_env_vars(self, mock_get_config, mock_get_secret):
         """Explicit credentials should take priority over env vars."""
@@ -893,8 +893,8 @@ class TestCredentialResolutionPrecedence:
         assert client.credentials == {"token": "explicit-token"}
         mock_get_secret.assert_not_called()
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     @patch.dict('os.environ', {}, clear=False)
     def test_falls_through_to_secrets_manager(self, mock_get_config, mock_get_secret):
         """Without explicit creds or env vars, should use SM as before."""
@@ -910,8 +910,8 @@ class TestCredentialResolutionPrecedence:
         assert client.credentials == {"token": "sm-token"}
         mock_get_secret.assert_called_once_with("test-secret")
 
-    @patch('nui_lambda_shared_utils.base_client.get_secret')
-    @patch('nui_lambda_shared_utils.base_client.get_config')
+    @patch('nui_shared_utils.base_client.get_secret')
+    @patch('nui_shared_utils.base_client.get_config')
     def test_base_class_env_hook_returns_none(self, mock_get_config, mock_get_secret):
         """Base class _resolve_credentials_from_env returns None by default."""
         mock_get_config.return_value = Mock(test_credentials_secret="test-secret")

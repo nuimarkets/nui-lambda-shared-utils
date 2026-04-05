@@ -44,7 +44,7 @@ jobs:
     
     - name: Auto-format with black
       run: |
-        black nui_lambda_shared_utils tests
+        black nui_shared_utils tests
         if ! git diff --quiet; then
           echo "::warning::Code was auto-formatted by Black"
           git config --local user.email "action@github.com"
@@ -57,12 +57,12 @@ jobs:
     
     - name: Type check with mypy
       run: |
-        mypy nui_lambda_shared_utils --ignore-missing-imports
+        mypy nui_shared_utils --ignore-missing-imports
       continue-on-error: true  # Don't fail CI on type errors yet
     
     - name: Test with pytest
       run: |
-        pytest --cov=nui_lambda_shared_utils --cov-report=xml --cov-report=term-missing -v
+        pytest --cov=nui_shared_utils --cov-report=xml --cov-report=term-missing -v
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -104,5 +104,6 @@ jobs:
     - name: Test installation
       run: |
         pip install dist/*.whl
-        python -c "import nui_lambda_shared_utils; print('✅ Package imports successfully')"
-        python -c "from nui_lambda_shared_utils import Config, get_secret; print('✅ Core imports work')"
+        python -c "import nui_shared_utils; print('✅ Package imports successfully')"
+        python -c "from nui_shared_utils import Config, get_secret; print('✅ Core imports work')"
+        python -W ignore::DeprecationWarning -c "import nui_lambda_shared_utils; print('✅ Backwards-compat shim works')"

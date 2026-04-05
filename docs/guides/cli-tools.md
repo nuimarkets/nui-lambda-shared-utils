@@ -204,7 +204,7 @@ Usage in your application:
 
 ```python
 import os
-from nui_lambda_shared_utils import SlackClient
+from nui_shared_utils import SlackClient
 
 slack = SlackClient()
 alerts_channel = os.environ['APP_ALERTS_CHANNEL']
