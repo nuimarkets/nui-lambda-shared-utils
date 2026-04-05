@@ -17,7 +17,7 @@ The `log_processors` module provides utilities for:
 
 ```python
 from elasticsearch.helpers import streaming_bulk
-from nui_lambda_shared_utils.log_processors import (
+from nui_shared_utils.log_processors import (
     extract_cloudwatch_logs_from_kinesis,
     derive_index_name,
 )
@@ -82,7 +82,7 @@ for doc in extract_cloudwatch_logs_from_kinesis(
 Override the default index naming pattern:
 
 ```python
-from nui_lambda_shared_utils.log_processors import derive_index_name
+from nui_shared_utils.log_processors import derive_index_name
 
 # Default: log-{service}-{YYYY}-m{MM}
 derive_index_name("/aws/lambda/orders", ts)
@@ -121,7 +121,7 @@ With:
 
 ```python
 # After
-from nui_lambda_shared_utils.log_processors import extract_cloudwatch_logs_from_kinesis
+from nui_shared_utils.log_processors import extract_cloudwatch_logs_from_kinesis
 
 for doc in extract_cloudwatch_logs_from_kinesis(event["Records"], process_log_events):
     yield doc

@@ -14,7 +14,7 @@ The package provides rich Slack integration through two main components:
 ## Quick Start
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure Slack credentials
 nui.configure(slack_credentials_secret="prod/slack-token")
@@ -65,7 +65,7 @@ aws secretsmanager create-secret \
 
 ```python
 import os
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure in Lambda handler
 stage = os.environ.get('STAGE', 'dev')
@@ -77,7 +77,7 @@ nui.configure(slack_credentials_secret=f"{stage}/slack-token")
 ### Simple Text Messages
 
 ```python
-from nui_lambda_shared_utils import SlackClient
+from nui_shared_utils import SlackClient
 
 slack = SlackClient()
 
@@ -134,7 +134,7 @@ slack.send_message(
 ### Using SlackBlockBuilder
 
 ```python
-from nui_lambda_shared_utils import SlackClient, SlackBlockBuilder
+from nui_shared_utils import SlackClient, SlackBlockBuilder
 
 slack = SlackClient()
 builder = SlackBlockBuilder()
@@ -208,7 +208,7 @@ builder.add_divider()
 ### Lambda Execution Report
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 from datetime import datetime
 
 def send_execution_report(event, context, results):
@@ -243,7 +243,7 @@ def send_execution_report(event, context, results):
 
 ```python
 import traceback
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 def send_error_alert(error: Exception, context: dict):
     """Send detailed error alert to Slack."""
@@ -284,7 +284,7 @@ def send_error_alert(error: Exception, context: dict):
 ### Data Processing Summary
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 def send_processing_summary(stats: dict):
     """Send data processing summary with metrics."""
@@ -316,7 +316,7 @@ def send_processing_summary(stats: dict):
 ## File Uploads
 
 ```python
-from nui_lambda_shared_utils import SlackClient
+from nui_shared_utils import SlackClient
 
 slack = SlackClient()
 
@@ -360,7 +360,7 @@ info = slack.get_channel_info("C1234567890")
 ### Retry Logic
 
 ```python
-from nui_lambda_shared_utils import with_retry, SlackClient
+from nui_shared_utils import with_retry, SlackClient
 
 @with_retry(max_attempts=3, backoff_factor=2)
 def send_critical_alert(message: str):
@@ -372,7 +372,7 @@ def send_critical_alert(message: str):
 ### Graceful Degradation
 
 ```python
-from nui_lambda_shared_utils import SlackClient
+from nui_shared_utils import SlackClient
 
 def notify_with_fallback(message: str):
     """Try Slack notification with fallback to logging."""
@@ -391,7 +391,7 @@ def notify_with_fallback(message: str):
 
 ```python
 import os
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 stage = os.environ.get('STAGE', 'dev')
 nui.configure(slack_credentials_secret=f"{stage}/slack")
@@ -436,7 +436,7 @@ for item in items:  # Could hit rate limit
 # Mock Slack client for testing
 from unittest.mock import Mock, patch
 
-@patch('nui_lambda_shared_utils.SlackClient')
+@patch('nui_shared_utils.SlackClient')
 def test_notification_logic(mock_slack):
     """Test notification without actually sending to Slack."""
     mock_client = Mock()

@@ -7,7 +7,7 @@ import json
 import os
 from unittest.mock import patch, Mock
 from botocore.exceptions import ClientError
-from nui_lambda_shared_utils import secrets_helper
+from nui_shared_utils import secrets_helper
 
 
 class TestGetSecret:
@@ -145,7 +145,7 @@ class TestGetDatabaseCredentials:
         mock_secrets_manager.get_secret_value.assert_called_with(SecretId="env-db-secret")
 
     @patch.dict(os.environ, {}, clear=True)  # Clear environment variables
-    @patch("nui_lambda_shared_utils.secrets_helper.get_config")
+    @patch("nui_shared_utils.secrets_helper.get_config")
     def test_get_database_credentials_no_secret(self, mock_get_config):
         """Test error when no secret name provided."""
         # Mock config to return empty/None secret name
@@ -214,7 +214,7 @@ class TestGetElasticsearchCredentials:
         mock_secrets_manager.get_secret_value.assert_called_with(SecretId="env-es-secret")
 
     @patch.dict(os.environ, {}, clear=True)  # Clear environment variables
-    @patch("nui_lambda_shared_utils.secrets_helper.get_config")
+    @patch("nui_shared_utils.secrets_helper.get_config")
     def test_get_elasticsearch_credentials_no_secret(self, mock_get_config):
         """Test error when no secret name provided."""
         # Mock config to return empty/None secret name
@@ -261,7 +261,7 @@ class TestGetSlackCredentials:
         mock_secrets_manager.get_secret_value.assert_called_with(SecretId="env-slack-secret")
 
     @patch.dict(os.environ, {}, clear=True)  # Clear environment variables
-    @patch("nui_lambda_shared_utils.secrets_helper.get_config")
+    @patch("nui_shared_utils.secrets_helper.get_config")
     def test_get_slack_credentials_no_secret(self, mock_get_config):
         """Test error when no secret name provided."""
         # Mock config to return empty/None secret name

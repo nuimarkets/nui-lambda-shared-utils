@@ -7,7 +7,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 import pytz
 
-from nui_lambda_shared_utils.es_query_builder import (
+from nui_shared_utils.es_query_builder import (
     ESQueryBuilder,
     build_error_rate_query,
     build_top_errors_query,
@@ -574,7 +574,7 @@ class TestPrebuiltQueries:
         assert "active_users" in timeline_aggs
         assert timeline_aggs["active_users"]["cardinality"]["field"] == "user.email"
 
-    @patch("nui_lambda_shared_utils.es_query_builder.datetime")
+    @patch("nui_shared_utils.es_query_builder.datetime")
     def test_build_pattern_detection_query_with_start_time(self, mock_datetime):
         """Test building pattern detection query with start time."""
         mock_utcnow = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
@@ -611,7 +611,7 @@ class TestPrebuiltQueries:
         # Check sort
         assert query["sort"] == [{"@timestamp": {"order": "desc"}}]
 
-    @patch("nui_lambda_shared_utils.es_query_builder.datetime")
+    @patch("nui_shared_utils.es_query_builder.datetime")
     def test_build_pattern_detection_query_without_start_time(self, mock_datetime):
         """Test building pattern detection query without start time."""
         mock_utcnow = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)

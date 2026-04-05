@@ -23,7 +23,7 @@ pip install nui-python-shared-utils
 ## Quick Start
 
 ```python
-from nui_lambda_shared_utils import get_lambda_environment_info
+from nui_shared_utils import get_lambda_environment_info
 
 def handler(event, context):
     env_info = get_lambda_environment_info()
@@ -100,7 +100,7 @@ The `environment` value is normalized for consistency:
 Add environment context to structured logs:
 
 ```python
-from nui_lambda_shared_utils import get_powertools_logger, get_lambda_environment_info
+from nui_shared_utils import get_powertools_logger, get_lambda_environment_info
 
 logger = get_powertools_logger("my-service")
 
@@ -123,7 +123,7 @@ def handler(event, context):
 Add standard dimensions to metrics:
 
 ```python
-from nui_lambda_shared_utils import MetricsPublisher, get_lambda_environment_info
+from nui_shared_utils import MetricsPublisher, get_lambda_environment_info
 
 def handler(event, context):
     env_info = get_lambda_environment_info()
@@ -144,7 +144,7 @@ def handler(event, context):
 Execute different code paths based on environment:
 
 ```python
-from nui_lambda_shared_utils import get_lambda_environment_info
+from nui_shared_utils import get_lambda_environment_info
 
 def handler(event, context):
     env_info = get_lambda_environment_info()
@@ -169,7 +169,7 @@ def handler(event, context):
 Include environment info in error reports:
 
 ```python
-from nui_lambda_shared_utils import (
+from nui_shared_utils import (
     get_powertools_logger,
     get_lambda_environment_info,
     SlackClient
@@ -239,7 +239,7 @@ def test_handler_local_behavior(monkeypatch):
     """Test handler behavior when running locally"""
     monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-    from nui_lambda_shared_utils import get_lambda_environment_info
+    from nui_shared_utils import get_lambda_environment_info
 
     env_info = get_lambda_environment_info()
     assert env_info["is_local"] is True
@@ -252,7 +252,7 @@ def test_handler_lambda_behavior(monkeypatch):
     monkeypatch.setenv("AWS_REGION", "ap-southeast-2")
     monkeypatch.setenv("AWS_LAMBDA_FUNCTION_NAME", "my-function")
 
-    from nui_lambda_shared_utils import get_lambda_environment_info
+    from nui_shared_utils import get_lambda_environment_info
 
     env_info = get_lambda_environment_info()
     assert env_info["is_local"] is False

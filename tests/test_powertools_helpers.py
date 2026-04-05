@@ -20,7 +20,7 @@ class TestGetPowertoolsLogger:
         # Remove Lambda environment variables
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        from nui_shared_utils.powertools_helpers import get_powertools_logger
 
         logger = get_powertools_logger("test-service")
 
@@ -40,9 +40,9 @@ class TestGetPowertoolsLogger:
         mock_logger_instance = MagicMock()
         mock_logger_class = MagicMock(return_value=mock_logger_instance)
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", True):
-            with patch("nui_lambda_shared_utils.powertools_helpers.Logger", mock_logger_class):
-                from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        with patch("nui_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", True):
+            with patch("nui_shared_utils.powertools_helpers.Logger", mock_logger_class):
+                from nui_shared_utils.powertools_helpers import get_powertools_logger
 
                 logger = get_powertools_logger("test-service")
 
@@ -63,7 +63,7 @@ class TestGetPowertoolsLogger:
         monkeypatch.setenv("AWS_LAMBDA_RUNTIME_API", "127.0.0.1:9001")
         monkeypatch.setenv("AWS_SAM_LOCAL", "true")
 
-        from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        from nui_shared_utils.powertools_helpers import get_powertools_logger
 
         logger = get_powertools_logger("test-service")
 
@@ -74,7 +74,7 @@ class TestGetPowertoolsLogger:
         """Test logger respects custom log level"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        from nui_shared_utils.powertools_helpers import get_powertools_logger
 
         logger = get_powertools_logger("test-service", level="DEBUG")
 
@@ -87,12 +87,12 @@ class TestGetPowertoolsLogger:
         # Mock coloredlogs module
         mock_coloredlogs = MagicMock()
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.COLOREDLOGS_AVAILABLE", True):
+        with patch("nui_shared_utils.powertools_helpers.COLOREDLOGS_AVAILABLE", True):
             with patch.dict("sys.modules", {"coloredlogs": mock_coloredlogs}):
                 # Re-import to get the mocked coloredlogs
                 import importlib
 
-                import nui_lambda_shared_utils.powertools_helpers as ph
+                import nui_shared_utils.powertools_helpers as ph
 
                 importlib.reload(ph)
 
@@ -108,11 +108,11 @@ class TestGetPowertoolsLogger:
         # Mock coloredlogs module
         mock_coloredlogs = MagicMock()
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.COLOREDLOGS_AVAILABLE", True):
+        with patch("nui_shared_utils.powertools_helpers.COLOREDLOGS_AVAILABLE", True):
             with patch.dict("sys.modules", {"coloredlogs": mock_coloredlogs}):
                 import importlib
 
-                import nui_lambda_shared_utils.powertools_helpers as ph
+                import nui_shared_utils.powertools_helpers as ph
 
                 importlib.reload(ph)
 
@@ -125,8 +125,8 @@ class TestGetPowertoolsLogger:
         """Test ImportError when Powertools not available in Lambda environment"""
         monkeypatch.setenv("AWS_LAMBDA_RUNTIME_API", "127.0.0.1:9001")
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", False):
-            from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        with patch("nui_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", False):
+            from nui_shared_utils.powertools_helpers import get_powertools_logger
 
             with pytest.raises(ImportError, match="aws-lambda-powertools is required"):
                 get_powertools_logger("test-service")
@@ -135,7 +135,7 @@ class TestGetPowertoolsLogger:
         """Test mock inject_lambda_context decorator works locally"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        from nui_shared_utils.powertools_helpers import get_powertools_logger
 
         logger = get_powertools_logger("test-service")
 
@@ -155,7 +155,7 @@ class TestPowertoolsHandler:
         """Test decorator allows successful handler execution"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        from nui_shared_utils.powertools_helpers import powertools_handler
 
         @powertools_handler(service_name="test-service")
         def handler(event, context):
@@ -174,7 +174,7 @@ class TestPowertoolsHandler:
         """Test decorator catches exceptions and returns 500 error"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        from nui_shared_utils.powertools_helpers import powertools_handler
 
         @powertools_handler(service_name="test-service")
         def handler(event, context):
@@ -194,9 +194,9 @@ class TestPowertoolsHandler:
 
         mock_slack_client = MagicMock()
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
-            with patch("nui_lambda_shared_utils.powertools_helpers.SlackClient", return_value=mock_slack_client):
-                from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        with patch("nui_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
+            with patch("nui_shared_utils.powertools_helpers.SlackClient", return_value=mock_slack_client):
+                from nui_shared_utils.powertools_helpers import powertools_handler
 
                 @powertools_handler(service_name="test-service", slack_alert_channel="#errors")
                 def handler(event, context):
@@ -222,9 +222,9 @@ class TestPowertoolsHandler:
         mock_slack_client.send_message.side_effect = Exception("Slack API error")
 
         # Capture logger warnings
-        with patch("nui_lambda_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
-            with patch("nui_lambda_shared_utils.powertools_helpers.SlackClient", return_value=mock_slack_client):
-                from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        with patch("nui_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
+            with patch("nui_shared_utils.powertools_helpers.SlackClient", return_value=mock_slack_client):
+                from nui_shared_utils.powertools_helpers import powertools_handler
 
                 @powertools_handler(service_name="test-service", slack_alert_channel="#errors")
                 def handler(event, context):
@@ -244,9 +244,9 @@ class TestPowertoolsHandler:
 
         mock_slack_client = MagicMock()
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
-            with patch("nui_lambda_shared_utils.powertools_helpers.SlackClient", return_value=mock_slack_client):
-                from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        with patch("nui_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
+            with patch("nui_shared_utils.powertools_helpers.SlackClient", return_value=mock_slack_client):
+                from nui_shared_utils.powertools_helpers import powertools_handler
 
                 @powertools_handler(service_name="test-service")
                 def handler(event, context):
@@ -262,12 +262,12 @@ class TestPowertoolsHandler:
         """Test Slack client initialization failure is logged"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
+        with patch("nui_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", True):
             with patch(
-                "nui_lambda_shared_utils.powertools_helpers.SlackClient",
+                "nui_shared_utils.powertools_helpers.SlackClient",
                 side_effect=Exception("Slack init failed"),
             ):
-                from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+                from nui_shared_utils.powertools_helpers import powertools_handler
 
                 # Decorator creation should not raise
                 @powertools_handler(service_name="test-service", slack_alert_channel="#errors")
@@ -286,9 +286,9 @@ class TestPowertoolsHandler:
         mock_metrics = MagicMock()
         mock_metrics.log_metrics = lambda func: func  # Pass-through decorator
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", True):
-            with patch("nui_lambda_shared_utils.powertools_helpers.Metrics", return_value=mock_metrics):
-                from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        with patch("nui_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", True):
+            with patch("nui_shared_utils.powertools_helpers.Metrics", return_value=mock_metrics):
+                from nui_shared_utils.powertools_helpers import powertools_handler
 
                 @powertools_handler(service_name="test-service", metrics_namespace="Test/Metrics")
                 def handler(event, context):
@@ -304,7 +304,7 @@ class TestPowertoolsHandler:
         """Test metrics not used when namespace not provided"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        from nui_shared_utils.powertools_helpers import powertools_handler
 
         @powertools_handler(service_name="test-service")
         def handler(event, context):
@@ -319,7 +319,7 @@ class TestPowertoolsHandler:
         """Test exception logging includes error type and service context"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        from nui_shared_utils.powertools_helpers import powertools_handler
 
         @powertools_handler(service_name="test-service")
         def handler(event, context):
@@ -339,16 +339,16 @@ class TestOptionalImports:
 
     def test_powertools_not_available(self):
         """Test graceful degradation when Powertools not installed"""
-        with patch("nui_lambda_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", False):
+        with patch("nui_shared_utils.powertools_helpers.POWERTOOLS_AVAILABLE", False):
             # Should not raise on import
-            from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+            from nui_shared_utils.powertools_helpers import get_powertools_logger
 
             assert get_powertools_logger is not None
 
     def test_slack_client_not_available(self):
         """Test graceful degradation when SlackClient not available"""
-        with patch("nui_lambda_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", False):
-            from nui_lambda_shared_utils.powertools_helpers import powertools_handler
+        with patch("nui_shared_utils.powertools_helpers.SLACK_CLIENT_AVAILABLE", False):
+            from nui_shared_utils.powertools_helpers import powertools_handler
 
             # Should not raise on decorator creation
             @powertools_handler(service_name="test", slack_alert_channel="#test")
@@ -361,8 +361,8 @@ class TestOptionalImports:
         """Test graceful degradation when coloredlogs not installed"""
         monkeypatch.delenv("AWS_LAMBDA_RUNTIME_API", raising=False)
 
-        with patch("nui_lambda_shared_utils.powertools_helpers.COLOREDLOGS_AVAILABLE", False):
-            from nui_lambda_shared_utils.powertools_helpers import get_powertools_logger
+        with patch("nui_shared_utils.powertools_helpers.COLOREDLOGS_AVAILABLE", False):
+            from nui_shared_utils.powertools_helpers import get_powertools_logger
 
             # Should work without coloredlogs
             logger = get_powertools_logger("test-service", local_dev_colors=True)

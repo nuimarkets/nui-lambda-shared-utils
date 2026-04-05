@@ -1,5 +1,5 @@
 """
-Comprehensive tests for nui_lambda_shared_utils.utils module.
+Comprehensive tests for nui_shared_utils.utils module.
 """
 
 import pytest
@@ -10,7 +10,7 @@ pytestmark = pytest.mark.unit
 from unittest.mock import Mock, patch
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from nui_lambda_shared_utils.utils import (
+from nui_shared_utils.utils import (
     resolve_config_value,
     resolve_aws_region,
     create_aws_client,
@@ -81,7 +81,7 @@ class TestResolveAwsRegion:
             result = resolve_aws_region("eu-west-1")
             assert result == "eu-west-1"
 
-    @patch('nui_lambda_shared_utils.utils.get_config')
+    @patch('nui_shared_utils.utils.get_config')
     def test_env_var_precedence(self, mock_get_config):
         """Test that AWS_REGION environment variable is used."""
         mock_config = Mock()
@@ -92,7 +92,7 @@ class TestResolveAwsRegion:
             result = resolve_aws_region()
             assert result == "env-region"
 
-    @patch('nui_lambda_shared_utils.utils.get_config')
+    @patch('nui_shared_utils.utils.get_config')
     def test_aws_default_region_env_var(self, mock_get_config):
         """Test that AWS_DEFAULT_REGION environment variable is used."""
         mock_config = Mock()
@@ -103,7 +103,7 @@ class TestResolveAwsRegion:
             result = resolve_aws_region()
             assert result == "default-env-region"
 
-    @patch('nui_lambda_shared_utils.utils.get_config')
+    @patch('nui_shared_utils.utils.get_config')
     def test_config_region_fallback(self, mock_get_config):
         """Test that config aws_region is used when env vars not set."""
         mock_config = Mock()
@@ -114,7 +114,7 @@ class TestResolveAwsRegion:
             result = resolve_aws_region()
             assert result == "config-region"
 
-    @patch('nui_lambda_shared_utils.utils.get_config')
+    @patch('nui_shared_utils.utils.get_config')
     @patch('boto3.session.Session')
     def test_boto3_session_fallback(self, mock_session_class, mock_get_config):
         """Test that boto3 session region is used as fallback."""
@@ -130,7 +130,7 @@ class TestResolveAwsRegion:
             result = resolve_aws_region()
             assert result == "session-region"
 
-    @patch('nui_lambda_shared_utils.utils.get_config')
+    @patch('nui_shared_utils.utils.get_config')
     @patch('boto3.session.Session')
     def test_default_region_final_fallback(self, mock_session_class, mock_get_config):
         """Test that DEFAULT_AWS_REGION is used as final fallback."""
@@ -146,7 +146,7 @@ class TestResolveAwsRegion:
             result = resolve_aws_region()
             assert result == DEFAULT_AWS_REGION
 
-    @patch('nui_lambda_shared_utils.utils.get_config')
+    @patch('nui_shared_utils.utils.get_config')
     @patch('boto3.session.Session')
     def test_boto3_session_exception_handling(self, mock_session_class, mock_get_config):
         """Test that boto3 session exceptions are handled gracefully."""
@@ -164,7 +164,7 @@ class TestResolveAwsRegion:
 class TestCreateAwsClient:
     """Test create_aws_client function."""
 
-    @patch('nui_lambda_shared_utils.utils.resolve_aws_region')
+    @patch('nui_shared_utils.utils.resolve_aws_region')
     @patch('boto3.session.Session')
     def test_successful_client_creation(self, mock_session_class, mock_resolve_region):
         """Test successful AWS client creation."""
@@ -183,7 +183,7 @@ class TestCreateAwsClient:
             region_name="us-east-1"
         )
 
-    @patch('nui_lambda_shared_utils.utils.resolve_aws_region')
+    @patch('nui_shared_utils.utils.resolve_aws_region')
     @patch('boto3.session.Session')
     def test_no_credentials_error(self, mock_session_class, mock_resolve_region):
         """Test handling of NoCredentialsError."""
@@ -195,7 +195,7 @@ class TestCreateAwsClient:
         with pytest.raises(NoCredentialsError):
             create_aws_client("secretsmanager")
 
-    @patch('nui_lambda_shared_utils.utils.resolve_aws_region')
+    @patch('nui_shared_utils.utils.resolve_aws_region')
     @patch('boto3.session.Session')
     def test_client_error(self, mock_session_class, mock_resolve_region):
         """Test handling of ClientError."""
@@ -210,7 +210,7 @@ class TestCreateAwsClient:
         with pytest.raises(ClientError):
             create_aws_client("secretsmanager")
 
-    @patch('nui_lambda_shared_utils.utils.resolve_aws_region')
+    @patch('nui_shared_utils.utils.resolve_aws_region')
     @patch('boto3.session.Session')
     def test_unexpected_error(self, mock_session_class, mock_resolve_region):
         """Test handling of unexpected errors."""

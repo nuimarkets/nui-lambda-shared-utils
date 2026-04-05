@@ -12,7 +12,7 @@ class TestAWSClientFactory:
     @patch("boto3.session.Session")
     def test_create_aws_client_default_region(self, mock_session_class):
         """Test AWS client creation with default region."""
-        from nui_lambda_shared_utils.utils import create_aws_client
+        from nui_shared_utils.utils import create_aws_client
         
         mock_session = Mock()
         mock_session.region_name = None
@@ -38,7 +38,7 @@ class TestAWSClientFactory:
 
         # Test create_aws_client("s3", region="eu-west-1")
         # Should use explicit region over defaults
-        from nui_lambda_shared_utils.utils import create_aws_client
+        from nui_shared_utils.utils import create_aws_client
         
         service_name = "s3"
         explicit_region = "eu-west-1"
@@ -50,7 +50,7 @@ class TestAWSClientFactory:
         assert result == mock_client
 
     @patch("boto3.session.Session")
-    @patch("nui_lambda_shared_utils.utils.get_config")
+    @patch("nui_shared_utils.utils.get_config")
     @patch.dict("os.environ", {}, clear=True)
     def test_create_aws_client_session_region_fallback(self, mock_get_config, mock_session_class):
         """Test fallback to session region when available."""
@@ -68,7 +68,7 @@ class TestAWSClientFactory:
 
         # When no explicit region provided, should use session region
         # before falling back to hardcoded default
-        from nui_lambda_shared_utils.utils import create_aws_client
+        from nui_shared_utils.utils import create_aws_client
         
         result = create_aws_client("dynamodb")
         
@@ -202,7 +202,7 @@ class TestAWSCredentialsHandling:
             "AWS_SECRET_ACCESS_KEY": "test-secret-key"
         }):
             # Test that create_aws_client works with environment credentials
-            from nui_lambda_shared_utils.utils import create_aws_client
+            from nui_shared_utils.utils import create_aws_client
             create_aws_client("s3")
             
             # Session should pick up environment credentials automatically
@@ -217,7 +217,7 @@ class TestAWSCredentialsHandling:
         mock_session.client.return_value = mock_client
 
         # Test that create_aws_client works with IAM role credentials
-        from nui_lambda_shared_utils.utils import create_aws_client
+        from nui_shared_utils.utils import create_aws_client
         result = create_aws_client("lambda")
 
         # In Lambda, credentials come from execution role
@@ -306,7 +306,7 @@ class TestAWSUtilityIntegration:
 class TestConfigurationIntegration:
     """Tests for integration with configuration system."""
 
-    @patch("nui_lambda_shared_utils.config.get_config")
+    @patch("nui_shared_utils.config.get_config")
     def test_aws_region_from_config(self, mock_get_config):
         """Test AWS region resolution from configuration."""
         mock_config = Mock()

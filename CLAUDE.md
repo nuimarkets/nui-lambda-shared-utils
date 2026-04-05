@@ -129,7 +129,7 @@ source venv/bin/activate  # Linux/Mac
 pytest
 
 # Run with coverage reporting
-pytest --cov=nui_lambda_shared_utils --cov-report=html
+pytest --cov=nui_shared_utils --cov-report=html
 
 # Run only unit tests (skip integration tests requiring AWS)
 pytest -m "not integration"
@@ -147,16 +147,16 @@ pytest tests/test_slack_client.py -v
 
 ```bash
 # Format code with Black (line length: 120)
-black nui_lambda_shared_utils/ tests/
+black nui_shared_utils/ tests/
 
 # Check formatting without changes
-black --check nui_lambda_shared_utils/
+black --check nui_shared_utils/
 
 # Type checking with MyPy
-mypy nui_lambda_shared_utils/ --config-file mypy.ini
+mypy nui_shared_utils/ --config-file mypy.ini
 
 # Run linting (currently configured to use Black)
-black --check nui_lambda_shared_utils/
+black --check nui_shared_utils/
 
 # Lint markdown documentation
 npx markdownlint-cli2 '**/*.md'
@@ -227,7 +227,7 @@ Secrets should follow standardized JSON structures:
 ### Programmatic Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Pass credentials directly (no Secrets Manager needed)
 slack = nui.SlackClient(credentials={"bot_token": "xoxb-..."})
@@ -253,7 +253,7 @@ For detailed usage examples and integration patterns, see:
 
 ```python
 # See docs/getting-started/quickstart.md for complete examples
-from nui_lambda_shared_utils import SlackClient, MetricsPublisher, with_retry
+from nui_shared_utils import SlackClient, MetricsPublisher, with_retry
 
 # Slack messaging with rich formatting
 slack = SlackClient()
@@ -299,7 +299,7 @@ Before submitting PRs, ensure:
 - [ ] **No hardcoded organization-specific values** (service names, currencies, business logic)
 - [ ] **Configuration options** provided for any defaults
 - [ ] **Tests pass** with `pytest --cov`
-- [ ] **Code formatted** with Black (`black nui_lambda_shared_utils/ tests/`)
+- [ ] **Code formatted** with Black (`black nui_shared_utils/ tests/`)
 - [ ] **Type hints** included for public APIs
 - [ ] **Documentation updated** in docs/ for new features
 - [ ] **Generic naming** - avoid organization-specific terminology in public APIs

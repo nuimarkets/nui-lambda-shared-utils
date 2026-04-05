@@ -1,6 +1,6 @@
 # Shared Types & Data Structures
 
-This document describes the core types, interfaces, and data structures provided by `nui-lambda-shared-utils`.
+This document describes the core types, interfaces, and data structures provided by `nui-python-shared-utils`.
 
 ## Configuration Types
 
@@ -9,7 +9,7 @@ This document describes the core types, interfaces, and data structures provided
 Central configuration class for environment-based settings.
 
 ```python
-from nui_lambda_shared_utils import Config, configure
+from nui_shared_utils import Config, configure
 
 # Configuration fields
 Config(
@@ -35,7 +35,7 @@ Config(
 Abstract base class providing standardized patterns for all service clients.
 
 ```python
-from nui_lambda_shared_utils.base_client import BaseClient
+from nui_shared_utils.base_client import BaseClient
 
 class BaseClient(ABC):
     config: Config                    # Global configuration instance
@@ -85,7 +85,7 @@ execute_with_retry(
 MySQL client with connection pooling.
 
 ```python
-from nui_lambda_shared_utils import DatabaseClient
+from nui_shared_utils import DatabaseClient
 
 client = DatabaseClient(
     secret_name: str = None,          # Override secret name
@@ -128,7 +128,7 @@ client.get_connection_info() -> Dict
 PostgreSQL client with connection management.
 
 ```python
-from nui_lambda_shared_utils import PostgreSQLClient
+from nui_shared_utils import PostgreSQLClient
 
 client = PostgreSQLClient(
     secret_name: str = None,
@@ -147,7 +147,7 @@ client.health_check() -> Dict
 Elasticsearch client with standardized query patterns.
 
 ```python
-from nui_lambda_shared_utils import ElasticsearchClient
+from nui_shared_utils import ElasticsearchClient
 
 client = ElasticsearchClient(
     host: str = None,                 # Override ES host
@@ -202,7 +202,7 @@ client.get_indices_info(pattern="*") -> List[Dict]
 Slack messaging client with Lambda context integration.
 
 ```python
-from nui_lambda_shared_utils import SlackClient
+from nui_shared_utils import SlackClient
 
 client = SlackClient(
     secret_name: str = None,
@@ -255,7 +255,7 @@ client.get_bot_info() -> Dict
 ### Error Classes
 
 ```python
-from nui_lambda_shared_utils.error_handler import RetryableError, NonRetryableError
+from nui_shared_utils.error_handler import RetryableError, NonRetryableError
 
 # Exceptions for retry control
 raise RetryableError("Temporary failure")      # Will trigger retry
@@ -267,7 +267,7 @@ raise NonRetryableError("Permanent failure")   # Will NOT trigger retry
 Pattern-based error categorization.
 
 ```python
-from nui_lambda_shared_utils.error_handler import ErrorPatternMatcher
+from nui_shared_utils.error_handler import ErrorPatternMatcher
 
 matcher = ErrorPatternMatcher()
 result = matcher.categorize_error(exception)
@@ -302,7 +302,7 @@ result = matcher.categorize_error(exception)
 Batch error collection for reporting.
 
 ```python
-from nui_lambda_shared_utils.error_handler import ErrorAggregator
+from nui_shared_utils.error_handler import ErrorAggregator
 
 aggregator = ErrorAggregator(max_errors=100)
 aggregator.add_error(exception, context={"key": "value"})
@@ -322,7 +322,7 @@ summary = aggregator.get_summary()
 ### Retry Decorator
 
 ```python
-from nui_lambda_shared_utils import with_retry
+from nui_shared_utils import with_retry
 
 @with_retry(
     max_attempts: int = 3,
@@ -344,7 +344,7 @@ def my_function(): ...
 CloudWatch metrics publisher with batching.
 
 ```python
-from nui_lambda_shared_utils import MetricsPublisher
+from nui_shared_utils import MetricsPublisher
 
 publisher = MetricsPublisher(
     namespace: str,
@@ -376,7 +376,7 @@ publisher.flush() -> bool
 Predefined metric name constants.
 
 ```python
-from nui_lambda_shared_utils import StandardMetrics
+from nui_shared_utils import StandardMetrics
 
 # Service health
 StandardMetrics.SERVICE_HEALTH
@@ -417,7 +417,7 @@ StandardMetrics.API_RATE_LIMIT_HITS
 Context manager for timing operations.
 
 ```python
-from nui_lambda_shared_utils.cloudwatch_metrics import TimedMetric
+from nui_shared_utils.cloudwatch_metrics import TimedMetric
 
 with TimedMetric(publisher, "DatabaseQuery", unit="Milliseconds", dimensions=None):
     # Operation to time
@@ -459,7 +459,7 @@ with TimedMetric(publisher, "DatabaseQuery", unit="Milliseconds", dimensions=Non
 ### Secrets Helper Functions
 
 ```python
-from nui_lambda_shared_utils import (
+from nui_shared_utils import (
     get_secret,
     get_database_credentials,
     get_elasticsearch_credentials,
@@ -486,7 +486,7 @@ clear_cache()  # Clear secrets cache for long-running Lambdas
 ## Connection Pool Statistics
 
 ```python
-from nui_lambda_shared_utils.db_client import get_pool_stats
+from nui_shared_utils.db_client import get_pool_stats
 
 stats = get_pool_stats()
 ```
@@ -508,7 +508,7 @@ stats = get_pool_stats()
 ## Lambda Error Response
 
 ```python
-from nui_lambda_shared_utils.error_handler import handle_lambda_error
+from nui_shared_utils.error_handler import handle_lambda_error
 
 response = handle_lambda_error(error, context)
 ```

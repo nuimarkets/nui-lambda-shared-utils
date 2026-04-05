@@ -40,7 +40,7 @@ setup(
     ],
     packages=find_packages(),
     package_data={
-        "nui_lambda_shared_utils": ["slack_setup/*.yaml"],
+        "nui_shared_utils": ["slack_setup/*.yaml"],
     },
     install_requires=[
         "boto3>=1.20.0",

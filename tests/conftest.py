@@ -11,7 +11,7 @@ import json
 @pytest.fixture
 def mock_boto3_session():
     """Mock boto3 session."""
-    with patch("nui_lambda_shared_utils.secrets_helper.boto3.session.Session") as mock_session_class:
+    with patch("nui_shared_utils.secrets_helper.boto3.session.Session") as mock_session_class:
         mock_session = Mock()
         mock_session_class.return_value = mock_session
         yield mock_session
@@ -73,7 +73,7 @@ def mock_db_connection():
 @pytest.fixture
 def mock_datetime():
     """Mock datetime for consistent time testing."""
-    with patch("nui_lambda_shared_utils.timezone.datetime") as mock_dt:
+    with patch("nui_shared_utils.timezone.datetime") as mock_dt:
         mock_now = datetime(2024, 1, 30, 10, 30, 45)
         mock_dt.now.return_value = mock_now
         mock_dt.utcnow.return_value = mock_now
@@ -84,7 +84,7 @@ def mock_datetime():
 def clear_caches():
     """Clear any caches before each test."""
     # Clear secrets cache
-    from nui_lambda_shared_utils.secrets_helper import clear_cache
+    from nui_shared_utils.secrets_helper import clear_cache
 
     clear_cache()
     yield

@@ -103,7 +103,7 @@ export DB_DATABASE="mydb"
 ### Using the Config Class
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Create configuration object
 config = nui.Config(
@@ -121,7 +121,7 @@ nui.set_config(config)
 ### Using the Configure Helper
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Convenient one-liner configuration
 nui.configure(
@@ -134,7 +134,7 @@ nui.configure(
 ### Getting Current Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Get current configuration
 config = nui.get_config()
@@ -321,7 +321,7 @@ nui.configure(
 
 ```python
 import os
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 def lambda_handler(event, context):
     # Configure based on Lambda environment variables
@@ -344,7 +344,7 @@ def lambda_handler(event, context):
 ### Checking Configuration
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Get configuration and check values
 config = nui.get_config()
@@ -363,7 +363,7 @@ except Exception as e:
 ### Configuration Debug Mode
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 import json
 
 # Enable debug logging for configuration issues

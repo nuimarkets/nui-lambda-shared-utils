@@ -9,7 +9,7 @@ import pytest
 
 pytestmark = pytest.mark.unit
 
-from nui_lambda_shared_utils.log_processors import (
+from nui_shared_utils.log_processors import (
     derive_index_name,
     extract_cloudwatch_logs_from_kinesis,
 )

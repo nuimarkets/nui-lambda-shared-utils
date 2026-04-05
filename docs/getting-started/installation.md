@@ -193,7 +193,7 @@ aws lambda publish-layer-version \
 
 ```python
 # In your Lambda function code
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Configure and use
 nui.configure(
@@ -207,7 +207,7 @@ nui.configure(
 Test your installation:
 
 ```python
-import nui_lambda_shared_utils as nui
+import nui_shared_utils as nui
 
 # Check version
 print(nui.__version__)  # Should print version number

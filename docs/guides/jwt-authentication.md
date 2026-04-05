@@ -15,7 +15,7 @@ pip install nui-python-shared-utils[jwt]
 ## Quick Start
 
 ```python
-from nui_lambda_shared_utils import require_auth, AuthenticationError
+from nui_shared_utils import require_auth, AuthenticationError
 
 def lambda_handler(event, context):
     try:
@@ -112,7 +112,7 @@ def lambda_handler(event, context):
 ### Direct Validation (Pre-fetched Key)
 
 ```python
-from nui_lambda_shared_utils import get_jwt_public_key, validate_jwt, JWTValidationError
+from nui_shared_utils import get_jwt_public_key, validate_jwt, JWTValidationError
 
 # Fetch key once at module level (cached by secrets_helper)
 public_key = get_jwt_public_key(secret_name="prod/jwt-public-key")

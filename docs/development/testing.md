@@ -15,7 +15,7 @@ The package uses `pytest` as the testing framework with comprehensive test cover
 pytest
 
 # Run with coverage report
-pytest --cov=nui_lambda_shared_utils --cov-report=html
+pytest --cov=nui_shared_utils --cov-report=html
 
 # Run specific test categories
 pytest -m unit              # Unit tests only
@@ -126,17 +126,17 @@ pytest -k "slack"  # All tests with "slack" in name
 
 ```bash
 # Terminal coverage report
-pytest --cov=nui_lambda_shared_utils
+pytest --cov=nui_shared_utils
 
 # HTML coverage report
-pytest --cov=nui_lambda_shared_utils --cov-report=html
+pytest --cov=nui_shared_utils --cov-report=html
 # Opens in: htmlcov/index.html
 
 # Coverage with missing lines
-pytest --cov=nui_lambda_shared_utils --cov-report=term-missing
+pytest --cov=nui_shared_utils --cov-report=term-missing
 
 # Fail if coverage below threshold
-pytest --cov=nui_lambda_shared_utils --cov-fail-under=90
+pytest --cov=nui_shared_utils --cov-fail-under=90
 ```
 
 ### Filtering Tests
@@ -179,7 +179,7 @@ def mock_secrets():
 
 def test_with_mock_secrets(mock_secrets):
     """Test using mocked secrets."""
-    from nui_lambda_shared_utils import get_secret
+    from nui_shared_utils import get_secret
     secret = get_secret('test-secret')
     assert secret['key'] == 'value'
 ```
@@ -218,7 +218,7 @@ markers =
 
 ```python
 import pytest
-from nui_lambda_shared_utils import SlackClient
+from nui_shared_utils import SlackClient
 
 class TestSlackClient:
     """Test suite for SlackClient."""
@@ -265,7 +265,7 @@ def test_elasticsearch_search():
         }
 
         # Test code
-        from nui_lambda_shared_utils import ElasticsearchClient
+        from nui_shared_utils import ElasticsearchClient
         client = ElasticsearchClient()
         results = client.search(index='test', body={})
 
@@ -280,7 +280,7 @@ def test_elasticsearch_search():
 @pytest.mark.unit
 def test_error_retry_logic():
     """Test retry decorator behavior."""
-    from nui_lambda_shared_utils import with_retry
+    from nui_shared_utils import with_retry
 
     call_count = 0
 
@@ -323,10 +323,10 @@ def test_uppercase_conversion(input_value, expected):
 
 ```bash
 # Generate coverage report
-pytest --cov=nui_lambda_shared_utils --cov-report=term-missing
+pytest --cov=nui_shared_utils --cov-report=term-missing
 
 # View detailed HTML report
-pytest --cov=nui_lambda_shared_utils --cov-report=html
+pytest --cov=nui_shared_utils --cov-report=html
 open htmlcov/index.html  # Mac
 xdg-open htmlcov/index.html  # Linux
 ```
@@ -357,7 +357,7 @@ The project uses GitHub Actions for automated testing:
 
 ```bash
 # Simulate CI environment locally
-pytest --cov=nui_lambda_shared_utils --cov-fail-under=90 -v
+pytest --cov=nui_shared_utils --cov-fail-under=90 -v
 ```
 
 ## Troubleshooting Tests

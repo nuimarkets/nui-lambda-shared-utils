@@ -4,7 +4,7 @@ Tests for timezone module.
 
 from datetime import datetime, timezone
 from unittest.mock import patch
-from nui_lambda_shared_utils.timezone import nz_time, format_nz_time, NZ_TZ
+from nui_shared_utils.timezone import nz_time, format_nz_time, NZ_TZ
 
 
 class TestNzTime:
@@ -40,7 +40,7 @@ class TestNzTime:
         # Mock current UTC time
         mock_now = datetime(2024, 1, 30, 10, 0, 0, tzinfo=timezone.utc)
 
-        with patch("nui_lambda_shared_utils.timezone.datetime") as mock_dt:
+        with patch("nui_shared_utils.timezone.datetime") as mock_dt:
             mock_dt.now.return_value = mock_now
             result = nz_time()
 
@@ -96,7 +96,7 @@ class TestFormatNzTime:
         """Test formatting current time."""
         mock_now = datetime(2024, 1, 30, 10, 30, 45, tzinfo=timezone.utc)
 
-        with patch("nui_lambda_shared_utils.timezone.datetime") as mock_dt:
+        with patch("nui_shared_utils.timezone.datetime") as mock_dt:
             mock_dt.now.return_value = mock_now
             result = format_nz_time()
 

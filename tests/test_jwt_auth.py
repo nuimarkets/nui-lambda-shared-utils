@@ -12,7 +12,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 
 import rsa as rsa_lib
 
-from nui_lambda_shared_utils.jwt_auth import (
+from nui_shared_utils.jwt_auth import (
     validate_jwt,
     require_auth,
     check_auth,

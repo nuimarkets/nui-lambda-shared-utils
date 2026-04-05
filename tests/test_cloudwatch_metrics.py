@@ -10,7 +10,7 @@ from unittest.mock import patch, Mock
 from datetime import datetime
 from botocore.exceptions import ClientError
 
-from nui_lambda_shared_utils.cloudwatch_metrics import (
+from nui_shared_utils.cloudwatch_metrics import (
     MetricsPublisher,
     MetricAggregator,
     StandardMetrics,
@@ -24,7 +24,7 @@ from nui_lambda_shared_utils.cloudwatch_metrics import (
 class TestMetricsPublisher:
     """Tests for MetricsPublisher class."""
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_init_default_values(self, mock_boto3_client):
         """Test initialization with default values."""
         mock_client = Mock()
@@ -40,7 +40,7 @@ class TestMetricsPublisher:
 
         mock_boto3_client.assert_called_once_with("cloudwatch", region_name=None)
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_init_custom_values(self, mock_boto3_client):
         """Test initialization with custom values."""
         mock_client = Mock()
@@ -56,7 +56,7 @@ class TestMetricsPublisher:
 
         mock_boto3_client.assert_called_once_with("cloudwatch", region_name="us-east-1")
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_put_metric_basic(self, mock_boto3_client):
         """Test basic metric publishing."""
         mock_client = Mock()
@@ -65,7 +65,7 @@ class TestMetricsPublisher:
         publisher = MetricsPublisher("TestNamespace")
 
         # Mock datetime.utcnow() to get predictable timestamp
-        with patch("nui_lambda_shared_utils.cloudwatch_metrics.datetime") as mock_datetime:
+        with patch("nui_shared_utils.cloudwatch_metrics.datetime") as mock_datetime:
             mock_timestamp = datetime(2023, 1, 1, 12, 0, 0)
             mock_datetime.utcnow.return_value = mock_timestamp
 
@@ -81,7 +81,7 @@ class TestMetricsPublisher:
         assert metric["StorageResolution"] == 60
         assert "Dimensions" not in metric
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_put_metric_with_dimensions(self, mock_boto3_client):
         """Test metric publishing with dimensions."""
         mock_client = Mock()
@@ -102,7 +102,7 @@ class TestMetricsPublisher:
 
         assert metric["Dimensions"] == expected_dimensions
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_put_metric_with_custom_timestamp(self, mock_boto3_client):
         """Test metric with custom timestamp."""
         mock_client = Mock()
@@ -117,7 +117,7 @@ class TestMetricsPublisher:
         assert metric["Timestamp"] == custom_timestamp
         assert metric["StorageResolution"] == 1
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_put_metric_auto_flush(self, mock_boto3_client):
         """Test auto-flush when buffer reaches size limit."""
         mock_client = Mock()
@@ -135,7 +135,7 @@ class TestMetricsPublisher:
         assert len(publisher.metric_buffer) == 0  # Buffer cleared after flush
         mock_client.put_metric_data.assert_called_once()
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_put_metric_with_statistics(self, mock_boto3_client):
         """Test metric publishing with statistical values."""
         mock_client = Mock()
@@ -151,7 +151,7 @@ class TestMetricsPublisher:
         assert metric["Unit"] == "Milliseconds"
         assert metric["StatisticValues"] == {"SampleCount": 5, "Sum": 150, "Minimum": 10, "Maximum": 50}
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_put_metric_with_statistics_empty_values(self, mock_boto3_client):
         """Test metric with statistics with empty values list."""
         mock_client = Mock()
@@ -163,7 +163,7 @@ class TestMetricsPublisher:
 
         assert len(publisher.metric_buffer) == 0
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_flush_success(self, mock_boto3_client):
         """Test successful metrics flush."""
         mock_client = Mock()
@@ -186,7 +186,7 @@ class TestMetricsPublisher:
         assert call_args[1]["Namespace"] == "TestNamespace"
         assert len(call_args[1]["MetricData"]) == 2
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_flush_large_batch(self, mock_boto3_client):
         """Test flush with more than 20 metrics (batch splitting)."""
         mock_client = Mock()
@@ -204,7 +204,7 @@ class TestMetricsPublisher:
         assert mock_client.put_metric_data.call_count == 2
         assert len(publisher.metric_buffer) == 0
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_flush_empty_buffer(self, mock_boto3_client):
         """Test flush with empty buffer."""
         mock_client = Mock()
@@ -217,7 +217,7 @@ class TestMetricsPublisher:
         assert result is True
         mock_client.put_metric_data.assert_not_called()
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_flush_client_error(self, mock_boto3_client):
         """Test flush with CloudWatch client error."""
         mock_client = Mock()
@@ -235,7 +235,7 @@ class TestMetricsPublisher:
         # Buffer should not be cleared on error
         assert len(publisher.metric_buffer) == 1
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
     def test_context_manager(self, mock_boto3_client):
         """Test context manager functionality."""
         mock_client = Mock()
@@ -348,7 +348,7 @@ class TestTimedMetric:
         """Test successful timing."""
         mock_publisher = Mock()
 
-        with patch("nui_lambda_shared_utils.cloudwatch_metrics.time.time") as mock_time:
+        with patch("nui_shared_utils.cloudwatch_metrics.time.time") as mock_time:
             mock_time.side_effect = [1000.0, 1000.5]  # 500ms duration
 
             with TimedMetric(mock_publisher, "TestOperation", unit="Milliseconds"):
@@ -361,7 +361,7 @@ class TestTimedMetric:
         mock_publisher = Mock()
         dimensions = {"Service": "TestService"}
 
-        with patch("nui_lambda_shared_utils.cloudwatch_metrics.time.time") as mock_time:
+        with patch("nui_shared_utils.cloudwatch_metrics.time.time") as mock_time:
             mock_time.side_effect = [1000.0, 1000.2]  # 200ms duration
 
             with TimedMetric(mock_publisher, "DatabaseQuery", dimensions=dimensions):
@@ -379,7 +379,7 @@ class TestTimedMetric:
         """Test timing when exception occurs."""
         mock_publisher = Mock()
 
-        with patch("nui_lambda_shared_utils.cloudwatch_metrics.time.time") as mock_time:
+        with patch("nui_shared_utils.cloudwatch_metrics.time.time") as mock_time:
             mock_time.side_effect = [1000.0, 1000.1]  # 100ms duration
 
             with pytest.raises(ValueError):
@@ -398,8 +398,8 @@ class TestTimedMetric:
 class TestTrackLambdaPerformance:
     """Tests for track_lambda_performance decorator."""
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.MetricsPublisher")
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.time.time")
+    @patch("nui_shared_utils.cloudwatch_metrics.MetricsPublisher")
+    @patch("nui_shared_utils.cloudwatch_metrics.time.time")
     def test_successful_execution(self, mock_time, mock_publisher_class):
         """Test decorator with successful function execution."""
         mock_publisher = Mock()
@@ -440,8 +440,8 @@ class TestTrackLambdaPerformance:
 
         mock_publisher.flush.assert_called_once()
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.MetricsPublisher")
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.time.time")
+    @patch("nui_shared_utils.cloudwatch_metrics.MetricsPublisher")
+    @patch("nui_shared_utils.cloudwatch_metrics.time.time")
     def test_warm_invocation(self, mock_time, mock_publisher_class):
         """Test decorator with warm invocation (no cold start)."""
         mock_publisher = Mock()
@@ -465,8 +465,8 @@ class TestTrackLambdaPerformance:
         assert StandardMetrics.LAMBDA_DURATION in put_metric_calls
         assert StandardMetrics.REQUEST_COUNT in put_metric_calls
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.MetricsPublisher")
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.time.time")
+    @patch("nui_shared_utils.cloudwatch_metrics.MetricsPublisher")
+    @patch("nui_shared_utils.cloudwatch_metrics.time.time")
     def test_exception_handling(self, mock_time, mock_publisher_class):
         """Test decorator with function that raises exception."""
         mock_publisher = Mock()
@@ -527,13 +527,13 @@ class TestHelperFunctions:
         assert dimensions["Environment"] == "dev"
         assert dimensions["Region"] == "eu-west-1"
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.MetricsPublisher")
+    @patch("nui_shared_utils.cloudwatch_metrics.MetricsPublisher")
     def test_publish_health_metric_healthy(self, mock_publisher_class):
         """Test publishing health metric for healthy service."""
         mock_publisher = Mock()
         mock_publisher_class.return_value = mock_publisher
 
-        with patch("nui_lambda_shared_utils.cloudwatch_metrics.create_service_dimensions") as mock_create_dims:
+        with patch("nui_shared_utils.cloudwatch_metrics.create_service_dimensions") as mock_create_dims:
             mock_create_dims.return_value = {"ServiceName": "test-service"}
 
             publish_health_metric("test-service", True)
@@ -543,13 +543,13 @@ class TestHelperFunctions:
         mock_publisher.put_metric.assert_called_once_with(StandardMetrics.SERVICE_HEALTH, 1, unit="None")
         mock_publisher.flush.assert_called_once()
 
-    @patch("nui_lambda_shared_utils.cloudwatch_metrics.MetricsPublisher")
+    @patch("nui_shared_utils.cloudwatch_metrics.MetricsPublisher")
     def test_publish_health_metric_unhealthy(self, mock_publisher_class):
         """Test publishing health metric for unhealthy service."""
         mock_publisher = Mock()
         mock_publisher_class.return_value = mock_publisher
 
-        with patch("nui_lambda_shared_utils.cloudwatch_metrics.create_service_dimensions") as mock_create_dims:
+        with patch("nui_shared_utils.cloudwatch_metrics.create_service_dimensions") as mock_create_dims:
             mock_create_dims.return_value = {"ServiceName": "test-service"}
 
             publish_health_metric("test-service", False, namespace="CustomNamespace")

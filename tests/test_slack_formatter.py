@@ -6,7 +6,7 @@ from unittest.mock import patch
 from datetime import datetime, timedelta
 import pytz
 
-from nui_lambda_shared_utils.slack_formatter import (
+from nui_shared_utils.slack_formatter import (
     format_currency,
     format_percentage,
     format_number,
@@ -469,7 +469,7 @@ class TestSlackBlockBuilder:
 class TestConvenienceFunctions:
     """Tests for convenience functions."""
 
-    @patch("nui_lambda_shared_utils.slack_formatter.format_nz_time")
+    @patch("nui_shared_utils.slack_formatter.format_nz_time")
     def test_format_daily_header_no_time_window(self, mock_format_time):
         """Test daily header without time window."""
         mock_format_time.return_value = "2:30 PM NZST"
@@ -504,7 +504,7 @@ class TestConvenienceFunctions:
         assert "2023-06-15 00:00" in context_block["elements"][0]["text"]
         assert "2023-06-15 23:59" in context_block["elements"][0]["text"]
 
-    @patch("nui_lambda_shared_utils.slack_formatter.format_date_range")
+    @patch("nui_shared_utils.slack_formatter.format_date_range")
     def test_format_weekly_header(self, mock_format_range):
         """Test weekly header."""
         mock_format_range.return_value = "Jun 15 - Jun 21 NZST"
