@@ -502,6 +502,17 @@ class TestElasticsearchCredentialResolution:
 
     @patch("nui_shared_utils.base_client.get_secret")
     @patch("nui_shared_utils.es_client.Elasticsearch")
+    @patch.dict("os.environ", {"ES_PASS": "short-pass", "ES_USER": "short-user"}, clear=True)
+    def test_env_var_short_form(self, mock_es, mock_get_secret):
+        """ES_PASS/ES_USER convention also works."""
+        client = ElasticsearchClient()
+
+        mock_get_secret.assert_not_called()
+        assert client.credentials["password"] == "short-pass"
+        assert client.credentials["username"] == "short-user"
+
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.es_client.Elasticsearch")
     @patch.dict("os.environ", {"ES_PASSWORD": "env-pass"}, clear=False)
     def test_explicit_credentials_win_over_env_vars(self, mock_es, mock_get_secret):
         """Explicit credentials should take priority over env vars."""
