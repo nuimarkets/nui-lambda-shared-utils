@@ -112,13 +112,29 @@ def get_elasticsearch_credentials(secret_name: Optional[str] = None) -> Dict:
     """
     Get Elasticsearch credentials.
 
+    Precedence (matching BaseServiceClient pattern):
+    1. Environment variables (ES_PASSWORD/ES_PASS + ES_USERNAME/ES_USER)
+    2. AWS Secrets Manager
+
     Args:
-        secret_name: Override default from configuration or environment
+        secret_name: Override default secret name for Secrets Manager lookup.
+            Ignored when credentials are resolved from environment variables.
 
     Returns:
         Dict with host, username, password
     """
     config = get_config()
+
+    # Environment variables first (local dev, CLI usage)
+    es_password = os.environ.get("ES_PASSWORD") or os.environ.get("ES_PASS")
+    if es_password:
+        es_user = os.environ.get("ES_USERNAME") or os.environ.get("ES_USER") or "elastic"
+        host = os.environ.get("ES_HOST") or config.es_host
+        if ":" not in host and not host.startswith("http"):
+            host = f"{host}:9200"
+        return {"host": host, "username": es_user, "password": es_password}
+
+    # Secrets Manager (Lambda runtime)
     secret = secret_name or os.environ.get("ES_CREDENTIALS_SECRET") or config.es_credentials_secret
     if not secret:
         raise ValueError("No Elasticsearch secret name provided")

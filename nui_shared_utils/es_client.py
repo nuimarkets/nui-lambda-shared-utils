@@ -52,14 +52,14 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
     def _resolve_credentials_from_env(self) -> Optional[Dict[str, Any]]:
         """Resolve Elasticsearch credentials from environment variables.
 
-        Checks for ES_PASSWORD (required to trigger).
-        ES_USERNAME defaults to "elastic" if not set.
+        Accepts both conventions: ES_PASSWORD/ES_USERNAME and ES_PASS/ES_USER.
+        Password is required to trigger. Username defaults to "elastic".
         """
-        password = os.environ.get("ES_PASSWORD")
+        password = os.environ.get("ES_PASSWORD") or os.environ.get("ES_PASS")
         if not password:
             return None
         return {
-            "username": os.environ.get("ES_USERNAME", "elastic"),
+            "username": os.environ.get("ES_USERNAME") or os.environ.get("ES_USER") or "elastic",
             "password": password,
         }
 

@@ -228,6 +228,43 @@ class TestGetElasticsearchCredentials:
         assert "No Elasticsearch secret name provided" in str(exc_info.value)
 
 
+    @patch.dict("os.environ", {"ES_PASSWORD": "env_pass", "ES_USERNAME": "env_user", "ES_HOST": "env-host:9200"}, clear=True)
+    def test_get_elasticsearch_credentials_env_vars_first(self, mock_secrets_manager):
+        """Env vars take precedence over Secrets Manager."""
+        result = secrets_helper.get_elasticsearch_credentials("es-secret")
+
+        assert result == {"host": "env-host:9200", "username": "env_user", "password": "env_pass"}
+        mock_secrets_manager.get_secret_value.assert_not_called()
+
+    @patch.dict("os.environ", {"ES_PASS": "env_pass2", "ES_USER": "env_user2", "ES_HOST": "env-host:9200"}, clear=True)
+    def test_get_elasticsearch_credentials_short_env_vars(self, mock_secrets_manager):
+        """ES_PASS/ES_USER convention also works."""
+        result = secrets_helper.get_elasticsearch_credentials()
+
+        assert result == {"host": "env-host:9200", "username": "env_user2", "password": "env_pass2"}
+        mock_secrets_manager.get_secret_value.assert_not_called()
+
+    @patch.dict("os.environ", {"ES_PASSWORD": "env_pass"}, clear=True)
+    @patch("nui_shared_utils.secrets_helper.get_config")
+    def test_get_elasticsearch_credentials_partial_env_vars(self, mock_get_config):
+        """Password-only env var works, username defaults to 'elastic'."""
+        mock_config = Mock()
+        mock_config.es_host = "default-host"
+        mock_get_config.return_value = mock_config
+
+        result = secrets_helper.get_elasticsearch_credentials()
+
+        assert result == {"host": "default-host:9200", "username": "elastic", "password": "env_pass"}
+
+    @patch.dict("os.environ", {"ES_PASSWORD": "env_pass", "ES_HOST": "env-host:9200"}, clear=True)
+    def test_get_elasticsearch_credentials_env_vars_override_secret_name(self, mock_secrets_manager):
+        """Env vars win even when secret_name is explicitly passed."""
+        result = secrets_helper.get_elasticsearch_credentials(secret_name="my-specific-secret")
+
+        assert result["password"] == "env_pass"
+        mock_secrets_manager.get_secret_value.assert_not_called()
+
+
 class TestGetSlackCredentials:
     """Tests for get_slack_credentials function."""
 
