@@ -26,15 +26,34 @@ try:
 except ImportError:
     COLOREDLOGS_AVAILABLE = False
 
-try:
-    from .slack_client import SlackClient
-
-    SLACK_CLIENT_AVAILABLE = True
-except ImportError:
-    SLACK_CLIENT_AVAILABLE = False
-    SlackClient = None  # type: ignore
-
 from .lambda_helpers import get_lambda_environment_info
+
+# SlackClient is loaded lazily on first use to keep this module's import
+# cost low for callers that don't enable Slack alerting (it transitively
+# pulls in slack_sdk, which is the dominant cost).
+SLACK_CLIENT_AVAILABLE = False
+SlackClient = None  # type: ignore[assignment]
+
+
+def _ensure_slack_client_loaded() -> None:
+    """Lazy-import :class:`SlackClient` and update module-level flags.
+
+    Idempotent: returns immediately if ``SlackClient`` has already been
+    populated (real import or test mock).
+    """
+    global SLACK_CLIENT_AVAILABLE, SlackClient
+    if SlackClient is not None:
+        # Already populated (real import or test mock) — keep the availability
+        # flag in sync so callers don't see a stale False.
+        SLACK_CLIENT_AVAILABLE = True
+        return
+    try:
+        from .slack_client import SlackClient as _SC
+
+        SlackClient = _SC
+        SLACK_CLIENT_AVAILABLE = True
+    except ImportError:
+        SLACK_CLIENT_AVAILABLE = False
 
 
 __all__ = ["get_powertools_logger", "powertools_handler"]
@@ -99,6 +118,7 @@ def get_powertools_logger(
             if func is not None:
                 return func
             return lambda f: f
+
         logger.inject_lambda_context = _mock_inject_lambda_context  # type: ignore
 
         return logger
@@ -194,14 +214,16 @@ def powertools_handler(
 
         # Create Slack client if channel provided
         slack_client = None
-        if slack_alert_channel and SLACK_CLIENT_AVAILABLE:
-            try:
-                slack_client = SlackClient(
-                    account_names=slack_account_names,
-                    account_names_config=slack_account_names_config,
-                )
-            except Exception as e:
-                logger.warning("Failed to initialize Slack client: %s", e)
+        if slack_alert_channel:
+            _ensure_slack_client_loaded()
+            if SLACK_CLIENT_AVAILABLE and SlackClient is not None:
+                try:
+                    slack_client = SlackClient(
+                        account_names=slack_account_names,
+                        account_names_config=slack_account_names_config,
+                    )
+                except Exception as e:
+                    logger.warning("Failed to initialize Slack client: %s", e)
 
         @functools.wraps(func)
         def wrapper(event: dict, context: Any) -> dict:

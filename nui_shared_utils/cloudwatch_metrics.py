@@ -9,8 +9,6 @@ import logging
 from typing import Dict, List, Optional, Union
 from datetime import datetime
 from collections import defaultdict
-import boto3
-from botocore.exceptions import ClientError
 
 log = logging.getLogger(__name__)
 
@@ -45,8 +43,18 @@ class MetricsPublisher:
         self.namespace = namespace
         self.default_dimensions = dimensions or {}
         self.auto_flush_size = auto_flush_size
-        self.client = boto3.client("cloudwatch", region_name=region)
+        self._region = region
+        self._client = None
         self.metric_buffer: List[Dict] = []
+
+    @property
+    def client(self):
+        """Lazily construct the boto3 CloudWatch client on first use."""
+        if self._client is None:
+            import boto3
+
+            self._client = boto3.client("cloudwatch", region_name=self._region)
+        return self._client
 
     def put_metric(
         self,
@@ -147,6 +155,8 @@ class MetricsPublisher:
         """
         if not self.metric_buffer:
             return True
+
+        from botocore.exceptions import ClientError
 
         try:
             # CloudWatch allows max 20 metrics per request

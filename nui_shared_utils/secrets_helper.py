@@ -7,8 +7,6 @@ import os
 import json
 import logging
 from typing import Dict, Optional
-import boto3
-from botocore.exceptions import ClientError
 
 from .config import get_config
 
@@ -34,6 +32,9 @@ def get_secret(secret_name: str) -> Dict:
     # Check cache first
     if secret_name in _secrets_cache:
         return _secrets_cache[secret_name]
+
+    import boto3
+    from botocore.exceptions import ClientError
 
     # Create a Secrets Manager client
     session = boto3.session.Session()

@@ -24,7 +24,7 @@ from nui_shared_utils.cloudwatch_metrics import (
 class TestMetricsPublisher:
     """Tests for MetricsPublisher class."""
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_init_default_values(self, mock_boto3_client):
         """Test initialization with default values."""
         mock_client = Mock()
@@ -40,7 +40,7 @@ class TestMetricsPublisher:
 
         mock_boto3_client.assert_called_once_with("cloudwatch", region_name=None)
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_init_custom_values(self, mock_boto3_client):
         """Test initialization with custom values."""
         mock_client = Mock()
@@ -56,7 +56,7 @@ class TestMetricsPublisher:
 
         mock_boto3_client.assert_called_once_with("cloudwatch", region_name="us-east-1")
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_put_metric_basic(self, mock_boto3_client):
         """Test basic metric publishing."""
         mock_client = Mock()
@@ -81,7 +81,7 @@ class TestMetricsPublisher:
         assert metric["StorageResolution"] == 60
         assert "Dimensions" not in metric
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_put_metric_with_dimensions(self, mock_boto3_client):
         """Test metric publishing with dimensions."""
         mock_client = Mock()
@@ -102,7 +102,7 @@ class TestMetricsPublisher:
 
         assert metric["Dimensions"] == expected_dimensions
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_put_metric_with_custom_timestamp(self, mock_boto3_client):
         """Test metric with custom timestamp."""
         mock_client = Mock()
@@ -117,7 +117,7 @@ class TestMetricsPublisher:
         assert metric["Timestamp"] == custom_timestamp
         assert metric["StorageResolution"] == 1
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_put_metric_auto_flush(self, mock_boto3_client):
         """Test auto-flush when buffer reaches size limit."""
         mock_client = Mock()
@@ -135,7 +135,7 @@ class TestMetricsPublisher:
         assert len(publisher.metric_buffer) == 0  # Buffer cleared after flush
         mock_client.put_metric_data.assert_called_once()
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_put_metric_with_statistics(self, mock_boto3_client):
         """Test metric publishing with statistical values."""
         mock_client = Mock()
@@ -151,7 +151,7 @@ class TestMetricsPublisher:
         assert metric["Unit"] == "Milliseconds"
         assert metric["StatisticValues"] == {"SampleCount": 5, "Sum": 150, "Minimum": 10, "Maximum": 50}
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_put_metric_with_statistics_empty_values(self, mock_boto3_client):
         """Test metric with statistics with empty values list."""
         mock_client = Mock()
@@ -163,7 +163,7 @@ class TestMetricsPublisher:
 
         assert len(publisher.metric_buffer) == 0
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_flush_success(self, mock_boto3_client):
         """Test successful metrics flush."""
         mock_client = Mock()
@@ -186,7 +186,7 @@ class TestMetricsPublisher:
         assert call_args[1]["Namespace"] == "TestNamespace"
         assert len(call_args[1]["MetricData"]) == 2
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_flush_large_batch(self, mock_boto3_client):
         """Test flush with more than 20 metrics (batch splitting)."""
         mock_client = Mock()
@@ -204,7 +204,7 @@ class TestMetricsPublisher:
         assert mock_client.put_metric_data.call_count == 2
         assert len(publisher.metric_buffer) == 0
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_flush_empty_buffer(self, mock_boto3_client):
         """Test flush with empty buffer."""
         mock_client = Mock()
@@ -217,7 +217,7 @@ class TestMetricsPublisher:
         assert result is True
         mock_client.put_metric_data.assert_not_called()
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_flush_client_error(self, mock_boto3_client):
         """Test flush with CloudWatch client error."""
         mock_client = Mock()
@@ -235,7 +235,7 @@ class TestMetricsPublisher:
         # Buffer should not be cleared on error
         assert len(publisher.metric_buffer) == 1
 
-    @patch("nui_shared_utils.cloudwatch_metrics.boto3.client")
+    @patch("boto3.client")
     def test_context_manager(self, mock_boto3_client):
         """Test context manager functionality."""
         mock_client = Mock()
