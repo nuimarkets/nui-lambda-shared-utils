@@ -11,7 +11,7 @@ import json
 @pytest.fixture
 def mock_boto3_session():
     """Mock boto3 session."""
-    with patch("nui_shared_utils.secrets_helper.boto3.session.Session") as mock_session_class:
+    with patch("boto3.session.Session") as mock_session_class:
         mock_session = Mock()
         mock_session_class.return_value = mock_session
         yield mock_session
