@@ -25,3 +25,6 @@ psycopg2-binary>=2.9.0
 slack-sdk>=3.19.0
 rsa>=4.9
 cryptography>=41.0.0
+
+# snowflake adapter (pre-release pin; see pyproject [snowflake] extra)
+snowflake-sql-api @ git+https://github.com/hampsterx/snowflake-sql-api.git@50205b0cb63df008c9c453ee05f0f130dcfe4805

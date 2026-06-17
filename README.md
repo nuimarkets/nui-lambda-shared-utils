@@ -65,12 +65,13 @@ Production-ready shared Python utilities for AWS Lambda functions, CLI tools, an
 pip install nui-python-shared-utils
 
 # With specific extras for optional dependencies
-pip install nui-python-shared-utils[all]          # All integrations
+pip install nui-python-shared-utils[all]          # Core optional integrations (excludes Snowflake)
 pip install nui-python-shared-utils[powertools]   # AWS Powertools only
 pip install nui-python-shared-utils[slack]        # Slack only
 pip install nui-python-shared-utils[elasticsearch] # Elasticsearch only
 pip install nui-python-shared-utils[database]     # Database only
 pip install nui-python-shared-utils[jwt]          # JWT authentication only
+pip install nui-python-shared-utils[snowflake]    # Snowflake SQL API client
 ```
 
 ### Basic Configuration
@@ -197,6 +198,31 @@ async with db.get_connection() as conn:
 ```
 
 **[→ See full database guide](docs/getting-started/quickstart.md#database-connections)**
+
+### Snowflake (SQL API)
+
+Pure-Python Snowflake client (no `snowflake-connector-python`), keypair auth via
+Secrets Manager, with NUI session defaults (`TIMEZONE=Pacific/Auckland`, role
+`NUI_LAMBDA`) that you can override via `timezone=` and `role=`, plus a redacting
+query-logging hook.
+
+```python
+from nui_shared_utils import create_snowflake_client
+
+# Loads account/user/private_key from Secrets Manager ("snowflake-credentials"
+# by default; override with SNOWFLAKE_CREDENTIALS_SECRET or secret_name=).
+# The NUI defaults are overridable, so the client stays generic for any account.
+client = create_snowflake_client(
+    warehouse="COMPUTE_WH",
+    database="ANALYTICS",
+    timezone="UTC",          # override the Pacific/Auckland default
+    role="MY_APP_ROLE",      # override the NUI_LAMBDA default
+)
+rows = client.query("SELECT id, name FROM orders WHERE status = ?", ["confirmed"])
+```
+
+Sync is the default; use `create_async_snowflake_client(...)` inside a Lambda
+already on an event loop. Requires the `[snowflake]` extra.
 
 ### CloudWatch Metrics
 
