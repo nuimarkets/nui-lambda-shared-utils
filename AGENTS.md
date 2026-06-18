@@ -49,6 +49,7 @@ The package uses optional extras to minimize Lambda bundle size:
 - `database` - MySQL/PostgreSQL drivers
 - `slack` - Slack SDK
 - `jwt` - RS256 JWT validation (`rsa` package)
+- `snowflake` - Pure-Python Snowflake SQL API client (`snowflake-sql-api`)
 - `all` - All integrations
 - `dev` - Development and testing tools
 

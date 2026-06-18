@@ -104,6 +104,11 @@ _LAZY_EXPORTS = {
     # Optional: AWS Powertools
     "get_powertools_logger": ("powertools_helpers", "get_powertools_logger"),
     "powertools_handler": ("powertools_helpers", "powertools_handler"),
+    # Optional: Snowflake client adapter (snowflake-sql-api)
+    "create_snowflake_client": ("snowflake_client", "create_snowflake_client"),
+    "create_async_snowflake_client": ("snowflake_client", "create_async_snowflake_client"),
+    "get_snowflake_credentials": ("snowflake_client", "get_snowflake_credentials"),
+    "redacting_query_logger": ("snowflake_client", "redacting_query_logger"),
     # Optional: JWT validation (rsa)
     "validate_jwt": ("jwt_auth", "validate_jwt"),
     "require_auth": ("jwt_auth", "require_auth"),
@@ -124,6 +129,7 @@ _OPTIONAL_SUBMODULES = {
     "db_client",
     "powertools_helpers",
     "jwt_auth",
+    "snowflake_client",
     "slack_setup",
 }
 
@@ -248,6 +254,12 @@ if TYPE_CHECKING:
         build_user_activity_query,
     )
     from .db_client import DatabaseClient, PostgreSQLClient, get_pool_stats
+    from .snowflake_client import (
+        create_async_snowflake_client,
+        create_snowflake_client,
+        get_snowflake_credentials,
+        redacting_query_logger,
+    )
     from .powertools_helpers import get_powertools_logger, powertools_handler
     from .jwt_auth import (
         AuthenticationError,

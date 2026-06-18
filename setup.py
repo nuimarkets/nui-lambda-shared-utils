@@ -57,6 +57,13 @@ setup(
             "coloredlogs>=15.0",
         ],
         "jwt": ["rsa>=4.9"],
+        # Pre-release pin to the public snowflake-sql-api repo (PR #1 merge
+        # commit on master). Repinned to a PyPI release (>=0.1.0) once that
+        # package ships. Kept out of "all" so nothing pulls the git dep
+        # implicitly.
+        "snowflake": [
+            "snowflake-sql-api @ git+https://github.com/hampsterx/snowflake-sql-api.git@50205b0cb63df008c9c453ee05f0f130dcfe4805",
+        ],
         "all": [
             "elasticsearch>=7.17.0,<8.0.0",
             "pymysql>=1.0.0",
