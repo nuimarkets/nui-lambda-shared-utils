@@ -38,7 +38,11 @@ def get_secret(secret_name: str) -> Dict:
 
     # Create a Secrets Manager client
     session = boto3.session.Session()
-    client = session.client(service_name="secretsmanager", region_name=session.region_name or "ap-southeast-2")
+    region = session.region_name or os.environ.get("AWS_REGION") or os.environ.get("AWS_DEFAULT_REGION")
+    if not region:
+        raise Exception("AWS region not configured for Secrets Manager lookup; set AWS_REGION or AWS_DEFAULT_REGION")
+
+    client = session.client(service_name="secretsmanager", region_name=region)
 
     try:
         response = client.get_secret_value(SecretId=secret_name)
