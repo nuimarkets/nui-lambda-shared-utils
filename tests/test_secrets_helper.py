@@ -26,6 +26,28 @@ class TestGetSecret:
         }
         mock_secrets_manager.get_secret_value.assert_called_once_with(SecretId="test-secret")
 
+    @pytest.mark.unit
+    def test_get_secret_uses_aws_region_when_session_region_missing(self, mock_boto3_session, mock_secrets_manager):
+        """Test AWS_REGION fallback when boto3 session has no region."""
+        mock_boto3_session.region_name = None
+
+        with patch.dict(os.environ, {"AWS_REGION": "eu-west-1"}, clear=True):
+            secrets_helper.get_secret("test-secret")
+
+        mock_boto3_session.client.assert_called_once_with(service_name="secretsmanager", region_name="eu-west-1")
+
+    @pytest.mark.unit
+    def test_get_secret_requires_region_when_session_and_env_missing(self, mock_boto3_session):
+        """Test clear error when no Secrets Manager region is configured."""
+        mock_boto3_session.region_name = None
+
+        with patch.dict(os.environ, {}, clear=True):
+            with pytest.raises(Exception) as exc_info:
+                secrets_helper.get_secret("test-secret")
+
+        assert "AWS region not configured for Secrets Manager lookup" in str(exc_info.value)
+        mock_boto3_session.client.assert_not_called()
+
     def test_get_secret_cached(self, mock_secrets_manager):
         """Test that secrets are cached after first retrieval."""
         # First call
@@ -227,8 +249,9 @@ class TestGetElasticsearchCredentials:
 
         assert "No Elasticsearch secret name provided" in str(exc_info.value)
 
-
-    @patch.dict("os.environ", {"ES_PASSWORD": "env_pass", "ES_USERNAME": "env_user", "ES_HOST": "env-host:9200"}, clear=True)
+    @patch.dict(
+        "os.environ", {"ES_PASSWORD": "env_pass", "ES_USERNAME": "env_user", "ES_HOST": "env-host:9200"}, clear=True
+    )
     def test_get_elasticsearch_credentials_env_vars_first(self, mock_secrets_manager):
         """Env vars take precedence over Secrets Manager."""
         result = secrets_helper.get_elasticsearch_credentials("es-secret")
