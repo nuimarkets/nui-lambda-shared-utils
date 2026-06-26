@@ -222,7 +222,11 @@ rows = client.query("SELECT id, name FROM orders WHERE status = ?", ["confirmed"
 ```
 
 Sync is the default; use `create_async_snowflake_client(...)` inside a Lambda
-already on an event loop. Requires the `[snowflake]` extra.
+or FastAPI app already on an event loop. Snowflake SQL API bindings use
+positional `?` placeholders, not connector-style `%s` placeholders. Requires
+the `[snowflake]` extra.
+
+**[→ See full Snowflake guide](docs/guides/snowflake-integration.md)**
 
 ### CloudWatch Metrics
 

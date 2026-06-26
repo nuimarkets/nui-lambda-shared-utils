@@ -479,6 +479,42 @@ class TestCreateClient:
         finally:
             asyncio.run(client.aclose())
 
+    def test_async_factory_queries_through_fake_snowflake(self, clear_snowflake_env, rsa_private_key_pem):
+        """Offline smoke path: shared-utils async factory can run a real query."""
+        import asyncio
+
+        import httpx
+        from snowflake_sql_api.testing import FakeSnowflake
+
+        async def run_query():
+            fake = FakeSnowflake()
+            fake.register(
+                "SELECT id, payload FROM events WHERE kind = ?",
+                [{"id": 1, "payload": {"ok": True}}],
+            )
+            async with httpx.AsyncClient(transport=fake.transport) as http_client:
+                client = sc.create_async_snowflake_client(
+                    account="ab12345.ap-southeast-2",
+                    user="tim",
+                    private_key=rsa_private_key_pem,
+                    role="NUI_ANALYTICS_API",
+                    warehouse="ANALYTICS_WH",
+                    database="NUI_MARKETS",
+                    schema="ANALYTICS_API",
+                    http_client=http_client,
+                    log_queries=False,
+                )
+                rows = await client.query("SELECT id, payload FROM events WHERE kind = ?", ["news"])
+                await client.aclose()
+            return client, rows
+
+        client, rows = asyncio.run(run_query())
+        assert client.role == "NUI_ANALYTICS_API"
+        assert client.warehouse == "ANALYTICS_WH"
+        assert client.database == "NUI_MARKETS"
+        assert client.schema == "ANALYTICS_API"
+        assert rows == [{"id": 1, "payload": {"ok": True}}]
+
 
 # ---------------------------------------------------------------------------
 # Redaction: no key material in logs end-to-end

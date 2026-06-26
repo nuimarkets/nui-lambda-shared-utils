@@ -20,6 +20,7 @@ Component-specific guides for major features:
 - **[Lambda Context Helpers](guides/lambda-utilities.md)** - Environment info extraction for logging and metrics
 - **[Slack Integration](guides/slack-integration.md)** - Messaging, formatting, and file uploads
 - **[Elasticsearch Integration](guides/elasticsearch-integration.md)** - Search, bulk indexing, health checks
+- **[Snowflake Integration](guides/snowflake-integration.md)** - SQL API client, Secrets Manager credentials, sync/async usage
 - **[JWT Authentication](guides/jwt-authentication.md)** - RS256 token validation for API Gateway Lambdas
 - **[Log Processing](guides/log-processing.md)** - Kinesis log extraction and ES index naming
 - Database Connections (planned)
@@ -124,6 +125,7 @@ When contributing to documentation:
 - Lambda context helpers guide (guides/lambda-utilities.md)
 - Slack integration guide (guides/slack-integration.md)
 - Elasticsearch integration guide (guides/elasticsearch-integration.md)
+- Snowflake integration guide (guides/snowflake-integration.md)
 - JWT authentication guide (guides/jwt-authentication.md)
 - Shared types reference (guides/shared-types.md)
 - CLI tools guide (guides/cli-tools.md)
