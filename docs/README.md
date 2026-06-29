@@ -22,6 +22,7 @@ Component-specific guides for major features:
 - **[Elasticsearch Integration](guides/elasticsearch-integration.md)** - Search, bulk indexing, health checks
 - **[Snowflake Integration](guides/snowflake-integration.md)** - SQL API client, Secrets Manager credentials, sync/async usage
 - **[JWT Authentication](guides/jwt-authentication.md)** - RS256 token validation for API Gateway Lambdas
+- **[Anthropic (Claude) Integration](guides/llm-integration.md)** - Client helper for API-key/Bedrock auth, forced tool-use, and text calls
 - **[Log Processing](guides/log-processing.md)** - Kinesis log extraction and ES index naming
 - Database Connections (planned)
 - Error Handling Patterns (planned)
@@ -127,6 +128,7 @@ When contributing to documentation:
 - Elasticsearch integration guide (guides/elasticsearch-integration.md)
 - Snowflake integration guide (guides/snowflake-integration.md)
 - JWT authentication guide (guides/jwt-authentication.md)
+- Anthropic (Claude) integration guide (guides/llm-integration.md)
 - Shared types reference (guides/shared-types.md)
 - CLI tools guide (guides/cli-tools.md)
 - Testing guide (development/testing.md)

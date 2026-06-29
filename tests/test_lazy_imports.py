@@ -34,6 +34,25 @@ def test_bare_package_import_does_not_load_boto3():
     assert "botocore=False" in output
 
 
+def test_bare_package_import_does_not_load_anthropic():
+    """``import nui_shared_utils`` must not transitively import anthropic.
+
+    The ``llm`` helper imports ``anthropic`` at module top, so the cold-start
+    guarantee rests entirely on the PEP 562 lazy loader: the ``llm`` submodule
+    (and therefore ``anthropic``) must not load until a consumer first touches
+    an ``llm`` attribute. anthropic is installed via the ``[dev]`` extra, so this
+    assertion is meaningful rather than trivially true.
+    """
+    output = _run("""
+        import sys
+        import nui_shared_utils  # noqa: F401
+        print(f"anthropic={'anthropic' in sys.modules}")
+        print(f"llm={'nui_shared_utils.llm' in sys.modules}")
+        """)
+    assert "anthropic=False" in output
+    assert "llm=False" in output
+
+
 def test_jwt_auth_import_does_not_load_boto3():
     """``from nui_shared_utils.jwt_auth import check_auth`` must stay lazy.
 

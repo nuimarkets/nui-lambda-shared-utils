@@ -38,6 +38,7 @@ This is `nui-python-shared-utils`, a Python package providing production-ready u
 - **Database** (`db_client.py`) - Connection pooling with retry logic
 - **Metrics** (`cloudwatch_metrics.py`) - Batched CloudWatch publishing with decorators
 - **JWT Authentication** (`jwt_auth.py`) - RS256 token validation for API Gateway Lambdas (uses `rsa` package)
+- **LLM Helper** (`llm.py`) - Generic Anthropic (Claude) client plumbing: API-key/Bedrock auth, forced tool-use call, text call (uses `anthropic`)
 - **Error Handling** (`error_handler.py`) - Retry patterns with exponential backoff
 - **Timezone Utils** (`timezone.py`) - Timezone conversion and formatting utilities
 
@@ -50,6 +51,7 @@ The package uses optional extras to minimize Lambda bundle size:
 - `slack` - Slack SDK
 - `jwt` - RS256 JWT validation (`rsa` package)
 - `snowflake` - Pure-Python Snowflake SQL API client (`snowflake-sql-api`)
+- `llm` - Anthropic (Claude) client helper (`anthropic[bedrock]`, both API-key and Bedrock IAM auth)
 - `all` - All integrations
 - `dev` - Development and testing tools
 

@@ -116,6 +116,10 @@ _LAZY_EXPORTS = {
     "get_jwt_public_key": ("jwt_auth", "get_jwt_public_key"),
     "JWTValidationError": ("jwt_auth", "JWTValidationError"),
     "AuthenticationError": ("jwt_auth", "AuthenticationError"),
+    # Optional: Anthropic (Claude) LLM helper (anthropic[bedrock])
+    "build_anthropic_client": ("llm", "build_anthropic_client"),
+    "call_tool": ("llm", "call_tool"),
+    "call_text": ("llm", "call_text"),
 }
 
 # Submodules that are optional integrations; ImportError during lazy load
@@ -130,6 +134,7 @@ _OPTIONAL_SUBMODULES = {
     "powertools_helpers",
     "jwt_auth",
     "snowflake_client",
+    "llm",
     "slack_setup",
 }
 
@@ -269,6 +274,7 @@ if TYPE_CHECKING:
         require_auth,
         validate_jwt,
     )
+    from .llm import build_anthropic_client, call_text, call_tool
     from . import slack_setup
 
 
