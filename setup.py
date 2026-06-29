@@ -57,12 +57,10 @@ setup(
             "coloredlogs>=15.0",
         ],
         "jwt": ["rsa>=4.9"],
-        # Pre-release pin to the public snowflake-sql-api repo (PR #1 merge
-        # commit on master). Repinned to a PyPI release (>=0.1.0) once that
-        # package ships. Kept out of "all" so nothing pulls the git dep
-        # implicitly.
+        # Pinned to the published PyPI release (no direct-URL deps, PyPI rejects
+        # those on upload). Kept out of "all": opt-in.
         "snowflake": [
-            "snowflake-sql-api @ git+https://github.com/hampsterx/snowflake-sql-api.git@50205b0cb63df008c9c453ee05f0f130dcfe4805",
+            "snowflake-sql-api>=0.1.1,<0.2.0",
         ],
         # Anthropic (Claude) helper. anthropic[bedrock] covers both auth modes
         # (API key + Bedrock IAM). Kept out of "all" (same as snowflake): the
