@@ -28,3 +28,6 @@ cryptography>=41.0.0
 
 # snowflake adapter (tag pin; see pyproject [snowflake] extra)
 snowflake-sql-api @ git+https://github.com/hampsterx/snowflake-sql-api.git@v0.1.1
+
+# Anthropic (Claude) helper (see pyproject [llm] extra)
+anthropic[bedrock]>=0.45.0,<1.0.0

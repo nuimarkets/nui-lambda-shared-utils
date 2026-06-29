@@ -51,6 +51,10 @@ jwt = ["rsa>=4.9"]
 snowflake = [
     "snowflake-sql-api @ git+https://github.com/hampsterx/snowflake-sql-api.git@v0.1.1",
 ]
+# Anthropic (Claude) helper. anthropic[bedrock] covers both auth modes (API key
+# + Bedrock IAM). Kept out of `all` (same as snowflake): the SDK is specialized
+# and opt-in. Keep in sync with setup.py.
+llm = ["anthropic[bedrock]>=0.45.0,<1.0.0"]
 all = [
     "elasticsearch>=7.17.0,<8.0.0",
     "pymysql>=1.0.0",
@@ -75,6 +79,7 @@ dev = [
     "rsa>=4.9",
     "cryptography>=41.0.0",
     "snowflake-sql-api @ git+https://github.com/hampsterx/snowflake-sql-api.git@v0.1.1",
+    "anthropic[bedrock]>=0.45.0,<1.0.0",
 ]
 
 [project.urls]

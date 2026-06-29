@@ -35,6 +35,7 @@ Production-ready shared Python utilities for AWS Lambda functions, CLI tools, an
 - **Database Connections** - Connection pooling, automatic retries, and transaction management
 - **CloudWatch Metrics** - Batched publishing with custom dimensions
 - **JWT Authentication** - RS256 token validation for API Gateway Lambdas (lightweight, no PyJWT needed)
+- **Anthropic (Claude) Helper** - Generic client plumbing for LLM calls: API-key or Bedrock IAM auth, forced tool-use, and text calls (prompts and schemas stay in your code)
 - **Error Handling** - Intelligent retry patterns with exponential backoff
 - **Timezone Utilities** - Timezone handling and formatting
 - **Configurable Defaults** - Environment-aware configuration system
@@ -65,13 +66,14 @@ Production-ready shared Python utilities for AWS Lambda functions, CLI tools, an
 pip install nui-python-shared-utils
 
 # With specific extras for optional dependencies
-pip install nui-python-shared-utils[all]          # Core optional integrations (excludes Snowflake)
+pip install nui-python-shared-utils[all]          # Core optional integrations (excludes Snowflake and LLM)
 pip install nui-python-shared-utils[powertools]   # AWS Powertools only
 pip install nui-python-shared-utils[slack]        # Slack only
 pip install nui-python-shared-utils[elasticsearch] # Elasticsearch only
 pip install nui-python-shared-utils[database]     # Database only
 pip install nui-python-shared-utils[jwt]          # JWT authentication only
 pip install nui-python-shared-utils[snowflake]    # Snowflake SQL API client
+pip install nui-python-shared-utils[llm]          # Anthropic (Claude) client helper
 ```
 
 ### Basic Configuration
@@ -259,6 +261,41 @@ def lambda_handler(event, context):
 ```
 
 **[→ See JWT authentication guide](docs/guides/jwt-authentication.md)**
+
+### Anthropic (Claude) Helper
+
+Generic plumbing for Claude calls: build a client (API-key or Bedrock IAM), make
+a forced tool-use call or a text call, and get the parsed result back. Prompts,
+tool schemas, model ids, and result post-processing stay in your code.
+
+```python
+from nui_shared_utils import build_anthropic_client, call_tool
+
+# API-key auth: explicit key -> ANTHROPIC_API_KEY env -> Secrets Manager
+client = build_anthropic_client(secret_name="my/anthropic-key")
+# Or Bedrock IAM (no key): build_anthropic_client(mode="bedrock", region="us-east-1")
+
+tool = {
+    "name": "classify",
+    "description": "Classify the text.",
+    "input_schema": {
+        "type": "object",
+        "properties": {"label": {"type": "string"}, "score": {"type": "number"}},
+        "required": ["label", "score"],
+        "additionalProperties": False,
+    },
+}
+
+# Forced tool-use; returns the tool's input dict, or None on any model/parse failure.
+result = call_tool(client, tool=tool, prompt="Great product!", model="claude-haiku-4-5", max_tokens=256)
+if result is not None:
+    print(result["label"], result["score"])
+```
+
+Requires the `[llm]` extra. `call_tool` is best-effort (returns `None`, never
+raises); `call_text` returns `{text, input_tokens, output_tokens}`.
+
+**[→ See full LLM integration guide](docs/guides/llm-integration.md)**
 
 ### Error Handling
 
