@@ -388,7 +388,9 @@ class SlackClient(BaseClient, ServiceHealthMixin):
         blocks: Optional[List[Dict]] = None,
         attachments: Optional[List[Dict]] = None,
         include_lambda_header: bool = True,
-        event_type: Optional[str] = None
+        event_type: Optional[str] = None,
+        unfurl_links: Optional[bool] = None,
+        unfurl_media: Optional[bool] = None,
     ) -> bool:
         """
         Send message to Slack channel with standardized error handling.
@@ -400,6 +402,10 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             attachments: Legacy attachment objects (supports color sidebars)
             include_lambda_header: Whether to include context header
             event_type: Optional event type label for header (e.g., "Scheduled", "API", "SQS")
+            unfurl_links: Override Slack link unfurling. None leaves Slack's default;
+                False suppresses link preview cards (links stay clickable)
+            unfurl_media: Override Slack media unfurling. None leaves Slack's default;
+                False suppresses media preview cards
 
         Returns:
             True if successful, False otherwise
@@ -419,12 +425,19 @@ class SlackClient(BaseClient, ServiceHealthMixin):
             else:
                 blocks_with_header = blocks
 
-            response = self._service_client.chat_postMessage(
+            kwargs = dict(
                 channel=channel,
                 text=text,
                 blocks=blocks_with_header,
-                attachments=attachments
+                attachments=attachments,
             )
+            # Forward unfurl controls only when explicitly set, so existing callers
+            # keep Slack's default behavior (and their call assertions stay unchanged).
+            if unfurl_links is not None:
+                kwargs["unfurl_links"] = unfurl_links
+            if unfurl_media is not None:
+                kwargs["unfurl_media"] = unfurl_media
+            response = self._service_client.chat_postMessage(**kwargs)
 
             if response["ok"]:
                 log.info(
