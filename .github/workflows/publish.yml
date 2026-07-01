@@ -3,9 +3,7 @@ name: Build and Publish to PyPI
 on:
   push:
     tags:
-      - '[0-9]*'  # Trigger on version tags like 1.3.0
-  release:
-    types: [published]
+      - '[0-9]*'  # Trigger on version tags like 1.3.0 (a published GitHub Release also creates the tag)
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
@@ -17,10 +15,12 @@ jobs:
         python-version: ['3.9', '3.10', '3.11', '3.12']
     
     steps:
-    - uses: actions/checkout@v4
-    
+    - uses: actions/checkout@v5
+      with:
+        persist-credentials: false
+
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
     
@@ -41,9 +41,9 @@ jobs:
         pytest --cov=nui_shared_utils --cov-report=xml --cov-report=term-missing
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
-        file: ./coverage.xml
+        files: ./coverage.xml
         fail_ci_if_error: false
 
   build:
@@ -52,12 +52,13 @@ jobs:
     needs: test
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
+        persist-credentials: false
         fetch-depth: 0  # Full history for version calculation
     
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: '3.11'
     
@@ -75,7 +76,7 @@ jobs:
         python -m tarfile -l dist/*.tar.gz
     
     - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: dist
         path: dist/
@@ -85,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [test, build]
     # Only publish on tagged releases
-    if: github.event_name == 'release' || startsWith(github.ref, 'refs/tags/')
+    if: startsWith(github.ref, 'refs/tags/')
     environment:
       name: pypi
       url: https://pypi.org/project/nui-python-shared-utils/
@@ -96,7 +97,7 @@ jobs:
     
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: dist
         path: dist/
@@ -106,13 +107,14 @@ jobs:
       with:
         verbose: true
         print-hash: true
+        skip-existing: true  # No-op instead of failing if the version is already on PyPI (safe re-runs)
 
   publish-test:
     name: Publish to TestPyPI
     runs-on: ubuntu-latest
     needs: [test, build]
-    # Publish to TestPyPI on manual trigger or development branches
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/'))
+    # Publish to TestPyPI on manual (non-tag) dispatch only; tag pushes go to PyPI above
+    if: github.event_name == 'workflow_dispatch' && !startsWith(github.ref, 'refs/tags/')
     environment:
       name: testpypi
       url: https://test.pypi.org/project/nui-python-shared-utils/
@@ -123,7 +125,7 @@ jobs:
     
     steps:
     - name: Download artifacts
-      uses: actions/download-artifact@v4
+      uses: actions/download-artifact@v7
       with:
         name: dist
         path: dist/
