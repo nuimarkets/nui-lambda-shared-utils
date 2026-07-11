@@ -17,6 +17,7 @@ Welcome to the comprehensive documentation for `nui-python-shared-utils` (former
 Component-specific guides for major features:
 
 - **[AWS Powertools Integration](guides/powertools-integration.md)** - Standardized logging, metrics, and error handling
+- **[Structured Logging Contract](guides/structured-logging-contract.md)** - Canonical dotted field registry, request-scoped binders, and payload redaction
 - **[Lambda Context Helpers](guides/lambda-utilities.md)** - Environment info extraction for logging and metrics
 - **[Slack Integration](guides/slack-integration.md)** - Messaging, formatting, and file uploads
 - **[Elasticsearch Integration](guides/elasticsearch-integration.md)** - Search, bulk indexing, health checks

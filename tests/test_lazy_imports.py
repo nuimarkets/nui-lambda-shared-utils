@@ -53,6 +53,35 @@ def test_bare_package_import_does_not_load_anthropic():
     assert "llm=False" in output
 
 
+def test_logging_contract_import_stays_dependency_free():
+    """``from nui_shared_utils.logging import ...`` must pull in no heavy deps.
+
+    The logging contract (field registry + binders) is stdlib-only by design so it
+    is cheap to import and light in a Lambda bundle. It must not transitively load
+    boto3, aws-lambda-powertools, elasticsearch, or slack_sdk.
+    """
+    output = _run("""
+        import sys
+        from nui_shared_utils.logging import F, stdlib_binder, bind_request  # noqa: F401
+        for mod in ("boto3", "aws_lambda_powertools", "elasticsearch", "slack_sdk"):
+            print(f"{mod}={mod in sys.modules}")
+        """)
+    assert "boto3=False" in output
+    assert "aws_lambda_powertools=False" in output
+    assert "elasticsearch=False" in output
+    assert "slack_sdk=False" in output
+
+
+def test_bare_package_import_does_not_load_logging_submodule():
+    """``import nui_shared_utils`` must not eagerly import the logging subpackage."""
+    output = _run("""
+        import sys
+        import nui_shared_utils  # noqa: F401
+        print(f"logging={'nui_shared_utils.logging' in sys.modules}")
+        """)
+    assert "logging=False" in output
+
+
 def test_jwt_auth_import_does_not_load_boto3():
     """``from nui_shared_utils.jwt_auth import check_auth`` must stay lazy.
 

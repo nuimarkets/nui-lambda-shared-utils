@@ -106,19 +106,28 @@ logger = get_powertools_logger("my-service", local_dev_colors=False)
 
 ### Structured Logging
 
-The logger supports structured logging with the `extra` parameter:
+The logger supports structured logging with the `extra` parameter. Use the shared
+**[structured logging contract](structured-logging-contract.md)** so field names are
+consistent and queryable across the fleet: dotted, snake_case keys via the `F`
+constants (and consumer-defined domain fields like `order.*`), not ad-hoc flat keys.
 
 ```python
+from nui_shared_utils import F
+
 logger.info(
     "Order processed successfully",
     extra={
-        "order_id": "ORD-12345",
-        "user_id": 789,
-        "total_amount": 250.00,
-        "processing_time_ms": 123
-    }
+        "order.id": "ORD-12345",        # consumer domain field (order.* namespace)
+        F.USER_ID: 789,
+        F.RESPONSE_DURATION_MS: 123,
+    },
 )
 ```
+
+Better still, bind request/user context once per request with the contract's binding
+helpers so every log line carries it automatically. See the
+[contract guide](structured-logging-contract.md) for `bind_request` / `bind_user` /
+`log_exception` and the full field registry.
 
 ### Elasticsearch-Compatible Timestamps
 
@@ -209,7 +218,7 @@ def handler(event, context):
 ### Complete Example (All Features)
 
 ```python
-from nui_shared_utils import get_powertools_logger, powertools_handler
+from nui_shared_utils import get_powertools_logger, powertools_handler, F
 
 logger = get_powertools_logger("order-processor")
 
@@ -230,7 +239,7 @@ def handler(event, context):
     - Proper error response formatting
     """
 
-    logger.info("Processing order", extra={"event_id": event.get("id")})
+    logger.info("Processing order", extra={F.REQUEST_ID: event.get("id")})
 
     try:
         order = validate_order(event)
@@ -239,8 +248,8 @@ def handler(event, context):
         logger.info(
             "Order processed successfully",
             extra={
-                "order_id": order["id"],
-                "processing_time_ms": result["duration"]
+                "order.id": order["id"],                 # consumer domain field
+                F.RESPONSE_DURATION_MS: result["duration"],
             }
         )
 
@@ -250,7 +259,7 @@ def handler(event, context):
         }
 
     except ValidationError as e:
-        logger.error("Order validation failed", extra={"error": str(e)})
+        logger.error("Order validation failed", extra={F.ERROR_TYPE: type(e).__name__, F.ERROR_MESSAGE: str(e)})
         return {
             "statusCode": 400,
             "body": json.dumps({"error": "Invalid order"})
@@ -510,12 +519,17 @@ logger: Union[PowertoolsLogger, PythonLogger] = get_powertools_logger("my-servic
 
 ### 1. Use Structured Logging
 
+Use the [structured logging contract](structured-logging-contract.md)'s dotted field
+names (via `F` and consumer domain fields), not ad-hoc flat keys:
+
 ```python
-# ✓ Good - Searchable, filterable
+from nui_shared_utils import F
+
+# ✓ Good - Searchable, filterable, consistent field names
 logger.info("Order created", extra={
-    "order_id": order.id,
-    "user_id": user.id,
-    "amount": order.total
+    "order.id": order.id,       # consumer domain field
+    F.USER_ID: user.id,
+    F.RESPONSE_STATUS: 200,
 })
 
 # ✗ Bad - Unstructured string
@@ -563,6 +577,8 @@ def handler(event, context):
 ### 4. Graceful Error Handling
 
 ```python
+from nui_shared_utils import F
+
 @powertools_handler(service_name="my-service", slack_alert_channel="#errors")
 @logger.inject_lambda_context
 def handler(event, context):
@@ -573,7 +589,7 @@ def handler(event, context):
 
     except ValidationError as e:
         # Expected errors - log and return 400
-        logger.warning("Validation failed", extra={"error": str(e)})
+        logger.warning("Validation failed", extra={F.ERROR_TYPE: type(e).__name__, F.ERROR_MESSAGE: str(e)})
         return {"statusCode": 400, "body": json.dumps({"error": str(e)})}
 
     # Unexpected errors caught by decorator -> 500 + Slack alert
