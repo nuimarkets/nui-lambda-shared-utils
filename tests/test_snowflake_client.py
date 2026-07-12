@@ -574,7 +574,7 @@ class TestMissingExtra:
 
 
 # ---------------------------------------------------------------------------
-# Package wiring (top-level lazy export + back-compat shim)
+# Package wiring (top-level lazy export)
 # ---------------------------------------------------------------------------
 
 
@@ -587,14 +587,3 @@ class TestPackageWiring:
         assert nui.create_async_snowflake_client is sc.create_async_snowflake_client
         assert nui.get_snowflake_credentials is sc.get_snowflake_credentials
         assert nui.redacting_query_logger is sc.redacting_query_logger
-
-    def test_backwards_compat_shim_reexports(self):
-        """The nui_lambda_shared_utils shim re-exports the adapter surface."""
-        import warnings
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", DeprecationWarning)
-            from nui_lambda_shared_utils import snowflake_client as shim
-
-        assert shim.create_snowflake_client is sc.create_snowflake_client
-        assert shim.get_snowflake_credentials is sc.get_snowflake_credentials

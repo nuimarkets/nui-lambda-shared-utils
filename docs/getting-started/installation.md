@@ -183,7 +183,7 @@ zip -r nui-utils-layer.zip python/
 
 # Upload to AWS Lambda Layers (via AWS CLI)
 aws lambda publish-layer-version \
-  --layer-name nui-lambda-shared-utils \
+  --layer-name nui-python-shared-utils \
   --description "NUI Lambda Shared Utilities" \
   --zip-file fileb://nui-utils-layer.zip \
   --compatible-runtimes python3.9 python3.10 python3.11

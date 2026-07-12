@@ -110,4 +110,3 @@ jobs:
         pip install dist/*.whl
         python -c "import nui_shared_utils; print('✅ Package imports successfully')"
         python -c "from nui_shared_utils import Config, get_secret; print('✅ Core imports work')"
-        python -W ignore::DeprecationWarning -c "import nui_lambda_shared_utils; print('✅ Backwards-compat shim works')"

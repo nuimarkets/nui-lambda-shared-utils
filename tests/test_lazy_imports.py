@@ -122,30 +122,6 @@ def test_powertools_helpers_does_not_pull_slack_sdk():
     assert "slack_client=False" in output
 
 
-def test_legacy_shim_attribute_access_is_lazy():
-    """``from nui_lambda_shared_utils import X`` must remain lazy.
-
-    The shim used to do ``from nui_shared_utils import *`` which eagerly
-    loaded every submodule. After the 1.4 lazy refactor it forwards via
-    PEP 562 ``__getattr__`` so legacy consumers also benefit from
-    cold-start savings.
-    """
-    output = _run("""
-        import sys
-        import warnings
-        warnings.filterwarnings("ignore", category=DeprecationWarning)
-        from nui_lambda_shared_utils import get_powertools_logger  # noqa: F401
-        print(f"boto3={'boto3' in sys.modules}")
-        print(f"slack_sdk={'slack_sdk' in sys.modules}")
-        print(f"db_client={'nui_shared_utils.db_client' in sys.modules}")
-        print(f"es_client={'nui_shared_utils.es_client' in sys.modules}")
-        """)
-    assert "boto3=False" in output
-    assert "slack_sdk=False" in output
-    assert "db_client=False" in output
-    assert "es_client=False" in output
-
-
 def test_secrets_helper_loads_boto3_only_on_first_call():
     """Importing ``secrets_helper`` is cheap; the first ``get_secret`` call pays.
 
