@@ -1,12 +1,10 @@
 # Include the license and readme
 include LICENSE
 include README.md
-include CHANGELOG.md
 
 # Include package data
 recursive-include nui_shared_utils *.py
 recursive-include nui_shared_utils/slack_setup *.yaml
-recursive-include nui_lambda_shared_utils *.py
 
 # Exclude development and build files
 exclude .gitignore

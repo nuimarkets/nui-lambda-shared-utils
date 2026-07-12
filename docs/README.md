@@ -1,6 +1,6 @@
 # Documentation
 
-Welcome to the comprehensive documentation for `nui-python-shared-utils` (formerly `nui-lambda-shared-utils`).
+Welcome to the comprehensive documentation for `nui-python-shared-utils`.
 
 **Last Updated**: 2026-02-13
 

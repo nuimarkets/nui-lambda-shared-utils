@@ -92,7 +92,7 @@ slack-channel-setup = "nui_shared_utils.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["nui_shared_utils*", "nui_lambda_shared_utils*"]
+include = ["nui_shared_utils*"]
 
 [tool.setuptools.package-data]
 "nui_shared_utils" = ["slack_setup/*.yaml"]

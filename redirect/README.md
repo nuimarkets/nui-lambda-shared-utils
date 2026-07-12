@@ -1,27 +1,22 @@
-# nui-lambda-shared-utils (redirect)
+# nui-lambda-shared-utils
 
-This package has been renamed to **[nui-python-shared-utils](https://pypi.org/project/nui-python-shared-utils/)**.
-
-Install the new package directly:
+The maintained package is **[nui-python-shared-utils](https://pypi.org/project/nui-python-shared-utils/)**. Install it directly:
 
 ```bash
 pip install nui-python-shared-utils
 ```
 
-This redirect package depends on `nui-python-shared-utils` and re-exports
-`nui_lambda_shared_utils` for backwards compatibility. Existing code continues
-to work without changes.
+This distribution is a thin redirect that depends on `nui-python-shared-utils`, so an existing `pip install nui-lambda-shared-utils` keeps resolving. It ships no code of its own.
 
-To migrate, update your `requirements.txt`:
+Import from `nui_shared_utils`:
+
+```python
+from nui_shared_utils import SlackClient
+```
+
+Point your `requirements.txt` at the maintained package:
 
 ```diff
 - nui-lambda-shared-utils[powertools]
 + nui-python-shared-utils[powertools]
-```
-
-Import names remain unchanged during the transition period:
-
-```python
-# Both work
-from nui_lambda_shared_utils import SlackClient
 ```

@@ -427,7 +427,6 @@ slack-channel-setup --config channels.yaml
 - **GitHub Repository**: https://github.com/nuimarkets/nui-python-shared-utils
 - **Issue Tracker**: https://github.com/nuimarkets/nui-python-shared-utils/issues
 - **PyPI Package**: https://pypi.org/project/nui-python-shared-utils/
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
 
 ### 💬 Support
 
