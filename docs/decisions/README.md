@@ -24,3 +24,8 @@ Keep each ADR under two pages. Longer than that means it is a plan, not an ADR.
 | # | Decision | Status | Date |
 |---|----------|--------|------|
 | [001](ADR-001-structured-logging-field-vocabulary.md) | Structured logging field vocabulary (dotted registry + helpers + consistency test) | Proposed | 2026-07-11 |
+| [002](ADR-002-keep-shared-utilities-generic.md) | Keep shared utilities generic: configurable infrastructure, business queries/names/currencies to the consumer | Proposed | 2026-07-13 |
+| [003](ADR-003-lazy-load-integrations.md) | Lazy-load integrations via PEP 562 so package import stays cheap; heavy deps load on first use | Proposed | 2026-07-13 |
+| [004](ADR-004-credential-resolution-precedence.md) | Credential resolution precedence: explicit dict, then env vars, then Secrets Manager | Proposed | 2026-07-13 |
+| [005](ADR-005-explicit-secrets-manager-region.md) | Resolve the Secrets Manager region explicitly (session, then env); no hidden default, fail loud | Proposed | 2026-07-13 |
+| [006](ADR-006-snowflake-sql-api-client.md) | Snowflake access via the pure-Python SQL API client, not the native connector | Proposed | 2026-07-13 |
