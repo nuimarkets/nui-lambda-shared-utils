@@ -120,6 +120,25 @@ _LAZY_EXPORTS = {
     "build_anthropic_client": ("llm", "build_anthropic_client"),
     "call_tool": ("llm", "call_tool"),
     "call_text": ("llm", "call_text"),
+    # Structured logging contract (stdlib-only field registry + binders)
+    "F": ("logging", "F"),
+    "FIELDS": ("logging", "FIELDS"),
+    "Field": ("logging", "Field"),
+    "validate_fields": ("logging", "validate_fields"),
+    "validate_registry": ("logging", "validate_registry"),
+    "redaction_keys": ("logging", "redaction_keys"),
+    "alias_map": ("logging", "alias_map"),
+    "default_redactor": ("logging", "default_redactor"),
+    "powertools_binder": ("logging", "powertools_binder"),
+    "stdlib_binder": ("logging", "stdlib_binder"),
+    "PowertoolsBinder": ("logging", "PowertoolsBinder"),
+    "StdlibBinder": ("logging", "StdlibBinder"),
+    "bind_request": ("logging", "bind_request"),
+    "bind_user": ("logging", "bind_user"),
+    "bind_build_context": ("logging", "bind_build_context"),
+    "log_exception": ("logging", "log_exception"),
+    "request_body_fields": ("logging", "request_body_fields"),
+    "response_output_fields": ("logging", "response_output_fields"),
 }
 
 # Submodules that are optional integrations; ImportError during lazy load
@@ -275,6 +294,26 @@ if TYPE_CHECKING:
         validate_jwt,
     )
     from .llm import build_anthropic_client, call_text, call_tool
+    from .logging import (
+        FIELDS,
+        F,
+        Field,
+        PowertoolsBinder,
+        StdlibBinder,
+        alias_map,
+        bind_build_context,
+        bind_request,
+        bind_user,
+        default_redactor,
+        log_exception,
+        powertools_binder,
+        redaction_keys,
+        request_body_fields,
+        response_output_fields,
+        stdlib_binder,
+        validate_fields,
+        validate_registry,
+    )
     from . import slack_setup
 
 
