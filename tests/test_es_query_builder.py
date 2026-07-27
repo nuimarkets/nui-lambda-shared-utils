@@ -4,8 +4,7 @@ Tests for es_query_builder module.
 
 import pytest
 from unittest.mock import patch
-from datetime import datetime, timedelta
-import pytz
+from datetime import datetime, timedelta, timezone
 
 from nui_shared_utils.es_query_builder import (
     ESQueryBuilder,
@@ -34,8 +33,8 @@ class TestESQueryBuilder:
     def test_with_time_range_datetime_objects(self):
         """Test adding time range with datetime objects."""
         builder = ESQueryBuilder()
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         result = builder.with_time_range(start_time, end_time)
 
@@ -396,8 +395,8 @@ class TestPrebuiltQueries:
     def test_build_error_rate_query(self):
         """Test building error rate query."""
         service = "connect-order"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_error_rate_query(service, start_time, end_time, interval="10m")
 
@@ -438,8 +437,8 @@ class TestPrebuiltQueries:
     def test_build_top_errors_query(self):
         """Test building top errors query."""
         service = "connect-auth"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_top_errors_query(service, start_time, end_time, top_n=20)
 
@@ -471,8 +470,8 @@ class TestPrebuiltQueries:
     def test_build_response_time_query(self):
         """Test building response time query."""
         service = "connect-product"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_response_time_query(service, start_time, end_time)
 
@@ -504,8 +503,8 @@ class TestPrebuiltQueries:
     def test_build_service_volume_query(self):
         """Test building service volume query."""
         services = ["connect-order", "connect-auth", "connect-product"]
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_service_volume_query(services, start_time, end_time)
 
@@ -535,8 +534,8 @@ class TestPrebuiltQueries:
 
     def test_build_user_activity_query(self):
         """Test building user activity query."""
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_user_activity_query(start_time, end_time, user_field="user.email")
 
@@ -577,11 +576,11 @@ class TestPrebuiltQueries:
     @patch("nui_shared_utils.es_query_builder.datetime")
     def test_build_pattern_detection_query_with_start_time(self, mock_datetime):
         """Test building pattern detection query with start time."""
-        mock_utcnow = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        mock_utcnow = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
         mock_datetime.utcnow.return_value = mock_utcnow
 
         pattern = "database timeout"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
 
         query = build_pattern_detection_query(pattern, field="error.message", start_time=start_time)
 
@@ -614,7 +613,7 @@ class TestPrebuiltQueries:
     @patch("nui_shared_utils.es_query_builder.datetime")
     def test_build_pattern_detection_query_without_start_time(self, mock_datetime):
         """Test building pattern detection query without start time."""
-        mock_utcnow = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        mock_utcnow = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
         mock_datetime.utcnow.return_value = mock_utcnow
 
         pattern = "connection failed"
@@ -637,8 +636,8 @@ class TestPrebuiltQueries:
     def test_build_tender_participant_query(self):
         """Test building tender participant query."""
         tender_id = "tender-12345"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_tender_participant_query(tender_id, start_time, end_time)
 
@@ -691,8 +690,8 @@ class TestPrebuiltQueries:
     def test_build_error_rate_query_default_interval(self):
         """Test error rate query with default interval."""
         service = "connect-order"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_error_rate_query(service, start_time, end_time)
 
@@ -702,8 +701,8 @@ class TestPrebuiltQueries:
     def test_build_top_errors_query_default_top_n(self):
         """Test top errors query with default top_n."""
         service = "connect-auth"
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_top_errors_query(service, start_time, end_time)
 
@@ -712,8 +711,8 @@ class TestPrebuiltQueries:
 
     def test_build_user_activity_query_default_user_field(self):
         """Test user activity query with default user field."""
-        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start_time = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end_time = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         query = build_user_activity_query(start_time, end_time)
 
