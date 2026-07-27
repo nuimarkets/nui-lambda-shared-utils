@@ -96,7 +96,7 @@ class TestSearch:
         assert results[1] == {"field2": "value2"}
 
         mock_client.search.assert_called_once_with(
-            index="test-index", body={"query": {"match_all": {}}}, size=100, ignore_unavailable=True
+            index="test-index", body={"query": {"match_all": {}}, "size": 100}, ignore_unavailable=True
         )
 
     @patch("nui_shared_utils.base_client.get_secret")
@@ -111,7 +111,42 @@ class TestSearch:
         client = ElasticsearchClient()
         client.search("test-index", {}, size=500)
 
-        mock_client.search.assert_called_once_with(index="test-index", body={}, size=500, ignore_unavailable=True)
+        mock_client.search.assert_called_once_with(index="test-index", body={"size": 500}, ignore_unavailable=True)
+
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.es_client.Elasticsearch")
+    def test_search_does_not_mutate_caller_body(self, mock_es, mock_get_secret):
+        """Search leaves the caller's body dict untouched so it can be reused."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_client = Mock()
+        mock_es.return_value = mock_client
+        mock_client.search.return_value = {"hits": {"hits": []}}
+
+        body = {"query": {"match_all": {}}}
+
+        client = ElasticsearchClient()
+        client.search("test-index", body, size=10)
+        client.search("test-index", body, size=20)
+
+        assert body == {"query": {"match_all": {}}}
+        assert mock_client.search.call_args_list[0][1]["body"]["size"] == 10
+        assert mock_client.search.call_args_list[1][1]["body"]["size"] == 20
+
+    @patch("nui_shared_utils.base_client.get_secret")
+    @patch("nui_shared_utils.es_client.Elasticsearch")
+    def test_search_size_argument_wins_over_body_size(self, mock_es, mock_get_secret):
+        """An explicit size argument overrides a size already in the body."""
+        mock_get_secret.return_value = {"username": "elastic", "password": "pass"}
+        mock_client = Mock()
+        mock_es.return_value = mock_client
+        mock_client.search.return_value = {"hits": {"hits": []}}
+
+        client = ElasticsearchClient()
+        client.search("test-index", {"query": {"match_all": {}}, "size": 5}, size=50)
+
+        mock_client.search.assert_called_once_with(
+            index="test-index", body={"query": {"match_all": {}}, "size": 50}, ignore_unavailable=True
+        )
 
     @patch("nui_shared_utils.base_client.get_secret")
     @patch("nui_shared_utils.es_client.Elasticsearch")
@@ -154,8 +189,10 @@ class TestAggregate:
 
         mock_client.search.assert_called_once_with(
             index="test-index",
-            body={"aggs": {"total_count": {"sum": {"field": "count"}}, "avg_value": {"avg": {"field": "value"}}}},
-            size=0,
+            body={
+                "aggs": {"total_count": {"sum": {"field": "count"}}, "avg_value": {"avg": {"field": "value"}}},
+                "size": 0,
+            },
             ignore_unavailable=True,
         )
 
@@ -255,7 +292,7 @@ class TestGetServiceStats:
         # Verify the search was called with correct parameters
         call_args = mock_client.search.call_args
         assert call_args[1]["index"] == "logs-order-*"
-        assert call_args[1]["size"] == 0
+        assert call_args[1]["body"]["size"] == 0
 
         # Verify time range in query
         query = call_args[1]["body"]["query"]["bool"]["filter"][0]["range"]["@timestamp"]

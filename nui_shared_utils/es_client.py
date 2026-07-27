@@ -97,24 +97,37 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
             retry_on_timeout=self.client_config.get("retry_on_timeout", True),
         )
 
+    @staticmethod
+    def _body_with_size(body: Dict, size: int) -> Dict:
+        """Return a copy of ``body`` carrying ``size``.
+
+        ``size`` travels inside the request body rather than as a sibling keyword
+        argument, which is the one call shape every supported client major accepts.
+        On elasticsearch-py 8.x/9.x, passing ``body=`` alongside a body field as a
+        keyword folds that keyword into the caller's dict (mutating it) and raises
+        ``ValueError`` if the key is already there, so reusing a body dict for two
+        searches breaks. A body that carries its own ``size`` is accepted unchanged
+        by 7.17, 8.x and 9.x, and leaves the caller's dict alone.
+        """
+        return {**body, "size": size}
+
     @handle_client_errors(default_return=[])
     def search(self, index: str, body: Dict, size: int = 100) -> List[Dict]:
         """
         Execute search query with error handling.
-        
+
         Args:
             index: Index pattern to search
             body: Elasticsearch query body
-            size: Maximum results to return
-            
+            size: Maximum results to return (overrides any ``size`` in ``body``)
+
         Returns:
             List of hit documents
         """
         def _search_operation():
             response = self._service_client.search(
                 index=index,
-                body=body,
-                size=size,
+                body=self._body_with_size(body, size),
                 ignore_unavailable=True
             )
             return [hit["_source"] for hit in response["hits"]["hits"]]
@@ -141,8 +154,7 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
         def _aggregate_operation():
             response = self._service_client.search(
                 index=index,
-                body=body,
-                size=0,  # Only need aggregations
+                body=self._body_with_size(body, 0),  # Only need aggregations
                 ignore_unavailable=True
             )
             return response.get("aggregations", {})
@@ -374,7 +386,9 @@ class ElasticsearchClient(BaseClient, ServiceHealthMixin):
                 format="json",
                 h="index,health,status,docs.count,store.size"
             )
-            return response or []
+            # 8.x/9.x return a response wrapper around the JSON array; normalise to
+            # a plain list so callers get the same type on every client major.
+            return list(response) if response else []
 
         return self._execute_with_error_handling(
             "get_indices_info",

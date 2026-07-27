@@ -49,7 +49,10 @@ setup(
         "pyyaml>=6.0",
     ],
     extras_require={
-        "elasticsearch": ["elasticsearch>=7.17.0,<8.0.0"],
+        # Client majors 7.17, 8.x and 9.x are all supported: es_client sends one
+        # call shape that is valid on each (see docs/decisions/ADR-007). The <10
+        # ceiling is the untested next major, not a known incompatibility.
+        "elasticsearch": ["elasticsearch>=7.17.0,<10.0.0"],
         "database": ["pymysql>=1.0.0", "psycopg2-binary>=2.9.0"],
         "slack": ["slack-sdk>=3.19.0"],
         "powertools": [
@@ -67,7 +70,7 @@ setup(
         # SDK is specialized and opt-in. Keep in sync with pyproject.toml.
         "llm": ["anthropic[bedrock]>=0.45.0,<1.0.0"],
         "all": [
-            "elasticsearch>=7.17.0,<8.0.0",
+            "elasticsearch>=7.17.0,<10.0.0",
             "pymysql>=1.0.0",
             "psycopg2-binary>=2.9.0",
             "slack-sdk>=3.19.0",

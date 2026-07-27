@@ -67,7 +67,11 @@ pip install -e .[dev]
 
 #### elasticsearch
 
-- `elasticsearch>=7.17.0,<8.0.0` - Elasticsearch client
+- `elasticsearch>=7.17.0,<10.0.0` - Elasticsearch client
+
+  Client majors 7.17, 8.x and 9.x are all supported and tested; pick whichever
+  your cluster needs. The `<10` ceiling is the untested next major, not a known
+  incompatibility. See [ADR-007](../decisions/ADR-007-elasticsearch-client-version-range.md).
 
 #### database
 

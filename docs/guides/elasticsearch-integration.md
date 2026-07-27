@@ -35,6 +35,23 @@ Install with the elasticsearch extra:
 pip install nui-python-shared-utils[elasticsearch]
 ```
 
+### Supported client versions
+
+The extra allows `elasticsearch>=7.17.0,<10.0.0`. Client majors 7.17, 8.x and 9.x are all
+supported and covered by CI, so the extra installs alongside whichever client your cluster
+needs. `ElasticsearchClient` sends one request form that every one of those majors accepts;
+`size` travels inside the request body rather than as a separate argument, and your body dict
+is copied, never mutated, so it is safe to reuse across calls.
+
+Pin the client yourself if you need a specific major:
+
+```bash
+pip install nui-python-shared-utils[elasticsearch] "elasticsearch<9"
+```
+
+See [ADR-007](../decisions/ADR-007-elasticsearch-client-version-range.md) for the reasoning
+and the `<10` ceiling.
+
 ## Configuration
 
 ### AWS Secrets Manager Setup

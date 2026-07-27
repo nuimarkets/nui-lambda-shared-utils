@@ -29,3 +29,4 @@ Keep each ADR under two pages. Longer than that means it is a plan, not an ADR.
 | [004](ADR-004-credential-resolution-precedence.md) | Credential resolution precedence: explicit dict, then env vars, then Secrets Manager | Proposed | 2026-07-13 |
 | [005](ADR-005-explicit-secrets-manager-region.md) | Resolve the Secrets Manager region explicitly (session, then env); no hidden default, fail loud | Proposed | 2026-07-13 |
 | [006](ADR-006-snowflake-sql-api-client.md) | Snowflake access via the pure-Python SQL API client, not the native connector | Proposed | 2026-07-13 |
+| [007](ADR-007-elasticsearch-client-version-range.md) | Support elasticsearch-py 7.17, 8.x and 9.x from one call shape | Proposed | 2026-07-27 |
