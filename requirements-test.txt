@@ -19,7 +19,9 @@ types-pytz>=2023.3.0
 types-PyYAML>=6.0.0
 
 # Optional dependencies for testing
-elasticsearch>=7.17.0,<8.0.0
+# Matches the [elasticsearch] extra range; the es-compat CI job pins each major
+# in turn (7.17 / 8.x / 9.x).
+elasticsearch>=7.17.0,<10.0.0
 pymysql>=1.0.0
 psycopg2-binary>=2.9.0
 slack-sdk>=3.19.0
