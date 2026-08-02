@@ -2,9 +2,11 @@
 Tests for slack_formatter module.
 """
 
+import os
+import subprocess
+import sys
 from unittest.mock import patch
-from datetime import datetime, timedelta
-import pytz
+from datetime import datetime, timedelta, timezone
 
 from nui_shared_utils.slack_formatter import (
     format_currency,
@@ -19,6 +21,20 @@ from nui_shared_utils.slack_formatter import (
     SEVERITY_EMOJI,
     STATUS_EMOJI,
 )
+
+# Run in its own process so the host clock's zone can be set for the call.
+_NO_ARG_NZ_TIME_SCRIPT = """
+from datetime import datetime, timezone
+from nui_shared_utils.slack_formatter import format_nz_time
+from nui_shared_utils.timezone import NZ_TZ
+
+fmt = "%I:%M %p %Z"
+before = datetime.now(timezone.utc)
+got = format_nz_time()
+after = datetime.now(timezone.utc)
+expected = {t.astimezone(NZ_TZ).strftime(fmt) for t in (before, after)}
+print(f"match={got in expected}")
+"""
 
 
 class TestFormatFunctions:
@@ -71,7 +87,7 @@ class TestFormatFunctions:
 
     def test_format_nz_time_with_datetime(self):
         """Test NZ time formatting with provided datetime."""
-        utc_time = datetime(2023, 6, 15, 12, 30, 0, tzinfo=pytz.UTC)
+        utc_time = datetime(2023, 6, 15, 12, 30, 0, tzinfo=timezone.utc)
         result = format_nz_time(utc_time)
 
         # Should contain time in NZ timezone format
@@ -87,10 +103,29 @@ class TestFormatFunctions:
         assert "AM" in result or "PM" in result
         assert "NZST" in result or "NZDT" in result
 
+    def test_format_nz_time_no_argument_ignores_the_host_clock_zone(self):
+        """The no-arg result must be the same wherever the process runs.
+
+        Run under ``TZ=Pacific/Auckland``: a naive "now" handed to ``astimezone()``
+        would be read as local time and come back unshifted (13 hours off), so this
+        only passes if the value starts out UTC-aware. Bracketing the call with two
+        UTC reads keeps it stable across a minute boundary.
+        """
+        result = subprocess.run(
+            [sys.executable, "-c", _NO_ARG_NZ_TIME_SCRIPT],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+            env={**os.environ, "TZ": "Pacific/Auckland"},
+        )
+
+        assert "match=True" in result.stdout
+
     def test_format_date_range_same_day(self):
         """Test date range formatting for same day."""
-        start = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2023, 6, 15, 14, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2023, 6, 15, 14, 0, 0, tzinfo=timezone.utc)
 
         result = format_date_range(start, end)
 
@@ -101,8 +136,8 @@ class TestFormatFunctions:
 
     def test_format_date_range_different_days(self):
         """Test date range formatting for different days."""
-        start = datetime(2023, 6, 15, 10, 0, 0, tzinfo=pytz.UTC)
-        end = datetime(2023, 6, 16, 14, 0, 0, tzinfo=pytz.UTC)
+        start = datetime(2023, 6, 15, 10, 0, 0, tzinfo=timezone.utc)
+        end = datetime(2023, 6, 16, 14, 0, 0, tzinfo=timezone.utc)
 
         result = format_date_range(start, end)
 

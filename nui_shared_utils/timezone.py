@@ -1,17 +1,21 @@
 """
 Timezone utilities for multi-timezone handling (NZ primary, AUS/US/EUR secondary).
+
+Zone data comes from the standard library's ``zoneinfo``, which reads the system
+IANA database. Environments without one (Windows, minimal images such as Alpine)
+need the ``tzdata`` package: `pip install nui-python-shared-utils[timezone]`.
 """
 
 from datetime import datetime, timezone
-import pytz
-from typing import List, Tuple, Optional
+from typing import List, Optional, Tuple
+from zoneinfo import ZoneInfo
 
 # Supported timezones
-NZ_TZ = pytz.timezone("Pacific/Auckland")  # Primary timezone
-AUS_TZ = pytz.timezone("Australia/Sydney")
-US_EAST_TZ = pytz.timezone("US/Eastern")
-US_WEST_TZ = pytz.timezone("US/Pacific")
-EUR_TZ = pytz.timezone("Europe/London")
+NZ_TZ = ZoneInfo("Pacific/Auckland")  # Primary timezone
+AUS_TZ = ZoneInfo("Australia/Sydney")
+US_EAST_TZ = ZoneInfo("US/Eastern")
+US_WEST_TZ = ZoneInfo("US/Pacific")
+EUR_TZ = ZoneInfo("Europe/London")
 
 
 def nz_time(utc_dt: Optional[datetime] = None) -> datetime:
@@ -28,7 +32,7 @@ def nz_time(utc_dt: Optional[datetime] = None) -> datetime:
         utc_dt = datetime.now(timezone.utc)
 
     if utc_dt.tzinfo is None:
-        utc_dt = pytz.UTC.localize(utc_dt)
+        utc_dt = utc_dt.replace(tzinfo=timezone.utc)
 
     return utc_dt.astimezone(NZ_TZ)
 
@@ -66,7 +70,7 @@ def format_multi_timezone(dt: Optional[datetime] = None, primary_tz: str = "nz",
         dt = datetime.now(timezone.utc)
 
     if dt.tzinfo is None:
-        dt = pytz.UTC.localize(dt)
+        dt = dt.replace(tzinfo=timezone.utc)
 
     # Timezone mapping
     tz_map = {"nz": NZ_TZ, "aus": AUS_TZ, "us_east": US_EAST_TZ, "us_west": US_WEST_TZ, "eur": EUR_TZ}

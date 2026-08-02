@@ -34,6 +34,9 @@ pip install nui-python-shared-utils[database]
 # JWT authentication only
 pip install nui-python-shared-utils[jwt]
 
+# Zone data, for minimal images with no system IANA database (Alpine, distroless)
+pip install nui-python-shared-utils[timezone]
+
 # All integrations
 pip install nui-python-shared-utils[all]
 
@@ -59,9 +62,13 @@ pip install -e .[dev]
 ### Core Dependencies (Always Installed)
 
 - `boto3` - AWS SDK for Python
-- `pytz` - Timezone handling
 - `click` - CLI framework
 - `pyyaml` - YAML configuration parsing
+- `tzdata` - Zone data, **Windows only** (installed via an environment marker)
+
+Timezone conversion uses the standard library's `zoneinfo`, which reads the
+system IANA database. Linux, macOS, and the AWS Lambda runtimes all ship one,
+so nothing extra is installed there.
 
 ### Optional Dependencies by Extra
 
@@ -85,6 +92,18 @@ pip install -e .[dev]
 #### jwt
 
 - `rsa>=4.9` - Pure Python RSA implementation (~100KB, no C extensions)
+
+#### timezone
+
+- `tzdata>=2023.3` - Zone data for images that carry no system IANA database
+
+  Only needed on a minimal image (Alpine, distroless) where `/usr/share/zoneinfo`
+  is absent, which no environment marker can detect. Without it, importing
+  `nui_shared_utils.timezone` raises `ZoneInfoNotFoundError`. Windows already
+  gets `tzdata` from the core dependencies.
+
+  `[all]` covers the integrations and does **not** include this; on a minimal
+  image ask for it by name (`[all,timezone]`).
 
 #### dev
 

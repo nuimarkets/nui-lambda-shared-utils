@@ -4,8 +4,9 @@ Provides a builder pattern for creating Slack Block Kit messages.
 """
 
 from typing import Dict, List, Any, Optional, Union
-from datetime import datetime, timedelta
-import pytz
+from datetime import datetime, timedelta, timezone
+
+from .timezone import NZ_TZ
 
 # Severity emoji mapping
 SEVERITY_EMOJI = {"critical": "🚨", "warning": "⚠️", "info": "ℹ️", "success": "✅", "error": "❌"}
@@ -42,25 +43,23 @@ def format_number(value: Union[int, float], decimals: int = 0) -> str:
 def format_nz_time(dt: Optional[datetime] = None) -> str:
     """Format datetime in NZ timezone."""
     if dt is None:
-        dt = datetime.utcnow()
+        dt = datetime.now(timezone.utc)
     elif not dt.tzinfo:
-        dt = dt.replace(tzinfo=pytz.UTC)
+        dt = dt.replace(tzinfo=timezone.utc)
 
-    nz_tz = pytz.timezone("Pacific/Auckland")
-    nz_time = dt.astimezone(nz_tz)
+    nz_time = dt.astimezone(NZ_TZ)
     return nz_time.strftime("%I:%M %p %Z")
 
 
 def format_date_range(start: datetime, end: datetime) -> str:
     """Format a date range in NZ timezone."""
-    nz_tz = pytz.timezone("Pacific/Auckland")
     if not start.tzinfo:
-        start = start.replace(tzinfo=pytz.UTC)
+        start = start.replace(tzinfo=timezone.utc)
     if not end.tzinfo:
-        end = end.replace(tzinfo=pytz.UTC)
+        end = end.replace(tzinfo=timezone.utc)
 
-    start_nz = start.astimezone(nz_tz)
-    end_nz = end.astimezone(nz_tz)
+    start_nz = start.astimezone(NZ_TZ)
+    end_nz = end.astimezone(NZ_TZ)
 
     if start_nz.date() == end_nz.date():
         return f"{start_nz.strftime('%b %d')} {start_nz.strftime('%I:%M %p')} - {end_nz.strftime('%I:%M %p %Z')}"
