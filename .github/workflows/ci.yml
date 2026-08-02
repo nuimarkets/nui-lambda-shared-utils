@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, master, develop ]
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test Python ${{ matrix.python-version }}
@@ -82,8 +85,11 @@ jobs:
       matrix:
         # Every major the [elasticsearch] extra allows. The ES tests drive the
         # real client with a stubbed transport, so a call shape that a major
-        # stops accepting fails here.
-        elasticsearch-version: ['7.17.*', '8.*', '9.*']
+        # stops accepting fails here. 8.x is pinned at three points because the
+        # client handles `body=` differently across the major: 8.0-8.11 route it
+        # through the parameter-rewriting fallback, 8.12+ take it as a declared
+        # parameter, and a bare `8.*` only ever resolves to the latter.
+        elasticsearch-version: ['7.17.*', '8.0.*', '8.11.*', '8.*', '9.*']
 
     steps:
     - uses: actions/checkout@v5
