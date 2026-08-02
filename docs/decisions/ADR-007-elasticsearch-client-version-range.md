@@ -40,7 +40,9 @@ shape all three majors accept: `size` folded into a **copy** of the caller's bod
 
 `tests/test_es_client_compat.py` drives the real client with a stubbed transport (no server),
 so an incompatible call shape fails as a test rather than in a consumer's Lambda. The CI
-`es-compat` matrix runs it against 7.17, 8.x and 9.x.
+`es-compat` matrix runs it against 7.17, 8.x and 9.x, pinning 8.x at three points (8.0, 8.11
+and latest) because the client routes `body=` through the parameter-rewriting fallback up to
+8.11 and takes it as a declared parameter from 8.12 on.
 
 The `<10` ceiling is the untested next major, not a known incompatibility.
 
